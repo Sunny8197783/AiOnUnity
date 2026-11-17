@@ -1,0 +1,12 @@
+Licence record for the two sound files taken from https://github.com/rafaelmardojai/blanket
+(commit 2eaca9ba5a1b624adf90b6ccee1008efc46f0273, data/resources/sounds/).
+
+Blanket's program code is GPL-3.0, but its sounds are licensed one by one in the repository's
+SOUNDS_LICENSING.md (copied next to this file). The rows for the files staged here:
+
+  wind.ogg          "Wind" by felix.blume, https://freesound.org/people/felix.blume/sounds/217506/
+                    edited by Porrumentzio - CC0 1.0 (public domain dedication)
+  summer-night.ogg  "Crickets Chirping At Night" by Lisa Redfern,
+                    https://soundbible.com/2083-Crickets-Chirping-At-Night.html - Public Domain
+
+No attribution is required for either file. No GPL-covered material was copied.

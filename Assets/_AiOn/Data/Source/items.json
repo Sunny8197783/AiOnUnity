@@ -1,0 +1,827 @@
+{
+  "catalog": [
+    {
+      "id": "water_2l",
+      "name": "생수 2L",
+      "unit": "병",
+      "price": 1100,
+      "weightKg": 2.05,
+      "volumeL": 2.2,
+      "category": "water",
+      "cells": [
+        3,
+        2
+      ],
+      "facts": [
+        "home_tub",
+        "water_sphere"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "water_500",
+      "name": "생수 500mL",
+      "unit": "병",
+      "price": 600,
+      "weightKg": 0.52,
+      "volumeL": 0.6,
+      "category": "water",
+      "cells": [
+        2,
+        1
+      ],
+      "facts": [
+        "bag_days",
+        "water_sphere"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "rice_instant",
+      "name": "즉석밥",
+      "unit": "개",
+      "price": 1500,
+      "weightKg": 0.22,
+      "volumeL": 0.4,
+      "category": "food",
+      "cells": [
+        1,
+        1
+      ],
+      "facts": [
+        "bag_nocook"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "canned",
+      "name": "통조림(참치·햄)",
+      "unit": "캔",
+      "price": 2800,
+      "weightKg": 0.2,
+      "volumeL": 0.25,
+      "category": "food",
+      "cells": [
+        1,
+        1
+      ],
+      "facts": [
+        "bag_nocook",
+        "home_30"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "ramen",
+      "name": "라면",
+      "unit": "봉",
+      "price": 900,
+      "weightKg": 0.12,
+      "volumeL": 0.6,
+      "category": "food",
+      "cells": [
+        2,
+        1
+      ],
+      "needs": [
+        "hot_water"
+      ],
+      "facts": [
+        "home_30"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "bars",
+      "name": "건빵·에너지바",
+      "unit": "봉",
+      "price": 1500,
+      "weightKg": 0.1,
+      "volumeL": 0.15,
+      "category": "food",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "facts": [
+        "bag_nocook"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "radio",
+      "name": "휴대용 라디오(건전지식)",
+      "unit": "대",
+      "price": 24000,
+      "weightKg": 0.3,
+      "volumeL": 0.6,
+      "category": "info",
+      "cells": [
+        2,
+        1
+      ],
+      "needsCheck": "batteries",
+      "facts": [
+        "radio_batt",
+        "power_prep",
+        "radio_listen"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "batteries_aa",
+      "name": "AA 건전지 4개",
+      "unit": "팩",
+      "price": 4500,
+      "weightKg": 0.1,
+      "volumeL": 0.05,
+      "category": "power",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "charge": 100,
+      "facts": [
+        "radio_batt"
+      ]
+    },
+    {
+      "id": "flashlight",
+      "name": "손전등(LED)",
+      "unit": "개",
+      "price": 9000,
+      "weightKg": 0.2,
+      "volumeL": 0.4,
+      "category": "light",
+      "cells": [
+        1,
+        1
+      ],
+      "needsCheck": "batteries",
+      "facts": [
+        "power_prep",
+        "candle_no"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "powerbank",
+      "name": "보조배터리",
+      "unit": "개",
+      "price": 22000,
+      "weightKg": 0.22,
+      "volumeL": 0.15,
+      "category": "power",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "needsCheck": "charge",
+      "facts": [
+        "comms_battery"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "first_aid",
+      "name": "구급함(상비약·밴드)",
+      "unit": "개",
+      "price": 15000,
+      "weightKg": 0.5,
+      "volumeL": 1.5,
+      "category": "health",
+      "cells": [
+        3,
+        1
+      ],
+      "facts": [
+        "bag_days"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "meds",
+      "name": "복용 중인 약(1주일분)",
+      "unit": "봉투",
+      "price": 0,
+      "weightKg": 0.1,
+      "volumeL": 0.1,
+      "category": "health",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "notSold": true,
+      "facts": [
+        "contact_fields",
+        "people_unhcr"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "masks",
+      "name": "마스크 10매",
+      "unit": "팩",
+      "price": 5000,
+      "weightKg": 0.1,
+      "volumeL": 0.4,
+      "category": "health",
+      "cells": [
+        1,
+        1
+      ],
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "wipes",
+      "name": "물티슈",
+      "unit": "팩",
+      "price": 2000,
+      "weightKg": 0.4,
+      "volumeL": 0.6,
+      "category": "hygiene",
+      "cells": [
+        2,
+        1
+      ],
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "tissue",
+      "name": "휴지",
+      "unit": "롤",
+      "price": 1500,
+      "weightKg": 0.15,
+      "volumeL": 0.8,
+      "category": "hygiene",
+      "cells": [
+        2,
+        1
+      ],
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "trash_bags",
+      "name": "비닐봉투·쓰레기봉투",
+      "unit": "묶음",
+      "price": 2500,
+      "weightKg": 0.2,
+      "volumeL": 0.3,
+      "category": "hygiene",
+      "cells": [
+        1,
+        1
+      ],
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "blanket",
+      "name": "은박 보온담요",
+      "unit": "장",
+      "price": 3000,
+      "weightKg": 0.06,
+      "volumeL": 0.2,
+      "category": "warmth",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "facts": [
+        "bag_foil"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "raincoat",
+      "name": "우의",
+      "unit": "벌",
+      "price": 3000,
+      "weightKg": 0.15,
+      "volumeL": 0.3,
+      "category": "warmth",
+      "cells": [
+        1,
+        1
+      ],
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "clothes",
+      "name": "여벌 옷·양말",
+      "unit": "벌",
+      "price": 0,
+      "weightKg": 0.6,
+      "volumeL": 3,
+      "category": "warmth",
+      "cells": [
+        3,
+        2
+      ],
+      "notSold": true,
+      "facts": [
+        "home_clothes"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "hygiene_kit",
+      "name": "세면도구",
+      "unit": "세트",
+      "price": 0,
+      "weightKg": 0.3,
+      "volumeL": 0.8,
+      "category": "hygiene",
+      "cells": [
+        2,
+        1
+      ],
+      "notSold": true,
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "whistle",
+      "name": "호루라기",
+      "unit": "개",
+      "price": 2000,
+      "weightKg": 0.02,
+      "volumeL": 0.02,
+      "category": "tool",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "tape",
+      "name": "청테이프",
+      "unit": "개",
+      "price": 2000,
+      "weightKg": 0.2,
+      "volumeL": 0.3,
+      "category": "tool",
+      "cells": [
+        1,
+        1
+      ],
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "water_jug",
+      "name": "접이식 물통 10L",
+      "unit": "개",
+      "price": 7000,
+      "weightKg": 0.3,
+      "volumeL": 1,
+      "category": "water",
+      "cells": [
+        2,
+        1
+      ],
+      "facts": [
+        "water_point"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "candles",
+      "name": "양초 6개",
+      "unit": "팩",
+      "price": 3500,
+      "weightKg": 0.4,
+      "volumeL": 0.4,
+      "category": "light",
+      "cells": [
+        1,
+        1
+      ],
+      "risk": "fire",
+      "facts": [
+        "candle_prep",
+        "candle_no",
+        "candle_rules"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "gas_stove",
+      "name": "휴대용 가스레인지",
+      "unit": "대",
+      "price": 25000,
+      "weightKg": 1.8,
+      "volumeL": 6,
+      "category": "fire",
+      "cells": [
+        4,
+        3
+      ],
+      "risk": "fire",
+      "facts": [
+        "home_stove",
+        "shelter_rules"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "butane",
+      "name": "부탄가스 4개",
+      "unit": "묶음",
+      "price": 6000,
+      "weightKg": 1,
+      "volumeL": 2,
+      "category": "fire",
+      "cells": [
+        2,
+        2
+      ],
+      "risk": "fire",
+      "facts": [
+        "home_stove"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "cash",
+      "name": "현금 5만 원",
+      "unit": "묶음",
+      "price": 50000,
+      "weightKg": 0.01,
+      "volumeL": 0.01,
+      "category": "docs",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "atmOnly": true,
+      "facts": [
+        "bag_cash"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "contact_card",
+      "name": "비상연락처 카드",
+      "unit": "장",
+      "price": 0,
+      "weightKg": 0.01,
+      "volumeL": 0.01,
+      "category": "docs",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "notSold": true,
+      "facts": [
+        "contact_card",
+        "contact_fields",
+        "contact_meet"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "doc_copies",
+      "name": "신분증·중요 서류 사본",
+      "unit": "묶음",
+      "price": 0,
+      "weightKg": 0.05,
+      "volumeL": 0.05,
+      "category": "docs",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "notSold": true,
+      "facts": [
+        "bag_copies",
+        "docs_take"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "id_card",
+      "name": "신분증(주민등록증)",
+      "unit": "장",
+      "price": 0,
+      "weightKg": 0.01,
+      "volumeL": 0.01,
+      "category": "docs",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "notSold": true,
+      "facts": [
+        "docs_take"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "fridge_food",
+      "name": "냉장고 반찬",
+      "unit": "통",
+      "price": 0,
+      "weightKg": 0.4,
+      "volumeL": 0.5,
+      "category": "food",
+      "cells": [
+        1,
+        1
+      ],
+      "notSold": true,
+      "risk": "spoil",
+      "facts": [
+        "food_fridge",
+        "food_4h",
+        "food_door"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "old_bars",
+      "name": "건빵(작년 비상가방)",
+      "unit": "봉",
+      "price": 0,
+      "weightKg": 0.1,
+      "volumeL": 0.15,
+      "category": "food",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "notSold": true,
+      "risk": "expired",
+      "facts": [
+        "bag_nocook"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "batteries_old",
+      "name": "AA 건전지(쓰던 것)",
+      "unit": "팩",
+      "price": 0,
+      "weightKg": 0.1,
+      "volumeL": 0.05,
+      "category": "power",
+      "cells": [
+        1,
+        1
+      ],
+      "pocket": true,
+      "notSold": true,
+      "charge": 30,
+      "facts": [
+        "radio_batt"
+      ]
+    },
+    {
+      "id": "towel",
+      "name": "수건",
+      "unit": "장",
+      "price": 0,
+      "weightKg": 0.2,
+      "volumeL": 0.6,
+      "category": "hygiene",
+      "cells": [
+        2,
+        1
+      ],
+      "notSold": true,
+      "facts": [
+        "fire_big"
+      ],
+      "charge": -1
+    },
+    {
+      "id": "photo_album",
+      "name": "가족사진 앨범",
+      "unit": "권",
+      "price": 0,
+      "weightKg": 0.5,
+      "volumeL": 1,
+      "category": "keepsake",
+      "cells": [
+        2,
+        1
+      ],
+      "notSold": true,
+      "facts": [],
+      "charge": -1
+    },
+    {
+      "id": "blackout_curtain",
+      "name": "암막 커튼",
+      "unit": "장",
+      "price": 18000,
+      "weightKg": 1.2,
+      "volumeL": 4,
+      "category": "home",
+      "fixture": true,
+      "facts": [
+        "night_lights"
+      ],
+      "cells": [
+        0,
+        0
+      ],
+      "charge": -1
+    },
+    {
+      "id": "cooked_meat",
+      "name": "남은 익힌 고기",
+      "unit": "통",
+      "price": 0,
+      "weightKg": 0.3,
+      "volumeL": 0.4,
+      "category": "food",
+      "cells": [
+        1,
+        1
+      ],
+      "notSold": true,
+      "risk": "spoil",
+      "facts": [
+        "myth_meat",
+        "food_4h"
+      ],
+      "charge": -1
+    }
+  ],
+  "startHome": [
+    {
+      "id": "water_2l",
+      "count": 2
+    },
+    {
+      "id": "ramen",
+      "count": 5
+    },
+    {
+      "id": "rice_instant",
+      "count": 2
+    },
+    {
+      "id": "canned",
+      "count": 1
+    },
+    {
+      "id": "flashlight",
+      "count": 1
+    },
+    {
+      "id": "meds",
+      "count": 1
+    },
+    {
+      "id": "clothes",
+      "count": 2
+    },
+    {
+      "id": "hygiene_kit",
+      "count": 1
+    },
+    {
+      "id": "tissue",
+      "count": 2
+    },
+    {
+      "id": "fridge_food",
+      "count": 4
+    },
+    {
+      "id": "cooked_meat",
+      "count": 1
+    },
+    {
+      "id": "old_bars",
+      "count": 2
+    },
+    {
+      "id": "towel",
+      "count": 3
+    },
+    {
+      "id": "photo_album",
+      "count": 1
+    }
+  ],
+  "bagLimit": {
+    "weightKg": 8,
+    "volumeL": 25
+  },
+  "bagGrid": {
+    "cols": 10,
+    "rows": 5,
+    "cellL": 0.5
+  },
+  "pocketL": 0.5,
+  "martSections": [
+    {
+      "id": "water",
+      "label": "생수·음료",
+      "items": [
+        "water_2l",
+        "water_500"
+      ]
+    },
+    {
+      "id": "food",
+      "label": "식품",
+      "items": [
+        "rice_instant",
+        "canned",
+        "ramen",
+        "bars"
+      ]
+    },
+    {
+      "id": "daily",
+      "label": "생활용품",
+      "items": [
+        "wipes",
+        "tissue",
+        "trash_bags",
+        "tape",
+        "raincoat",
+        "blanket",
+        "water_jug",
+        "gas_stove",
+        "butane",
+        "whistle",
+        "blackout_curtain"
+      ]
+    },
+    {
+      "id": "elec",
+      "label": "전지·전기용품",
+      "items": [
+        "radio",
+        "batteries_aa",
+        "flashlight",
+        "powerbank",
+        "candles"
+      ]
+    },
+    {
+      "id": "health",
+      "label": "의약외품",
+      "items": [
+        "first_aid",
+        "masks"
+      ]
+    }
+  ],
+  "storeItems": [
+    {
+      "id": "water_500",
+      "price": 700
+    },
+    {
+      "id": "bars",
+      "price": 1800
+    },
+    {
+      "id": "ramen",
+      "price": 1100
+    },
+    {
+      "id": "batteries_aa",
+      "price": 5500
+    },
+    {
+      "id": "wipes",
+      "price": 2500
+    },
+    {
+      "id": "tissue",
+      "price": 1800
+    },
+    {
+      "id": "masks",
+      "price": 6000
+    },
+    {
+      "id": "candles",
+      "price": 4000
+    }
+  ]
+}

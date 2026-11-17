@@ -1,0 +1,506 @@
+{
+ "prepared": {
+  "fail": null,
+  "events": [
+   [
+    "blackout",
+    {}
+   ],
+   [
+    "payoff",
+    {
+     "prep": "flashlight",
+     "moment": "정전 직후 손전등을 바로 켰다"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "hall_checked"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "elder_candle_tip"
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "radio",
+     "result": "tuned",
+     "stage": "guided"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "radio",
+     "moment": "맞춰 둔 주파수로 정전 안내를 바로 들었다"
+    }
+   ],
+   [
+    "sms",
+    {
+     "kind": "위급재난문자",
+     "time": "20:05"
+    }
+   ],
+   [
+    "alert",
+    {
+     "minute": 1205
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "bag",
+     "moment": "현관에 둔 배낭을 메고 바로 나섰다"
+    }
+   ],
+   [
+    "departure",
+    {
+     "bag": "packed"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "flashlight",
+     "moment": "손전등으로 어두운 계단을 내려갔다"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "manager_detour"
+    }
+   ],
+   [
+    "strike",
+    {
+     "minute": 1205
+    }
+   ],
+   [
+    "gate_observed",
+    {
+     "who": "jeongmin",
+     "via": "notice_after",
+     "minute": 1205
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "jeongmin",
+     "route": "stairs",
+     "minute": 1205
+    }
+   ],
+   [
+    "arrived",
+    {
+     "minute": 1205,
+     "late": false
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "route",
+     "moment": "확인해 둔 경로 덕분에 막힌 길에서 돌아갈 길을 알았다"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "docs",
+     "moment": "비상연락카드를 보고 명부를 바로 적었다"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "register_helped"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "bag",
+     "moment": "배낭에서 물과 담요를 꺼냈다"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "shelter_water_given"
+    }
+   ],
+   [
+    "stub_seoyeon_relay",
+    {}
+   ],
+   [
+    "sms",
+    {
+     "kind": "위급재난문자",
+     "time": "20:35"
+    }
+   ],
+   [
+    "sms",
+    {
+     "kind": "안전안내문자",
+     "time": "20:50"
+    }
+   ],
+   [
+    "help",
+    {
+     "who": "seoyeon",
+     "kind": "ask",
+     "what": "어떻게 도울지 먼저 묻고, 계단에서 보행기를 옆에서 들어 주었다"
+    }
+   ]
+  ],
+  "payoffs": [
+   "flashlight",
+   "radio",
+   "bag",
+   "flashlight",
+   "route",
+   "docs",
+   "bag"
+  ],
+  "deeds": [
+   "hall_checked",
+   "elder_candle_tip",
+   "manager_detour",
+   "register_helped",
+   "shelter_water_given"
+  ],
+  "know": {
+   "bagOn": false,
+   "closureHeard": true,
+   "closureSeen": null,
+   "gateClosedSeen": false,
+   "strikeSeen": true,
+   "candleLit": null,
+   "candleOut": null
+  },
+  "items": {
+   "water_2l": [
+    2,
+    0,
+    0
+   ],
+   "ramen": [
+    5,
+    0,
+    0
+   ],
+   "rice_instant": [
+    2,
+    0,
+    0
+   ],
+   "canned": [
+    1,
+    0,
+    0
+   ],
+   "flashlight": [
+    1,
+    0,
+    1
+   ],
+   "meds": [
+    1,
+    0,
+    0
+   ],
+   "clothes": [
+    2,
+    0,
+    0
+   ],
+   "hygiene_kit": [
+    1,
+    0,
+    0
+   ],
+   "tissue": [
+    2,
+    0,
+    0
+   ],
+   "fridge_food": [
+    4,
+    0,
+    0
+   ],
+   "cooked_meat": [
+    1,
+    0,
+    0
+   ],
+   "old_bars": [
+    2,
+    0,
+    0
+   ],
+   "towel": [
+    3,
+    0,
+    0
+   ],
+   "photo_album": [
+    1,
+    0,
+    0
+   ],
+   "radio": [
+    1,
+    0,
+    1
+   ],
+   "water_500": [
+    1,
+    0,
+    2
+   ],
+   "contact_card": [
+    0,
+    1,
+    0
+   ],
+   "blanket": [
+    0,
+    1,
+    1
+   ]
+  },
+  "minute": 1280,
+  "trust": 3,
+  "opens": [
+   "radio",
+   "emergencyAlert",
+   "emergencyAlert",
+   "emergencyAlert",
+   "chapterCard"
+  ]
+ },
+ "unprepared": {
+  "fail": null,
+  "events": [
+   [
+    "blackout",
+    {}
+   ],
+   [
+    "candle_lit",
+    {}
+   ],
+   [
+    "sms",
+    {
+     "kind": "위급재난문자",
+     "time": "20:05"
+    }
+   ],
+   [
+    "alert",
+    {
+     "minute": 1205
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "bag",
+     "result": "partial",
+     "stage": "guided"
+    }
+   ],
+   [
+    "departure",
+    {
+     "bag": "late",
+     "delay": 4
+    }
+   ],
+   [
+    "candle_left",
+    {}
+   ],
+   [
+    "elevator_tried",
+    {}
+   ],
+   [
+    "gate_observed",
+    {
+     "who": "jeongmin",
+     "via": "sign",
+     "minute": 1209
+    }
+   ],
+   [
+    "strike",
+    {
+     "minute": 1209
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "jeongmin",
+     "route": "ramp",
+     "minute": 1209
+    }
+   ],
+   [
+    "arrived",
+    {
+     "minute": 1209,
+     "late": false
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "bag",
+     "moment": "배낭에서 물을 꺼냈다"
+    }
+   ],
+   [
+    "stub_seoyeon_relay",
+    {}
+   ],
+   [
+    "sms",
+    {
+     "kind": "위급재난문자",
+     "time": "20:35"
+    }
+   ],
+   [
+    "sms",
+    {
+     "kind": "안전안내문자",
+     "time": "20:50"
+    }
+   ]
+  ],
+  "payoffs": [
+   "bag"
+  ],
+  "deeds": [],
+  "know": {
+   "bagOn": false,
+   "closureHeard": null,
+   "closureSeen": true,
+   "gateClosedSeen": true,
+   "strikeSeen": true,
+   "candleLit": true,
+   "candleOut": null
+  },
+  "items": {
+   "water_2l": [
+    1,
+    1,
+    0
+   ],
+   "ramen": [
+    5,
+    0,
+    0
+   ],
+   "rice_instant": [
+    2,
+    0,
+    0
+   ],
+   "canned": [
+    1,
+    0,
+    0
+   ],
+   "flashlight": [
+    0,
+    1,
+    0
+   ],
+   "meds": [
+    1,
+    0,
+    0
+   ],
+   "clothes": [
+    2,
+    0,
+    0
+   ],
+   "hygiene_kit": [
+    1,
+    0,
+    0
+   ],
+   "tissue": [
+    2,
+    0,
+    0
+   ],
+   "fridge_food": [
+    4,
+    0,
+    0
+   ],
+   "cooked_meat": [
+    1,
+    0,
+    0
+   ],
+   "old_bars": [
+    2,
+    0,
+    0
+   ],
+   "towel": [
+    3,
+    0,
+    0
+   ],
+   "photo_album": [
+    1,
+    0,
+    0
+   ],
+   "candles": [
+    1,
+    0,
+    1
+   ],
+   "water_500": [
+    0,
+    0,
+    1
+   ]
+  },
+  "minute": 1280,
+  "trust": 1,
+  "opens": [
+   "phone",
+   "emergencyAlert",
+   "bag",
+   "emergencyAlert",
+   "emergencyAlert",
+   "chapterCard"
+  ]
+ }
+}

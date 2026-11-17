@@ -1,0 +1,25 @@
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+.vs/
+.idea/
+/Assets/Screenshots/
+/Assets/Screenshots.meta
+
+# Unity crash-recovery scenes
+/Assets/_Recovery/
+/Assets/_Recovery.meta
+# Crash dumps / OS
+*.dmp
+Thumbs.db
+.DS_Store

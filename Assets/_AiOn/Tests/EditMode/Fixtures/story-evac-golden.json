@@ -1,0 +1,1018 @@
+{
+ "crossroads_stay": {
+  "fail": null,
+  "path": null,
+  "events": [
+   [
+    "ledger",
+    3,
+    1080,
+    {
+     "plan": {
+      "water": 1,
+      "meals": 1,
+      "power": "phone"
+     },
+     "place": "home",
+     "days": 3,
+     "trips": 0,
+     "cooked": 0,
+     "skipped": 0,
+     "oldBars": 0
+    }
+   ],
+   [
+    "rumor_judged",
+    6,
+    600,
+    {
+     "id": "camp_food",
+     "item": "claim",
+     "pick": "rumor",
+     "ok": true
+    }
+   ],
+   [
+    "encounter",
+    6,
+    600,
+    {
+     "tool": "info",
+     "result": "sorted",
+     "stage": "guided"
+    }
+   ],
+   [
+    "deed",
+    6,
+    603,
+    {
+     "id": "seoyeon_note_reply"
+    }
+   ],
+   [
+    "deed",
+    6,
+    603,
+    {
+     "id": "yoon_reply"
+    }
+   ],
+   [
+    "decision",
+    6,
+    603,
+    {
+     "stayMove": "stay",
+     "water": 8,
+     "food": 8
+    }
+   ],
+   [
+    "smoke_choice",
+    7,
+    1330,
+    {
+     "pick": "handle"
+    }
+   ],
+   [
+    "smoke_choice",
+    7,
+    1330,
+    {
+     "pick": "stay"
+    }
+   ],
+   [
+    "encounter",
+    7,
+    1330,
+    {
+     "tool": "extinguisher",
+     "result": "retreat-ok",
+     "stage": "guided"
+    }
+   ],
+   [
+    "payoff",
+    7,
+    1330,
+    {
+     "prep": "judgement",
+     "moment": "불을 끄러 가지도, 연기 속으로 뛰어들지도 않고 상황을 보고 기다렸다"
+    }
+   ],
+   [
+    "deed",
+    7,
+    1370,
+    {
+     "id": "rounds_with_manager"
+    }
+   ]
+  ],
+  "toasts": [
+   "메모: SNS 퍼온 글: [퍼옴] 생활문화센터 임시 거처 급식 끊김. 가면 굶는다고 함.",
+   "서연은 이 일을 기억할 것이다.",
+   "윤 팀장은 이 일을 기억할 것이다.",
+   "준비가 도움이 됐습니다 · 불을 끄러 가지도, 연기 속으로 뛰어들지도 않고 상황을 보고 기다렸다",
+   "박 소장은 이 일을 기억할 것이다.",
+   "상황을 보고 판단했습니다 — 다른 세대의 불로 우리 집에 화염·연기가 들어오지 않으면 집 안에서 창문을 닫고 대기하며 119에 신고합니다."
+  ],
+  "captions": [
+   "밤 10시. 위층 어딘가에서 화재경보가 울리고, 복도 쪽에서 연기 냄새가 난다."
+  ],
+  "talks": [
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    "phone"
+   ],
+   [
+    "SNS 퍼온 글",
+    "rumor"
+   ],
+   [
+    "정민",
+    "go"
+   ],
+   [
+    "오서연의 메모",
+    null
+   ],
+   [
+    "윤 팀장",
+    "yes"
+   ],
+   [
+    "판단",
+    "handle"
+   ],
+   [
+    "현관 문손잡이",
+    null
+   ],
+   [
+    "판단",
+    "stay"
+   ],
+   [
+    "박영수 소장",
+    null
+   ],
+   [
+    "박영수 소장",
+    "go"
+   ]
+  ],
+  "objectives": []
+ },
+ "crossroads_move": {
+  "fail": null,
+  "path": null,
+  "events": [
+   [
+    "ledger",
+    3,
+    1080,
+    {
+     "plan": {
+      "water": 1,
+      "meals": 1,
+      "power": "phone"
+     },
+     "place": "home",
+     "days": 3,
+     "trips": 0,
+     "cooked": 0,
+     "skipped": 0,
+     "oldBars": 0
+    }
+   ],
+   [
+    "rumor_judged",
+    6,
+    600,
+    {
+     "id": "camp_food",
+     "item": "claim",
+     "pick": "neighbor",
+     "ok": false
+    }
+   ],
+   [
+    "encounter",
+    6,
+    600,
+    {
+     "tool": "info",
+     "result": "misled",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_believed",
+    6,
+    600,
+    {
+     "id": "camp_food",
+     "truth": false
+    }
+   ],
+   [
+    "deed",
+    6,
+    603,
+    {
+     "id": "seoyeon_note_reply"
+    }
+   ],
+   [
+    "deed",
+    6,
+    603,
+    {
+     "id": "yoon_reply"
+    }
+   ],
+   [
+    "decision",
+    6,
+    603,
+    {
+     "stayMove": "move",
+     "water": 8,
+     "food": 8
+    }
+   ],
+   [
+    "rumor_corrected",
+    7,
+    1170,
+    {
+     "id": "camp_food"
+    }
+   ],
+   [
+    "encounter",
+    7,
+    1170,
+    {
+     "tool": "extinguisher",
+     "result": "retreat-ok",
+     "stage": "guided"
+    }
+   ],
+   [
+    "payoff",
+    7,
+    1170,
+    {
+     "prep": "judgement",
+     "moment": "천장까지 닿은 불 앞에서 물러나 알리고 대피했다"
+    }
+   ],
+   [
+    "deed",
+    7,
+    1170,
+    {
+     "id": "fire_report"
+    }
+   ],
+   [
+    "deed",
+    7,
+    1210,
+    {
+     "id": "sort_supplies"
+    }
+   ]
+  ],
+  "toasts": [
+   "메모: SNS 퍼온 글: [퍼옴] 생활문화센터 임시 거처 급식 끊김. 가면 굶는다고 함.",
+   "다시 떠올려 보니, 누가 언제 확인한 말인지는 적혀 있지 않았다.",
+   "서연은 이 일을 기억할 것이다.",
+   "윤 팀장은 이 일을 기억할 것이다.",
+   "준비가 도움이 됐습니다 · 천장까지 닿은 불 앞에서 물러나 알리고 대피했다",
+   "이웃들은 이 일을 기억할 것이다.",
+   "대피소에서는 — 대피소에서는 관리자의 안내를 따르고, 출입구와 통로를 막지 않으며, 불을 써서 요리하지 않습니다.",
+   "물러서는 것도 성공입니다 — 불길이 커지면 끄려 하지 말고, 젖은 수건 등으로 코와 입을 막고 몸을 낮춰 계단으로 대피합니다."
+  ],
+  "captions": [
+   "점심과 저녁에 배식 줄이 섰다. 급식이 끊겼다던 SNS 글과는 달랐다.",
+   "저녁. 주차장 구석에서 누군가 휴대용 버너로 라면을 끓이다 쌓아 둔 상자에 불이 옮겨 붙었다. 불길이 천장 배관에 닿는다."
+  ],
+  "talks": [
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    "phone"
+   ],
+   [
+    "SNS 퍼온 글",
+    "neighbor"
+   ],
+   [
+    "정민",
+    "go"
+   ],
+   [
+    "오서연의 메모",
+    null
+   ],
+   [
+    "윤 팀장",
+    "yes"
+   ],
+   [
+    "대피소 관리자",
+    "precise"
+   ],
+   [
+    "대피소 관리자",
+    null
+   ],
+   [
+    "대피소 관리자",
+    "help"
+   ]
+  ],
+  "objectives": []
+ },
+ "crossroads_fight": {
+  "fail": {
+   "type": "fire",
+   "detail": {
+    "scene": "upstairs"
+   }
+  },
+  "path": null,
+  "events": [
+   [
+    "ledger",
+    3,
+    1080,
+    {
+     "plan": {
+      "water": 1,
+      "meals": 1,
+      "power": "phone"
+     },
+     "place": "home",
+     "days": 3,
+     "trips": 0,
+     "cooked": 0,
+     "skipped": 0,
+     "oldBars": 0
+    }
+   ],
+   [
+    "rumor_judged",
+    6,
+    600,
+    {
+     "id": "camp_food",
+     "item": "claim",
+     "pick": "rumor",
+     "ok": true
+    }
+   ],
+   [
+    "encounter",
+    6,
+    600,
+    {
+     "tool": "info",
+     "result": "sorted",
+     "stage": "guided"
+    }
+   ],
+   [
+    "deed",
+    6,
+    600,
+    {
+     "id": "yoon_reply"
+    }
+   ],
+   [
+    "decision",
+    6,
+    600,
+    {
+     "stayMove": "stay",
+     "water": 8,
+     "food": 8
+    }
+   ],
+   [
+    "smoke_choice",
+    7,
+    1330,
+    {
+     "pick": "fight"
+    }
+   ],
+   [
+    "encounter",
+    7,
+    1330,
+    {
+     "tool": "extinguisher",
+     "result": "escalated",
+     "stage": "guided"
+    }
+   ]
+  ],
+  "toasts": [
+   "메모: SNS 퍼온 글: [퍼옴] 생활문화센터 임시 거처 급식 끊김. 가면 굶는다고 함.",
+   "윤 팀장은 이 일을 기억할 것이다."
+  ],
+  "captions": [
+   "밤 10시. 위층 어딘가에서 화재경보가 울리고, 복도 쪽에서 연기 냄새가 난다."
+  ],
+  "talks": [
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    "phone"
+   ],
+   [
+    "SNS 퍼온 글",
+    "rumor"
+   ],
+   [
+    "정민",
+    "go"
+   ],
+   [
+    "오서연의 메모",
+    null
+   ],
+   [
+    "윤 팀장",
+    "yes"
+   ],
+   [
+    "판단",
+    "fight"
+   ]
+  ],
+  "objectives": []
+ },
+ "evac_bus": {
+  "fail": null,
+  "path": "bus",
+  "events": [
+   [
+    "ledger",
+    7,
+    1380,
+    {
+     "plan": {
+      "water": 1,
+      "meals": 1,
+      "power": "phone"
+     },
+     "place": "home",
+     "days": 5,
+     "trips": 0,
+     "cooked": 0,
+     "skipped": 0,
+     "oldBars": 0
+    }
+   ],
+   [
+    "sms",
+    12,
+    450,
+    {
+     "kind": "안전안내문자",
+     "time": "07:30"
+    }
+   ],
+   [
+    "encounter",
+    12,
+    450,
+    {
+     "tool": "bag",
+     "result": "partial",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_judged",
+    12,
+    795,
+    {
+     "id": "evac_shortcut",
+     "item": "claim",
+     "pick": "rumor",
+     "ok": true
+    }
+   ],
+   [
+    "encounter",
+    12,
+    795,
+    {
+     "tool": "info",
+     "result": "sorted",
+     "stage": "guided"
+    }
+   ],
+   [
+    "note_left",
+    12,
+    795,
+    {}
+   ],
+   [
+    "path",
+    12,
+    795,
+    {
+     "path": "bus"
+    }
+   ],
+   [
+    "arrived_assembly",
+    12,
+    795,
+    {
+     "minute": 795
+    }
+   ],
+   [
+    "deed",
+    12,
+    798,
+    {
+     "id": "bus_helped"
+    }
+   ],
+   [
+    "payoff",
+    12,
+    798,
+    {
+     "prep": "docs",
+     "moment": "가방에 챙긴 연락처 카드와 서류 사본으로 접수를 바로 마쳤다"
+    }
+   ]
+  ],
+  "toasts": [
+   "메모: [안전안내문자] 연무동 주민 이동 지원. 오늘 14:00까지 행정복지센터 앞 임시 집결지로 이동. 1인 1가방, 신분증 지참 [연무구(가상)]",
+   "메모: SNS 단체방: 연무로 중앙 구간 통제 풀림! 그쪽으로 가면 집결지까지 지름길이래요.",
+   "대피할 때는 언제 어디로 떠나는지 쪽지를 남기고, 권고된 경로를 따릅니다. 지름길은 막혀 있을 수 있습니다. (미국 Ready.gov)",
+   "대피 안내를 받았을 때 — 시장·군수·구청장 등이 대피명령을 내리면 즉시 따라야 합니다.",
+   "그분은 이 일을 기억할 것이다.",
+   "준비가 도움이 됐습니다 · 가방에 챙긴 연락처 카드와 서류 사본으로 접수를 바로 마쳤다"
+  ],
+  "captions": [
+   "버스 창밖으로 연무동이 멀어진다."
+  ],
+  "talks": [
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    "phone"
+   ],
+   [
+    "라디오",
+    "no"
+   ],
+   [
+    "SNS 단체방",
+    "rumor"
+   ],
+   [
+    "정민",
+    "go"
+   ],
+   [
+    "현관",
+    "note"
+   ],
+   [
+    "집결지",
+    "ask"
+   ],
+   [
+    "어르신",
+    null
+   ],
+   [
+    "집결지 접수",
+    null
+   ]
+  ],
+  "objectives": [
+   [
+    "오늘 어떻게 할까",
+    "14:00 버스는 행정복지센터 앞 집결지에서 떠납니다. 어디가 통제인지는 아직 모릅니다.",
+    [
+     [
+      "문에 쪽지 남기기 (선택)",
+      true
+     ],
+     [
+      "버스 타기: 14:00까지 집결지",
+      false
+     ],
+     [
+      "남기: 관리사무소 박 소장에게",
+      false
+     ],
+     [
+      "서연과 함께: 303호",
+      false
+     ],
+     [
+      "돕기: 행정복지센터 자원봉사",
+      false
+     ],
+     [
+      "걸어서 떠나기: 큰길 끝까지",
+      false
+     ]
+    ]
+   ]
+  ]
+ },
+ "evac_seoyeon": {
+  "fail": null,
+  "path": "seoyeon",
+  "events": [
+   [
+    "ledger",
+    7,
+    1380,
+    {
+     "plan": {
+      "water": 1,
+      "meals": 1,
+      "power": "phone"
+     },
+     "place": "home",
+     "days": 5,
+     "trips": 0,
+     "cooked": 0,
+     "skipped": 0,
+     "oldBars": 0
+    }
+   ],
+   [
+    "sms",
+    12,
+    450,
+    {
+     "kind": "안전안내문자",
+     "time": "07:30"
+    }
+   ],
+   [
+    "encounter",
+    12,
+    450,
+    {
+     "tool": "bag",
+     "result": "partial",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_judged",
+    12,
+    795,
+    {
+     "id": "evac_shortcut",
+     "item": "claim",
+     "pick": "rumor",
+     "ok": true
+    }
+   ],
+   [
+    "encounter",
+    12,
+    795,
+    {
+     "tool": "info",
+     "result": "sorted",
+     "stage": "guided"
+    }
+   ],
+   [
+    "note_left",
+    12,
+    795,
+    {}
+   ],
+   [
+    "help",
+    12,
+    795,
+    {
+     "who": "seoyeon",
+     "kind": "card",
+     "what": "떠나기 전 서로의 연락처를 다시 확인했다"
+    }
+   ],
+   [
+    "help",
+    12,
+    795,
+    {
+     "who": "seoyeon",
+     "kind": "wait",
+     "what": "지원 차량이 올 때까지 곁을 지켰다"
+    }
+   ],
+   [
+    "path",
+    12,
+    795,
+    {
+     "path": "seoyeon"
+    }
+   ]
+  ],
+  "toasts": [
+   "메모: [안전안내문자] 연무동 주민 이동 지원. 오늘 14:00까지 행정복지센터 앞 임시 집결지로 이동. 1인 1가방, 신분증 지참 [연무구(가상)]",
+   "메모: SNS 단체방: 연무로 중앙 구간 통제 풀림! 그쪽으로 가면 집결지까지 지름길이래요.",
+   "대피할 때는 언제 어디로 떠나는지 쪽지를 남기고, 권고된 경로를 따릅니다. 지름길은 막혀 있을 수 있습니다. (미국 Ready.gov)",
+   "대피 안내를 받았을 때 — 시장·군수·구청장 등이 대피명령을 내리면 즉시 따라야 합니다."
+  ],
+  "captions": [
+   "서연의 문 앞에 가방을 내려놓고 앉았다. 지원 차량은 늦어지고 있었다."
+  ],
+  "talks": [
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    "phone"
+   ],
+   [
+    "라디오",
+    "no"
+   ],
+   [
+    "SNS 단체방",
+    "rumor"
+   ],
+   [
+    "정민",
+    "go"
+   ],
+   [
+    "현관",
+    "note"
+   ],
+   [
+    "오서연",
+    "card"
+   ],
+   [
+    "오서연",
+    "wait"
+   ]
+  ],
+  "objectives": [
+   [
+    "오늘 어떻게 할까",
+    "14:00 버스는 행정복지센터 앞 집결지에서 떠납니다. 어디가 통제인지는 아직 모릅니다.",
+    [
+     [
+      "문에 쪽지 남기기 (선택)",
+      true
+     ],
+     [
+      "버스 타기: 14:00까지 집결지",
+      false
+     ],
+     [
+      "남기: 관리사무소 박 소장에게",
+      false
+     ],
+     [
+      "서연과 함께: 303호",
+      false
+     ],
+     [
+      "돕기: 행정복지센터 자원봉사",
+      false
+     ],
+     [
+      "걸어서 떠나기: 큰길 끝까지",
+      false
+     ]
+    ]
+   ]
+  ]
+ },
+ "evac_shortcut_lost": {
+  "fail": {
+   "type": "lostWay",
+   "detail": {
+    "via": "rumor"
+   }
+  },
+  "path": null,
+  "events": [
+   [
+    "ledger",
+    7,
+    1380,
+    {
+     "plan": {
+      "water": 1,
+      "meals": 1,
+      "power": "phone"
+     },
+     "place": "home",
+     "days": 5,
+     "trips": 0,
+     "cooked": 0,
+     "skipped": 0,
+     "oldBars": 0
+    }
+   ],
+   [
+    "sms",
+    12,
+    450,
+    {
+     "kind": "안전안내문자",
+     "time": "07:30"
+    }
+   ],
+   [
+    "encounter",
+    12,
+    450,
+    {
+     "tool": "bag",
+     "result": "partial",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_judged",
+    12,
+    795,
+    {
+     "id": "evac_shortcut",
+     "item": "claim",
+     "pick": "neighbor",
+     "ok": false
+    }
+   ],
+   [
+    "encounter",
+    12,
+    795,
+    {
+     "tool": "info",
+     "result": "misled",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_believed",
+    12,
+    795,
+    {
+     "id": "evac_shortcut",
+     "truth": false
+    }
+   ],
+   [
+    "note_left",
+    12,
+    795,
+    {}
+   ],
+   [
+    "rumor_followed",
+    12,
+    795,
+    {
+     "id": "evac_shortcut",
+     "road": "yeonmuCenter"
+    }
+   ]
+  ],
+  "toasts": [
+   "메모: [안전안내문자] 연무동 주민 이동 지원. 오늘 14:00까지 행정복지센터 앞 임시 집결지로 이동. 1인 1가방, 신분증 지참 [연무구(가상)]",
+   "메모: SNS 단체방: 연무로 중앙 구간 통제 풀림! 그쪽으로 가면 집결지까지 지름길이래요.",
+   "다시 떠올려 보니, 누가 언제 확인한 말인지는 적혀 있지 않았다.",
+   "대피할 때는 언제 어디로 떠나는지 쪽지를 남기고, 권고된 경로를 따릅니다. 지름길은 막혀 있을 수 있습니다. (미국 Ready.gov)",
+   "대피 안내를 받았을 때 — 시장·군수·구청장 등이 대피명령을 내리면 즉시 따라야 합니다."
+  ],
+  "captions": [],
+  "talks": [
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    1
+   ],
+   [
+    "하루 장부",
+    "phone"
+   ],
+   [
+    "라디오",
+    "no"
+   ],
+   [
+    "SNS 단체방",
+    "neighbor"
+   ],
+   [
+    "정민",
+    "go"
+   ],
+   [
+    "현관",
+    "note"
+   ],
+   [
+    "안내 요원",
+    null
+   ]
+  ],
+  "objectives": [
+   [
+    "오늘 어떻게 할까",
+    "연무로 중앙 구간 쪽은 막혀 있었다. 안내 요원이 있는 큰길로 돌아가자. 14:00 버스는 행정복지센터 앞 집결지에서 떠납니다. 오늘 통제: 연무로 중앙 구간 통제, 시장길 통제",
+    [
+     [
+      "문에 쪽지 남기기 (선택)",
+      true
+     ],
+     [
+      "버스 타기: 14:00까지 집결지",
+      false
+     ],
+     [
+      "남기: 관리사무소 박 소장에게",
+      false
+     ],
+     [
+      "서연과 함께: 303호",
+      false
+     ],
+     [
+      "돕기: 행정복지센터 자원봉사",
+      false
+     ],
+     [
+      "걸어서 떠나기: 큰길 끝까지",
+      false
+     ]
+    ]
+   ]
+  ]
+ }
+}

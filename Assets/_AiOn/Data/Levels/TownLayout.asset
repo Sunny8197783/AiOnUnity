@@ -1,0 +1,8514 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8976f9aad0230d748bf739ab227325f8, type: 3}
+  m_Name: TownLayout
+  m_EditorClassIdentifier: AiOn.Runtime::AiOn.Levels.LevelLayout
+  levelId: town
+  env: day
+  walk:
+  - x0: -130
+    x1: 130
+    z0: -6
+    z1: 6
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -54
+    x1: -46
+    z0: -110
+    z1: -6
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -54
+    x1: -46
+    z0: 6
+    z1: 110
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: 46
+    x1: 54
+    z0: -110
+    z1: -6
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: 46
+    x1: 54
+    z0: 6
+    z1: 110
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -46
+    x1: 46
+    z0: -64
+    z1: -56
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -46
+    x1: 46
+    z0: 56
+    z1: 64
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -130
+    x1: -54
+    z0: -110
+    z1: -6
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -130
+    x1: -54
+    z0: 6
+    z1: 13.6
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -130
+    x1: -54
+    z0: 16
+    z1: 46
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -130
+    x1: -54
+    z0: 54
+    z1: 110
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -130
+    x1: -84.6
+    z0: 46
+    z1: 54
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -75.4
+    x1: -54
+    z0: 46
+    z1: 54
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -130
+    x1: -112
+    z0: 13.6
+    z1: 16
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -101.8
+    x1: -87.3
+    z0: 13.6
+    z1: 16
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -84.7
+    x1: -54
+    z0: 13.6
+    z1: 16
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: 54
+    x1: 130
+    z0: -110
+    z1: -6
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: 54
+    x1: 130
+    z0: 6
+    z1: 110
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -46
+    x1: 46
+    z0: -110
+    z1: -64
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -46
+    x1: 46
+    z0: -56
+    z1: -6
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -46
+    x1: 46
+    z0: 6
+    z1: 56
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -46
+    x1: 46
+    z0: 64
+    z1: 110
+    y: 0.12
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -84.3
+    x1: -75.7
+    z0: 46
+    z1: 54
+    y: 0
+    isRamp: 1
+    rampY0: -0.9
+    rampY1: 0.12
+    rampAxis: z
+  - x0: -109.6
+    x1: -101.8
+    z0: 13.75
+    z1: 16
+    y: 0
+    isRamp: 1
+    rampY0: -0.5
+    rampY1: 0.12
+    rampAxis: x
+  - x0: -112
+    x1: -109.6
+    z0: 13.75
+    z1: 16
+    y: -0.5
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -125.5
+    x1: -110.5
+    z0: -16
+    z1: -13.4
+    y: 0.2
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -3.4
+    x1: 1.4
+    z0: 35.6
+    z1: 40.4
+    y: 0.52
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  - x0: -4
+    x1: -3.4
+    z0: 36.3
+    z1: 37.5
+    y: 0.32
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  solids:
+  - x0: 64
+    x1: 112
+    y0: -3
+    y1: 43.8
+    z0: 30
+    z1: 42
+    id: apt103
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 111.45
+    x1: 111.65
+    y0: -0.5
+    y1: 3
+    z0: 29.5
+    z1: 29.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 80.5
+    x1: 80.7
+    y0: -0.5
+    y1: 3
+    z0: 29.5
+    z1: 29.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 64
+    x1: 112
+    y0: -3
+    y1: 43.8
+    z0: 58
+    z1: 70
+    id: apt102
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 64.35
+    x1: 64.55
+    y0: -0.5
+    y1: 3
+    z0: 57.5
+    z1: 57.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 111.45
+    x1: 111.65
+    y0: -0.5
+    y1: 3
+    z0: 57.5
+    z1: 57.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 90.5
+    x1: 90.7
+    y0: -0.5
+    y1: 3
+    z0: 57.5
+    z1: 57.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 64
+    x1: 112
+    y0: -3
+    y1: 43.8
+    z0: 86
+    z1: 98
+    id: apt101
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 64.35
+    x1: 64.55
+    y0: -0.5
+    y1: 3
+    z0: 85.5
+    z1: 85.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 111.45
+    x1: 111.65
+    y0: -0.5
+    y1: 3
+    z0: 85.5
+    z1: 85.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 90.5
+    x1: 90.7
+    y0: -0.5
+    y1: 3
+    z0: 85.5
+    z1: 85.7
+    id: downpipe
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 116
+    x1: 126
+    y0: -3
+    y1: 4.6
+    z0: 30
+    z1: 40
+    id: aptOffice
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 30
+    x1: 42
+    y0: -3
+    y1: 4.5
+    z0: 12
+    z1: 22
+    id: store
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 16
+    x1: 29
+    y0: -3
+    y1: 8
+    z0: 12
+    z1: 22
+    id: shopsS
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -36
+    x1: 4
+    y0: -3
+    y1: 10.2
+    z0: -50
+    z1: -24
+    id: mart
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 70
+    x1: 104
+    y0: -3
+    y1: 15.8
+    z0: -48
+    z1: -22
+    id: office
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 64
+    x1: 124
+    y0: -3
+    y1: 11
+    z0: -104
+    z1: -60
+    id: warehouse
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 104.2
+    x1: 123.8
+    y0: -1
+    y1: 1.12
+    z0: -60
+    z1: -59.1
+    id: dock
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -104
+    x1: -74
+    y0: -3
+    y1: 11.8
+    z0: -50
+    z1: -28
+    id: center
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126
+    x1: -110
+    y0: -3
+    y1: 8
+    z0: -34
+    z1: -16
+    id: cafe
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -112
+    x1: -70
+    y0: -3
+    y1: 11.8
+    z0: 16
+    z1: 46
+    id: culture
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40
+    x1: -8
+    y0: -3
+    y1: 15
+    z0: -104
+    z1: -70
+    id: n1
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 0
+    x1: 40
+    y0: -3
+    y1: 12.6
+    z0: -104
+    z1: -70
+    id: n2
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126
+    x1: -66
+    y0: -3
+    y1: 12.6
+    z0: -104
+    z1: -62
+    id: nw1
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40
+    x1: -4
+    y0: -3
+    y1: 12.6
+    z0: 70
+    z1: 104
+    id: s1
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4
+    x1: 40
+    y0: -3
+    y1: 15.5
+    z0: 70
+    z1: 104
+    id: s2
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126
+    x1: -62
+    y0: -3
+    y1: 12.6
+    z0: 60
+    z1: 104
+    id: sw1
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -87.65
+    x1: -87.3
+    y0: -3
+    y1: 3
+    z0: 12.75
+    z1: 16
+    id: kioskA
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -84.7
+    x1: -84.35
+    y0: -3
+    y1: 3
+    z0: 12.75
+    z1: 16
+    id: kioskA
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -87.3
+    x1: -84.7
+    y0: -3
+    y1: 3
+    z0: 13.7
+    z1: 16
+    id: stairsTop
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -84.95
+    x1: -84.3
+    y0: -3
+    y1: 3
+    z0: 46
+    z1: 54.2
+    id: rampWallB
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -75.7
+    x1: -75.05
+    y0: -3
+    y1: 3
+    z0: 46
+    z1: 54.2
+    id: rampWallB
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -84.92
+    x1: -84.68
+    y0: -3
+    y1: 3
+    z0: 54.48
+    z1: 54.72
+    id: heightBar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -75.32
+    x1: -75.08
+    y0: -3
+    y1: 3
+    z0: 54.48
+    z1: 54.72
+    id: heightBar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -84.3
+    x1: -83.78
+    y0: -3
+    y1: 0.419
+    z0: 48.3
+    z1: 48.7
+    id: boomCabinet
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -84.3
+    x1: -75.7
+    y0: -3
+    y1: 3
+    z0: 48.28
+    z1: 48.72
+    id: boomB
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -101.2
+    x1: -101
+    y0: -0.5
+    y1: 2.7
+    z0: 13.1
+    z1: 13.3
+    id: signPost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -112
+    x1: -101.8
+    y0: -3
+    y1: 1.12
+    z0: 13.45
+    z1: 13.75
+    id: railC
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -112.3
+    x1: -112
+    y0: -3
+    y1: 1.12
+    z0: 13.45
+    z1: 16
+    id: railC
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -67.7
+    x1: -67.4
+    y0: -3
+    y1: 3
+    z0: 28.45
+    z1: 28.75
+    id: canopyEast
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -67.7
+    x1: -67.4
+    y0: -3
+    y1: 3
+    z0: 33.25
+    z1: 33.55
+    id: canopyEast
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -70
+    x1: -67.55
+    y0: -3
+    y1: 3
+    z0: 28.4
+    z1: 33.6
+    id: gateEast
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -58.72
+    x1: -58.48
+    y0: -0.5
+    y1: 2.5
+    z0: 6.58
+    z1: 6.82
+    id: guidePost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -118.12
+    x1: -117.88
+    y0: -0.5
+    y1: 2.5
+    z0: 6.58
+    z1: 6.82
+    id: guidePost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.82
+    x1: -54.58
+    y0: -0.5
+    y1: 2.5
+    z0: 25.88
+    z1: 26.12
+    id: guidePost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.82
+    x1: -54.58
+    y0: -0.5
+    y1: 2.5
+    z0: 57.88
+    z1: 58.12
+    id: guidePost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -61.62
+    x1: -61.38
+    y0: -0.5
+    y1: 2.5
+    z0: -6.82
+    z1: -6.58
+    id: guidePost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.42
+    x1: -45.18
+    y0: -0.5
+    y1: 2.5
+    z0: 26.48
+    z1: 26.72
+    id: guidePost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 32.05
+    x1: 33.95
+    y0: -0.5
+    y1: 1.2
+    z0: 8.65
+    z1: 10.55
+    id: storeTable
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 39.55
+    x1: 41.45
+    y0: -0.5
+    y1: 1.2
+    z0: 8.65
+    z1: 10.55
+    id: storeTable
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40.7
+    x1: 41.7
+    y0: -0.5
+    y1: 1.2
+    z0: 11.3
+    z1: 12
+    id: storeStock
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 30.2
+    x1: 31.6
+    y0: -0.5
+    y1: 1
+    z0: 11.2
+    z1: 12
+    id: freezer
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.45
+    x1: -20.15
+    y0: -0.5
+    y1: 3
+    z0: -21.35
+    z1: -21.05
+    id: martCanopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -11.85
+    x1: -11.55
+    y0: -0.5
+    y1: 3
+    z0: -21.35
+    z1: -21.05
+    id: martCanopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -21.9
+    x1: -21.3
+    y0: -0.5
+    y1: 1.7
+    z0: -21.8
+    z1: -21.4
+    id: martBanner
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -10.7
+    x1: -10.1
+    y0: -0.5
+    y1: 1.7
+    z0: -21.8
+    z1: -21.4
+    id: martBanner
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -8.6
+    x1: -6.4
+    y0: -0.5
+    y1: 1.2
+    z0: -22.1
+    z1: -21.1
+    id: carts
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -92.1
+    x1: -91.7
+    y0: -0.5
+    y1: 3.3
+    z0: -25.3
+    z1: -24.9
+    id: centerCanopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -86.3
+    x1: -85.9
+    y0: -0.5
+    y1: 3.3
+    z0: -25.3
+    z1: -24.9
+    id: centerCanopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -102.2
+    x1: -101.8
+    y0: -0.5
+    y1: 3
+    z0: -26.4
+    z1: -26
+    id: flagpole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -100.6
+    x1: -100.2
+    y0: -0.5
+    y1: 3
+    z0: -26.4
+    z1: -26
+    id: flagpole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -99
+    x1: -98.6
+    y0: -0.5
+    y1: 3
+    z0: -26.4
+    z1: -26
+    id: flagpole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -124.25
+    x1: -122.55
+    y0: -0.5
+    y1: 1
+    z0: -15.1
+    z1: -14.1
+    id: cafeTable
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -122.05
+    x1: -120.35
+    y0: -0.5
+    y1: 1
+    z0: -15.1
+    z1: -14.1
+    id: cafeTable
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -115.45
+    x1: -113.75
+    y0: -0.5
+    y1: 1
+    z0: -15.1
+    z1: -14.1
+    id: cafeTable
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -113.25
+    x1: -111.55
+    y0: -0.5
+    y1: 1
+    z0: -15.1
+    z1: -14.1
+    id: cafeTable
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -111.3
+    x1: -110.5
+    y0: -0.5
+    y1: 1
+    z0: -13.6
+    z1: -13
+    id: menuBoard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 75.82
+    x1: 76.18
+    y0: -0.5
+    y1: 3
+    z0: 27.42
+    z1: 27.78
+    id: canopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 79.82
+    x1: 80.18
+    y0: -0.5
+    y1: 3
+    z0: 27.42
+    z1: 27.78
+    id: canopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 85.82
+    x1: 86.18
+    y0: -0.5
+    y1: 3
+    z0: 55.42
+    z1: 55.78
+    id: canopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 89.82
+    x1: 90.18
+    y0: -0.5
+    y1: 3
+    z0: 55.42
+    z1: 55.78
+    id: canopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 85.82
+    x1: 86.18
+    y0: -0.5
+    y1: 3
+    z0: 83.42
+    z1: 83.78
+    id: canopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 89.82
+    x1: 90.18
+    y0: -0.5
+    y1: 3
+    z0: 83.42
+    z1: 83.78
+    id: canopy
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -94.85
+    x1: -93.15
+    y0: -0.5
+    y1: 2.2
+    z0: 12.15
+    z1: 12.45
+    id: noticeBoard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 71.15
+    x1: 72.85
+    y0: -0.5
+    y1: 2.2
+    z0: 28.65
+    z1: 28.95
+    id: noticeBoard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -96.85
+    x1: -95.15
+    y0: -0.5
+    y1: 2.2
+    z0: -20.45
+    z1: -20.15
+    id: noticeBoard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -124.3
+    x1: -123.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -115.3
+    x1: -114.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -97.3
+    x1: -96.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -88.3
+    x1: -87.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -79.3
+    x1: -78.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -70.3
+    x1: -69.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -43.3
+    x1: -42.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -34.3
+    x1: -33.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -25.3
+    x1: -24.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -7.3
+    x1: -6.7
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 19.7
+    x1: 20.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 28.7
+    x1: 29.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 37.7
+    x1: 38.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 73.7
+    x1: 74.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 91.7
+    x1: 92.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 100.7
+    x1: 101.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.7
+    x1: 110.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 118.7
+    x1: 119.3
+    y0: -0.5
+    y1: 3
+    z0: -7.2
+    z1: -6.6
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -124.3
+    x1: -123.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -115.3
+    x1: -114.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -79.3
+    x1: -78.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -70.3
+    x1: -69.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -43.3
+    x1: -42.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -34.3
+    x1: -33.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -25.3
+    x1: -24.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.3
+    x1: -15.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -7.3
+    x1: -6.7
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.7
+    x1: 11.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 19.7
+    x1: 20.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 28.7
+    x1: 29.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 73.7
+    x1: 74.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 82.7
+    x1: 83.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 91.7
+    x1: 92.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 100.7
+    x1: 101.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.7
+    x1: 110.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 118.7
+    x1: 119.3
+    y0: -0.5
+    y1: 3
+    z0: 6.6
+    z1: 7.2
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: -104.3
+    z1: -103.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: -94.3
+    z1: -93.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: -84.3
+    z1: -83.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: -74.3
+    z1: -73.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: -24.3
+    z1: -23.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: 75.7
+    z1: 76.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: 85.7
+    z1: 86.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.2
+    x1: -54.6
+    y0: -0.5
+    y1: 3
+    z0: 95.7
+    z1: 96.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -104.3
+    z1: -103.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -94.3
+    z1: -93.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -84.3
+    z1: -83.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -74.3
+    z1: -73.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -44.3
+    z1: -43.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -34.3
+    z1: -33.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: -24.3
+    z1: -23.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: 35.7
+    z1: 36.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: 45.7
+    z1: 46.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: 75.7
+    z1: 76.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: 85.7
+    z1: 86.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.4
+    x1: -44.8
+    y0: -0.5
+    y1: 3
+    z0: 95.7
+    z1: 96.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -104.3
+    z1: -103.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -94.3
+    z1: -93.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -84.3
+    z1: -83.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -74.3
+    z1: -73.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -44.3
+    z1: -43.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -34.3
+    z1: -33.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: -24.3
+    z1: -23.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: 25.7
+    z1: 26.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: 35.7
+    z1: 36.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: 45.7
+    z1: 46.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: 75.7
+    z1: 76.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: 85.7
+    z1: 86.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.8
+    x1: 45.4
+    y0: -0.5
+    y1: 3
+    z0: 95.7
+    z1: 96.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -104.3
+    z1: -103.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -94.3
+    z1: -93.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -84.3
+    z1: -83.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -74.3
+    z1: -73.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -44.3
+    z1: -43.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -34.3
+    z1: -33.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: -24.3
+    z1: -23.7
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: 35.7
+    z1: 36.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: 45.7
+    z1: 46.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: 75.7
+    z1: 76.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: 85.7
+    z1: 86.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.6
+    x1: 55.2
+    y0: -0.5
+    y1: 3
+    z0: 95.7
+    z1: 96.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.133
+    x1: -39.533
+    y0: -0.5
+    y1: 3
+    z0: 38.835
+    z1: 39.435
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -33.646
+    x1: -33.046
+    y0: -0.5
+    y1: 3
+    z0: 31.865
+    z1: 32.465
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -26.042
+    x1: -25.442
+    y0: -0.5
+    y1: 3
+    z0: 32.079
+    z1: 32.679
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -28.183
+    x1: -27.583
+    y0: -0.5
+    y1: 3
+    z0: 40.02
+    z1: 40.62
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.637
+    x1: -16.037
+    y0: -0.5
+    y1: 3
+    z0: 44.003
+    z1: 44.603
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -8.933
+    x1: -8.333
+    y0: -0.5
+    y1: 3
+    z0: 38.831
+    z1: 39.431
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 8.775
+    x1: 9.375
+    y0: -0.5
+    y1: 3
+    z0: 26.273
+    z1: 26.873
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.126
+    x1: 10.726
+    y0: -0.5
+    y1: 3
+    z0: 32.403
+    z1: 33.003
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 8.943
+    x1: 9.543
+    y0: -0.5
+    y1: 3
+    z0: 38.261
+    z1: 38.861
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 63.497
+    x1: 64.097
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 79.069
+    x1: 79.669
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 86.482
+    x1: 87.082
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 100.777
+    x1: 101.377
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.173
+    x1: 109.773
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 123.476
+    x1: 124.076
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 63.679
+    x1: 64.279
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 78.696
+    x1: 79.296
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 85.728
+    x1: 86.328
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 101.062
+    x1: 101.662
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 108.334
+    x1: 108.934
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 123.654
+    x1: 124.254
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 64.167
+    x1: 64.767
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 78.738
+    x1: 79.338
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 85.778
+    x1: 86.378
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 100.828
+    x1: 101.428
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.093
+    x1: 109.693
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 124.044
+    x1: 124.644
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 62.7
+    x1: 63.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 71.7
+    x1: 72.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 80.7
+    x1: 81.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 89.7
+    x1: 90.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 98.7
+    x1: 99.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 107.7
+    x1: 108.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 116.7
+    x1: 117.3
+    y0: -0.5
+    y1: 3
+    z0: 11.3
+    z1: 11.9
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -127.3
+    x1: -126.7
+    y0: -0.5
+    y1: 3
+    z0: 19.7
+    z1: 20.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -122.3
+    x1: -121.7
+    y0: -0.5
+    y1: 3
+    z0: 26.7
+    z1: 27.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -127.3
+    x1: -126.7
+    y0: -0.5
+    y1: 3
+    z0: 33.7
+    z1: 34.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -118.3
+    x1: -117.7
+    y0: -0.5
+    y1: 3
+    z0: 40.7
+    z1: 41.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -121.3
+    x1: -120.7
+    y0: -0.5
+    y1: 3
+    z0: 43.7
+    z1: 44.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -31.926
+    x1: -31.326
+    y0: -0.5
+    y1: 3
+    z0: 28.14
+    z1: 28.74
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.548
+    x1: -19.948
+    y0: -0.5
+    y1: 3
+    z0: 33.301
+    z1: 33.901
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.261
+    x1: -19.661
+    y0: -0.5
+    y1: 3
+    z0: 45.92
+    z1: 46.52
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -13.826
+    x1: -13.226
+    y0: -0.5
+    y1: 3
+    z0: 15.409
+    z1: 16.009
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -9.892
+    x1: -9.292
+    y0: -0.5
+    y1: 3
+    z0: 45.457
+    z1: 46.057
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4.448
+    x1: -3.848
+    y0: -0.5
+    y1: 3
+    z0: 32.327
+    z1: 32.927
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.588
+    x1: 4.188
+    y0: -0.5
+    y1: 3
+    z0: 14.638
+    z1: 15.238
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.396
+    x1: 2.996
+    y0: -0.5
+    y1: 3
+    z0: 27.389
+    z1: 27.989
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 9.166
+    x1: 9.766
+    y0: -0.5
+    y1: 3
+    z0: 45.986
+    z1: 46.586
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 71.595
+    x1: 72.195
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 94.064
+    x1: 94.664
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 115.779
+    x1: 116.379
+    y0: -0.5
+    y1: 3
+    z0: 49.2
+    z1: 49.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 71.661
+    x1: 72.261
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 93.964
+    x1: 94.564
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 116.239
+    x1: 116.839
+    y0: -0.5
+    y1: 3
+    z0: 77.2
+    z1: 77.8
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 71.477
+    x1: 72.077
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 93.684
+    x1: 94.284
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 116.36
+    x1: 116.96
+    y0: -0.5
+    y1: 3
+    z0: 104.7
+    z1: 105.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 59.7
+    x1: 60.3
+    y0: -0.5
+    y1: 3
+    z0: 31.7
+    z1: 32.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 59.7
+    x1: 60.3
+    y0: -0.5
+    y1: 3
+    z0: 36.7
+    z1: 37.3
+    id: tree
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -25.16
+    x1: -24.44
+    y0: -0.5
+    y1: 0.8
+    z0: 23
+    z1: 23.4
+    id: rider
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: -25.16
+    x1: -24.44
+    y0: -0.5
+    y1: 0.8
+    z0: 21.2
+    z1: 21.6
+    id: rider
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: -34.3
+    x1: -24.2
+    y0: -0.5
+    y1: 3
+    z0: 17.6
+    z1: 19.6
+    id: play
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -32.8
+    x1: -27.2
+    y0: -0.5
+    y1: 3
+    z0: 22.9
+    z1: 24.3
+    id: swing
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.38
+    x1: -3.02
+    y0: -0.5
+    y1: 3.5
+    z0: 35.62
+    z1: 35.98
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -1.18
+    x1: -0.82
+    y0: -0.5
+    y1: 3.5
+    z0: 35.62
+    z1: 35.98
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 1.02
+    x1: 1.38
+    y0: -0.5
+    y1: 3.5
+    z0: 35.62
+    z1: 35.98
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 1.02
+    x1: 1.38
+    y0: -0.5
+    y1: 3.5
+    z0: 37.82
+    z1: 38.18
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 1.02
+    x1: 1.38
+    y0: -0.5
+    y1: 3.5
+    z0: 40.02
+    z1: 40.38
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -1.18
+    x1: -0.82
+    y0: -0.5
+    y1: 3.5
+    z0: 40.02
+    z1: 40.38
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.38
+    x1: -3.02
+    y0: -0.5
+    y1: 3.5
+    z0: 40.02
+    z1: 40.38
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.38
+    x1: -3.02
+    y0: -0.5
+    y1: 3.5
+    z0: 37.82
+    z1: 38.18
+    id: pavilion
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4.609
+    x1: -3.409
+    y0: -0.5
+    y1: 0.9
+    z0: 17.805
+    z1: 19.005
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -12.041
+    x1: -10.841
+    y0: -0.5
+    y1: 0.9
+    z0: 17.235
+    z1: 18.435
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -13.6
+    x1: -12.4
+    y0: -0.5
+    y1: 0.9
+    z0: 27.34
+    z1: 28.54
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -17.6
+    x1: -16.4
+    y0: -0.5
+    y1: 0.9
+    z0: 34
+    z1: 35.2
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.035
+    x1: -18.835
+    y0: -0.5
+    y1: 0.9
+    z0: 42.652
+    z1: 43.852
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -26.615
+    x1: -25.415
+    y0: -0.5
+    y1: 0.9
+    z0: 40.268
+    z1: 41.468
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -34.961
+    x1: -33.761
+    y0: -0.5
+    y1: 0.9
+    z0: 39.965
+    z1: 41.165
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -34.479
+    x1: -33.279
+    y0: -0.5
+    y1: 0.9
+    z0: 32.93
+    z1: 34.13
+    id: bench
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -9.2
+    x1: -7.7
+    y0: -0.5
+    y1: 2.3
+    z0: 22
+    z1: 23
+    id: gym
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -6.2
+    x1: -4.7
+    y0: -0.5
+    y1: 2.3
+    z0: 22
+    z1: 23
+    id: gym
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.2
+    x1: -1.7
+    y0: -0.5
+    y1: 2.3
+    z0: 22
+    z1: 23
+    id: gym
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -7.45
+    x1: -6.55
+    y0: -0.5
+    y1: 1.2
+    z0: 26.05
+    z1: 26.95
+    id: gym
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4.45
+    x1: -3.55
+    y0: -0.5
+    y1: 1.2
+    z0: 26.05
+    z1: 26.95
+    id: gym
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -1.3
+    x1: -1.1
+    y0: -0.5
+    y1: 2
+    z0: 27.64
+    z1: 27.84
+    id: gymSign
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: -2.15
+    x1: -1.85
+    y0: -0.5
+    y1: 3
+    z0: 15.85
+    z1: 16.15
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -13.15
+    x1: -12.85
+    y0: -0.5
+    y1: 3
+    z0: 22.85
+    z1: 23.15
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -13.55
+    x1: -13.25
+    y0: -0.5
+    y1: 3
+    z0: 33.85
+    z1: 34.15
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -22.15
+    x1: -21.85
+    y0: -0.5
+    y1: 3
+    z0: 43.45
+    z1: 43.75
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -35.15
+    x1: -34.85
+    y0: -0.5
+    y1: 3
+    z0: 35.85
+    z1: 36.15
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.15
+    x1: -39.85
+    y0: -0.5
+    y1: 3
+    z0: 32.25
+    z1: 32.55
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.85
+    x1: 3.15
+    y0: -0.5
+    y1: 3
+    z0: 29.85
+    z1: 30.15
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -19.15
+    x1: -18.85
+    y0: -0.5
+    y1: 3
+    z0: 15.85
+    z1: 16.15
+    id: lamp
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -17.07
+    x1: -16.53
+    y0: -0.5
+    y1: 0.95
+    z0: 38.73
+    z1: 39.27
+    id: bin
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: -31.27
+    x1: -30.73
+    y0: -0.5
+    y1: 0.95
+    z0: 41.23
+    z1: 41.77
+    id: bin
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: 1.73
+    x1: 2.27
+    y0: -0.5
+    y1: 0.95
+    z0: 14.73
+    z1: 15.27
+    id: bin
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: -17.07
+    x1: -16.53
+    y0: -0.5
+    y1: 1.05
+    z0: 20.23
+    z1: 20.77
+    id: fountain
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: 4.3
+    x1: 6.1
+    y0: -0.5
+    y1: 1
+    z0: 13.1
+    z1: 13.7
+    id: parkStone
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -109.18
+    x1: -108.82
+    y0: -0.5
+    y1: 4
+    z0: -6.73
+    z1: -6.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -96.18
+    x1: -95.82
+    y0: -0.5
+    y1: 4
+    z0: 6.37
+    z1: 6.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -83.18
+    x1: -82.82
+    y0: -0.5
+    y1: 4
+    z0: -6.73
+    z1: -6.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -31.18
+    x1: -30.82
+    y0: -0.5
+    y1: 4
+    z0: -6.73
+    z1: -6.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 7.82
+    x1: 8.18
+    y0: -0.5
+    y1: 4
+    z0: 6.37
+    z1: 6.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 33.82
+    x1: 34.18
+    y0: -0.5
+    y1: 4
+    z0: 6.37
+    z1: 6.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 85.82
+    x1: 86.18
+    y0: -0.5
+    y1: 4
+    z0: 6.37
+    z1: 6.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 124.82
+    x1: 125.18
+    y0: -0.5
+    y1: 4
+    z0: -6.73
+    z1: -6.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.73
+    x1: -54.37
+    y0: -0.5
+    y1: 4
+    z0: -50.18
+    z1: -49.82
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.73
+    x1: -54.37
+    y0: -0.5
+    y1: 4
+    z0: 27.82
+    z1: 28.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.73
+    x1: -54.37
+    y0: -0.5
+    y1: 4
+    z0: 53.82
+    z1: 54.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.73
+    x1: -54.37
+    y0: -0.5
+    y1: 4
+    z0: 79.82
+    z1: 80.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.63
+    x1: -45.27
+    y0: -0.5
+    y1: 4
+    z0: -50.18
+    z1: -49.82
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.63
+    x1: -45.27
+    y0: -0.5
+    y1: 4
+    z0: 27.82
+    z1: 28.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.63
+    x1: -45.27
+    y0: -0.5
+    y1: 4
+    z0: 53.82
+    z1: 54.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.63
+    x1: -45.27
+    y0: -0.5
+    y1: 4
+    z0: 79.82
+    z1: 80.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.27
+    x1: 45.63
+    y0: -0.5
+    y1: 4
+    z0: -89.18
+    z1: -88.82
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.27
+    x1: 45.63
+    y0: -0.5
+    y1: 4
+    z0: -37.18
+    z1: -36.82
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.27
+    x1: 45.63
+    y0: -0.5
+    y1: 4
+    z0: 40.82
+    z1: 41.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.27
+    x1: 45.63
+    y0: -0.5
+    y1: 4
+    z0: 66.82
+    z1: 67.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.27
+    x1: 45.63
+    y0: -0.5
+    y1: 4
+    z0: 92.82
+    z1: 93.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.37
+    x1: 54.73
+    y0: -0.5
+    y1: 4
+    z0: -89.18
+    z1: -88.82
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.37
+    x1: 54.73
+    y0: -0.5
+    y1: 4
+    z0: -37.18
+    z1: -36.82
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.37
+    x1: 54.73
+    y0: -0.5
+    y1: 4
+    z0: 40.82
+    z1: 41.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.37
+    x1: 54.73
+    y0: -0.5
+    y1: 4
+    z0: 66.82
+    z1: 67.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.37
+    x1: 54.73
+    y0: -0.5
+    y1: 4
+    z0: 92.82
+    z1: 93.18
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -38.18
+    x1: -37.82
+    y0: -0.5
+    y1: 4
+    z0: -64.73
+    z1: -64.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -25.18
+    x1: -24.82
+    y0: -0.5
+    y1: 4
+    z0: 64.37
+    z1: 64.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -12.18
+    x1: -11.82
+    y0: -0.5
+    y1: 4
+    z0: -64.73
+    z1: -64.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 0.82
+    x1: 1.18
+    y0: -0.5
+    y1: 4
+    z0: 64.37
+    z1: 64.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.82
+    x1: 14.18
+    y0: -0.5
+    y1: 4
+    z0: -64.73
+    z1: -64.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 26.82
+    x1: 27.18
+    y0: -0.5
+    y1: 4
+    z0: 64.37
+    z1: 64.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 39.82
+    x1: 40.18
+    y0: -0.5
+    y1: 4
+    z0: -64.73
+    z1: -64.37
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 52.82
+    x1: 53.18
+    y0: -0.5
+    y1: 4
+    z0: 64.37
+    z1: 64.73
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -25.18
+    x1: -24.82
+    y0: -0.5
+    y1: 4
+    z0: -55.63
+    z1: -55.27
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 26.82
+    x1: 27.18
+    y0: -0.5
+    y1: 4
+    z0: -55.63
+    z1: -55.27
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -38.18
+    x1: -37.82
+    y0: -0.5
+    y1: 4
+    z0: 55.27
+    z1: 55.63
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -12.18
+    x1: -11.82
+    y0: -0.5
+    y1: 4
+    z0: 55.27
+    z1: 55.63
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.82
+    x1: 14.18
+    y0: -0.5
+    y1: 4
+    z0: 55.27
+    z1: 55.63
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 39.82
+    x1: 40.18
+    y0: -0.5
+    y1: 4
+    z0: 55.27
+    z1: 55.63
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 76.32
+    x1: 76.68
+    y0: -0.5
+    y1: 4
+    z0: 12.22
+    z1: 12.58
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 94.32
+    x1: 94.68
+    y0: -0.5
+    y1: 4
+    z0: 12.22
+    z1: 12.58
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.37
+    x1: 54.73
+    y0: -0.5
+    y1: 4
+    z0: 24.32
+    z1: 24.68
+    id: streetlight
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.22
+    x1: -39.78
+    y0: -0.5
+    y1: 4
+    z0: -52.82
+    z1: -52.38
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.22
+    x1: -19.78
+    y0: -0.5
+    y1: 4
+    z0: -52.82
+    z1: -52.38
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.22
+    x1: 0.22
+    y0: -0.5
+    y1: 4
+    z0: -52.82
+    z1: -52.38
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 19.78
+    x1: 20.22
+    y0: -0.5
+    y1: 4
+    z0: -52.82
+    z1: -52.38
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 39.78
+    x1: 40.22
+    y0: -0.5
+    y1: 4
+    z0: -52.82
+    z1: -52.38
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.22
+    x1: -39.78
+    y0: -0.5
+    y1: 4
+    z0: 52.38
+    z1: 52.82
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.22
+    x1: -19.78
+    y0: -0.5
+    y1: 4
+    z0: 52.38
+    z1: 52.82
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.22
+    x1: 0.22
+    y0: -0.5
+    y1: 4
+    z0: 52.38
+    z1: 52.82
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 19.78
+    x1: 20.22
+    y0: -0.5
+    y1: 4
+    z0: 52.38
+    z1: 52.82
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 39.78
+    x1: 40.22
+    y0: -0.5
+    y1: 4
+    z0: 52.38
+    z1: 52.82
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.82
+    x1: -57.38
+    y0: -0.5
+    y1: 4
+    z0: -104.22
+    z1: -103.78
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.82
+    x1: -57.38
+    y0: -0.5
+    y1: 4
+    z0: -88.22
+    z1: -87.78
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.82
+    x1: -57.38
+    y0: -0.5
+    y1: 4
+    z0: -72.22
+    z1: -71.78
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.82
+    x1: -57.38
+    y0: -0.5
+    y1: 4
+    z0: 69.78
+    z1: 70.22
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.82
+    x1: -57.38
+    y0: -0.5
+    y1: 4
+    z0: 86.78
+    z1: 87.22
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.82
+    x1: -57.38
+    y0: -0.5
+    y1: 4
+    z0: 103.78
+    z1: 104.22
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.18
+    x1: 57.62
+    y0: -0.5
+    y1: 4
+    z0: -104.22
+    z1: -103.78
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.18
+    x1: 57.62
+    y0: -0.5
+    y1: 4
+    z0: -87.22
+    z1: -86.78
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.18
+    x1: 57.62
+    y0: -0.5
+    y1: 4
+    z0: -70.22
+    z1: -69.78
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.18
+    x1: 57.62
+    y0: -0.5
+    y1: 4
+    z0: 71.78
+    z1: 72.22
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.18
+    x1: 57.62
+    y0: -0.5
+    y1: 4
+    z0: 87.78
+    z1: 88.22
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.18
+    x1: 57.62
+    y0: -0.5
+    y1: 4
+    z0: 103.78
+    z1: 104.22
+    id: utilityPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 9.4
+    x1: 13.6
+    y0: -0.5
+    y1: 2.6
+    z0: -9.72
+    z1: -9.56
+    id: busStop
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.4
+    x1: 13.6
+    y0: -0.5
+    y1: 2.6
+    z0: -9.7
+    z1: -8.3
+    id: busStop
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 9.7
+    x1: 12.5
+    y0: -0.5
+    y1: 0.6
+    z0: -9.56
+    z1: -9.12
+    id: busStop
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 9.41
+    x1: 9.59
+    y0: -0.5
+    y1: 2.6
+    z0: -8.49
+    z1: -8.31
+    id: busStop
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 14.62
+    x1: 14.78
+    y0: -0.5
+    y1: 2.9
+    z0: -6.98
+    z1: -6.82
+    id: busStop
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 65.2
+    x1: 110.8
+    y0: -0.5
+    y1: 1
+    z0: 42
+    z1: 43.5
+    id: hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -114.1
+    x1: -112
+    y0: -0.5
+    y1: 1
+    z0: 17.3
+    z1: 44.7
+    id: hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -106.73
+    x1: -106.47
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -101.53
+    x1: -101.27
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -106.73
+    x1: -106.47
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -101.53
+    x1: -101.27
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -62.73
+    x1: -62.47
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.53
+    x1: -57.27
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -62.73
+    x1: -62.47
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.53
+    x1: -57.27
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.73
+    x1: -2.47
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.47
+    x1: 2.73
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.73
+    x1: -2.47
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.47
+    x1: 2.73
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.27
+    x1: 57.53
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 62.47
+    x1: 62.73
+    y0: -0.5
+    y1: 1
+    z0: -7.18
+    z1: -6.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.27
+    x1: 57.53
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 62.47
+    x1: 62.73
+    y0: -0.5
+    y1: 1
+    z0: 6.92
+    z1: 7.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.18
+    x1: -54.92
+    y0: -0.5
+    y1: 1
+    z0: -16.73
+    z1: -16.47
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.18
+    x1: -54.92
+    y0: -0.5
+    y1: 1
+    z0: -11.53
+    z1: -11.27
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.08
+    x1: -44.82
+    y0: -0.5
+    y1: 1
+    z0: -16.73
+    z1: -16.47
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.08
+    x1: -44.82
+    y0: -0.5
+    y1: 1
+    z0: -11.53
+    z1: -11.27
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.18
+    x1: -54.92
+    y0: -0.5
+    y1: 1
+    z0: 11.27
+    z1: 11.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.18
+    x1: -54.92
+    y0: -0.5
+    y1: 1
+    z0: 16.47
+    z1: 16.73
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.08
+    x1: -44.82
+    y0: -0.5
+    y1: 1
+    z0: 11.27
+    z1: 11.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.08
+    x1: -44.82
+    y0: -0.5
+    y1: 1
+    z0: 16.47
+    z1: 16.73
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.82
+    x1: 45.08
+    y0: -0.5
+    y1: 1
+    z0: -16.73
+    z1: -16.47
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.82
+    x1: 45.08
+    y0: -0.5
+    y1: 1
+    z0: -11.53
+    z1: -11.27
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.92
+    x1: 55.18
+    y0: -0.5
+    y1: 1
+    z0: -16.73
+    z1: -16.47
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.92
+    x1: 55.18
+    y0: -0.5
+    y1: 1
+    z0: -11.53
+    z1: -11.27
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.82
+    x1: 45.08
+    y0: -0.5
+    y1: 1
+    z0: 11.27
+    z1: 11.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.82
+    x1: 45.08
+    y0: -0.5
+    y1: 1
+    z0: 16.47
+    z1: 16.73
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.92
+    x1: 55.18
+    y0: -0.5
+    y1: 1
+    z0: 11.27
+    z1: 11.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.92
+    x1: 55.18
+    y0: -0.5
+    y1: 1
+    z0: 16.47
+    z1: 16.73
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.73
+    x1: -2.47
+    y0: -0.5
+    y1: 1
+    z0: -65.18
+    z1: -64.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.47
+    x1: 2.73
+    y0: -0.5
+    y1: 1
+    z0: -65.18
+    z1: -64.92
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.73
+    x1: -2.47
+    y0: -0.5
+    y1: 1
+    z0: -55.08
+    z1: -54.82
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.47
+    x1: 2.73
+    y0: -0.5
+    y1: 1
+    z0: -55.08
+    z1: -54.82
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.73
+    x1: -2.47
+    y0: -0.5
+    y1: 1
+    z0: 54.82
+    z1: 55.08
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.47
+    x1: 2.73
+    y0: -0.5
+    y1: 1
+    z0: 54.82
+    z1: 55.08
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.73
+    x1: -2.47
+    y0: -0.5
+    y1: 1
+    z0: 64.92
+    z1: 65.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.47
+    x1: 2.73
+    y0: -0.5
+    y1: 1
+    z0: 64.92
+    z1: 65.18
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 30.87
+    x1: 31.13
+    y0: -0.5
+    y1: 1
+    z0: 10.27
+    z1: 10.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 33.37
+    x1: 33.63
+    y0: -0.5
+    y1: 1
+    z0: 10.27
+    z1: 10.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 38.37
+    x1: 38.63
+    y0: -0.5
+    y1: 1
+    z0: 10.27
+    z1: 10.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40.87
+    x1: 41.13
+    y0: -0.5
+    y1: 1
+    z0: 10.27
+    z1: 10.53
+    id: bollard
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -67.05
+    x1: -66.55
+    y0: -0.5
+    y1: 1
+    z0: -6.95
+    z1: -6.45
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.25
+    x1: -19.75
+    y0: -0.5
+    y1: 1
+    z0: 6.45
+    z1: 6.95
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 25.75
+    x1: 26.25
+    y0: -0.5
+    y1: 1
+    z0: -6.95
+    z1: -6.45
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 61.75
+    x1: 62.25
+    y0: -0.5
+    y1: 1
+    z0: 6.45
+    z1: 6.95
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.55
+    x1: -45.05
+    y0: -0.5
+    y1: 1
+    z0: 39.75
+    z1: 40.25
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.05
+    x1: 45.55
+    y0: -0.5
+    y1: 1
+    z0: -40.25
+    z1: -39.75
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -54.95
+    x1: -54.45
+    y0: -0.5
+    y1: 1
+    z0: -87.45
+    z1: -86.95
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.45
+    x1: 54.95
+    y0: -0.5
+    y1: 1
+    z0: 83.75
+    z1: 84.25
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -120.25
+    x1: -119.75
+    y0: -0.5
+    y1: 1
+    z0: 6.45
+    z1: 6.95
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 104.15
+    x1: 104.65
+    y0: -0.5
+    y1: 1
+    z0: -6.95
+    z1: -6.45
+    id: hydrant
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -31.3
+    x1: -28.7
+    y0: -0.5
+    y1: 0.9
+    z0: -23.78
+    z1: -22.82
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5.3
+    x1: -2.7
+    y0: -0.5
+    y1: 0.9
+    z0: -23.78
+    z1: -22.82
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -99.3
+    x1: -96.7
+    y0: -0.5
+    y1: 0.9
+    z0: -27.08
+    z1: -26.12
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -81.3
+    x1: -78.7
+    y0: -0.5
+    y1: 0.9
+    z0: -27.08
+    z1: -26.12
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 72.7
+    x1: 75.3
+    y0: -0.5
+    y1: 0.9
+    z0: -21.28
+    z1: -20.32
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 98.7
+    x1: 101.3
+    y0: -0.5
+    y1: 0.9
+    z0: -21.28
+    z1: -20.32
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -66.48
+    x1: -65.52
+    y0: -0.5
+    y1: 0.9
+    z0: 19.7
+    z1: 22.3
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -66.48
+    x1: -65.52
+    y0: -0.5
+    y1: 0.9
+    z0: 39.7
+    z1: 42.3
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 68.2
+    x1: 70.8
+    y0: -0.5
+    y1: 0.9
+    z0: 28.52
+    z1: 29.48
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 86.7
+    x1: 89.3
+    y0: -0.5
+    y1: 0.9
+    z0: 28.52
+    z1: 29.48
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -124.3
+    x1: -121.7
+    y0: -0.5
+    y1: 0.9
+    z0: -15.08
+    z1: -14.12
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 16.7
+    x1: 19.3
+    y0: -0.5
+    y1: 0.9
+    z0: 10.42
+    z1: 11.38
+    id: planter
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -20.9
+    x1: -19.1
+    y0: -0.5
+    y1: 1
+    z0: -53.15
+    z1: -52.35
+    id: trash
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 19.1
+    x1: 20.9
+    y0: -0.5
+    y1: 1
+    z0: 52.35
+    z1: 53.15
+    id: trash
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 39.1
+    x1: 40.9
+    y0: -0.5
+    y1: 1
+    z0: -53.15
+    z1: -52.35
+    id: trash
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.85
+    x1: -57.05
+    y0: -0.5
+    y1: 1
+    z0: 87.1
+    z1: 88.9
+    id: trash
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 57.05
+    x1: 57.85
+    y0: -0.5
+    y1: 1
+    z0: -88.9
+    z1: -87.1
+    id: trash
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 42.15
+    x1: 42.95
+    y0: -0.5
+    y1: 1
+    z0: 22.1
+    z1: 23.9
+    id: trash
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 30.3
+    x1: 32.4
+    y0: -0.5
+    y1: 1.1
+    z0: 10.6
+    z1: 11.8
+    id: bikes
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5.8
+    x1: -4.45
+    y0: -0.5
+    y1: 1.1
+    z0: 10.4
+    z1: 11.6
+    id: bikes
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 63.9
+    x1: 65.1
+    y0: -0.5
+    y1: 1.1
+    z0: 26.8
+    z1: 30.25
+    id: bikes
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -62.3
+    x1: -60.95
+    y0: -0.5
+    y1: 1.1
+    z0: 12.8
+    z1: 14
+    id: bikes
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 15.5
+    x1: 16.85
+    y0: -0.5
+    y1: 1.1
+    z0: -10
+    z1: -8.8
+    id: bikes
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 88.8
+    x1: 92.2
+    y0: -0.5
+    y1: 0.5
+    z0: -21.6
+    z1: -20.4
+    id: parcels
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 96.3
+    x1: 103
+    y0: -0.5
+    y1: 2.2
+    z0: -19.3
+    z1: -16.2
+    id: parcels
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 92.7
+    x1: 95.7
+    y0: -0.5
+    y1: 2
+    z0: -21
+    z1: -20.2
+    id: cages
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 123.478
+    x1: 124.378
+    y0: -0.5
+    y1: 1
+    z0: 40
+    z1: 40.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 126
+    x1: 126.36
+    y0: -0.5
+    y1: 1
+    z0: 32.05
+    z1: 32.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 126
+    x1: 126.36
+    y0: -0.5
+    y1: 1
+    z0: 36.444
+    z1: 37.344
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 115.64
+    x1: 116
+    y0: -0.5
+    y1: 1
+    z0: 32.05
+    z1: 32.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 118.05
+    x1: 118.95
+    y0: -0.5
+    y1: 1
+    z0: 29.64
+    z1: 30
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 38.502
+    x1: 39.402
+    y0: -0.5
+    y1: 1
+    z0: 22
+    z1: 22.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 42
+    x1: 42.36
+    y0: -0.5
+    y1: 1
+    z0: 14.05
+    z1: 14.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 18.05
+    x1: 18.95
+    y0: -0.5
+    y1: 1
+    z0: 22
+    z1: 22.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 23.527
+    x1: 24.427
+    y0: -0.5
+    y1: 1
+    z0: 22
+    z1: 22.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 29
+    x1: 29.36
+    y0: -0.5
+    y1: 1
+    z0: 14.05
+    z1: 14.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4
+    x1: 4.36
+    y0: -0.5
+    y1: 1
+    z0: -47.95
+    z1: -47.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4
+    x1: 4.36
+    y0: -0.5
+    y1: 1
+    z0: -41.839
+    z1: -40.939
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4
+    x1: 4.36
+    y0: -0.5
+    y1: 1
+    z0: -36.973
+    z1: -36.073
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4
+    x1: 4.36
+    y0: -0.5
+    y1: 1
+    z0: -30.169
+    z1: -29.269
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -36.36
+    x1: -36
+    y0: -0.5
+    y1: 1
+    z0: -47.95
+    z1: -47.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -36.36
+    x1: -36
+    y0: -0.5
+    y1: 1
+    z0: -43.059
+    z1: -42.159
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -36.36
+    x1: -36
+    y0: -0.5
+    y1: 1
+    z0: -30.23
+    z1: -29.33
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -33.95
+    x1: -33.05
+    y0: -0.5
+    y1: 1
+    z0: -50.36
+    z1: -50
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -29.775
+    x1: -28.875
+    y0: -0.5
+    y1: 1
+    z0: -50.36
+    z1: -50
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -10.57
+    x1: -9.67
+    y0: -0.5
+    y1: 1
+    z0: -50.36
+    z1: -50
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 104
+    x1: 104.36
+    y0: -0.5
+    y1: 1
+    z0: -45.95
+    z1: -45.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 104
+    x1: 104.36
+    y0: -0.5
+    y1: 1
+    z0: -32.907
+    z1: -32.007
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 104
+    x1: 104.36
+    y0: -0.5
+    y1: 1
+    z0: -28.255
+    z1: -27.355
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 69.64
+    x1: 70
+    y0: -0.5
+    y1: 1
+    z0: -45.95
+    z1: -45.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 69.64
+    x1: 70
+    y0: -0.5
+    y1: 1
+    z0: -33.232
+    z1: -32.332
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 69.64
+    x1: 70
+    y0: -0.5
+    y1: 1
+    z0: -27.5
+    z1: -26.6
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 72.05
+    x1: 72.95
+    y0: -0.5
+    y1: 1
+    z0: -48.36
+    z1: -48
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 76.365
+    x1: 77.265
+    y0: -0.5
+    y1: 1
+    z0: -48.36
+    z1: -48
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 95.744
+    x1: 96.644
+    y0: -0.5
+    y1: 1
+    z0: -48.36
+    z1: -48
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -74
+    x1: -73.64
+    y0: -0.5
+    y1: 1
+    z0: -47.95
+    z1: -47.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -74
+    x1: -73.64
+    y0: -0.5
+    y1: 1
+    z0: -35.553
+    z1: -34.653
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -94.512
+    x1: -93.612
+    y0: -0.5
+    y1: 1
+    z0: -50.36
+    z1: -50
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -87.9
+    x1: -87
+    y0: -0.5
+    y1: 1
+    z0: -50.36
+    z1: -50
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -80.497
+    x1: -79.597
+    y0: -0.5
+    y1: 1
+    z0: -50.36
+    z1: -50
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -110
+    x1: -109.64
+    y0: -0.5
+    y1: 1
+    z0: -31.95
+    z1: -31.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -110
+    x1: -109.64
+    y0: -0.5
+    y1: 1
+    z0: -26.129
+    z1: -25.229
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -110
+    x1: -109.64
+    y0: -0.5
+    y1: 1
+    z0: -20.477
+    z1: -19.577
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -24.384
+    z1: -23.484
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -19.388
+    z1: -18.488
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -31.229
+    x1: -30.329
+    y0: -0.5
+    y1: 1
+    z0: -70
+    z1: -69.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -23.326
+    x1: -22.426
+    y0: -0.5
+    y1: 1
+    z0: -70
+    z1: -69.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -8
+    x1: -7.64
+    y0: -0.5
+    y1: 1
+    z0: -73.751
+    z1: -72.851
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: -89.003
+    z1: -88.103
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: -84.251
+    z1: -83.351
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: -78.176
+    z1: -77.276
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -37.95
+    x1: -37.05
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -23.974
+    x1: -23.074
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -17.628
+    x1: -16.728
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -12.066
+    x1: -11.166
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 9.89
+    x1: 10.79
+    y0: -0.5
+    y1: 1
+    z0: -70
+    z1: -69.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 14.993
+    x1: 15.893
+    y0: -0.5
+    y1: 1
+    z0: -70
+    z1: -69.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 20.559
+    x1: 21.459
+    y0: -0.5
+    y1: 1
+    z0: -70
+    z1: -69.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40
+    x1: 40.36
+    y0: -0.5
+    y1: 1
+    z0: -97.593
+    z1: -96.693
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40
+    x1: 40.36
+    y0: -0.5
+    y1: 1
+    z0: -93.585
+    z1: -92.685
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40
+    x1: 40.36
+    y0: -0.5
+    y1: 1
+    z0: -81.795
+    z1: -80.895
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40
+    x1: 40.36
+    y0: -0.5
+    y1: 1
+    z0: -75.77
+    z1: -74.87
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.36
+    x1: 0
+    y0: -0.5
+    y1: 1
+    z0: -101.95
+    z1: -101.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.36
+    x1: 0
+    y0: -0.5
+    y1: 1
+    z0: -97.501
+    z1: -96.601
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.36
+    x1: 0
+    y0: -0.5
+    y1: 1
+    z0: -92.235
+    z1: -91.335
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.36
+    x1: 0
+    y0: -0.5
+    y1: 1
+    z0: -85.919
+    z1: -85.019
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.36
+    x1: 0
+    y0: -0.5
+    y1: 1
+    z0: -79.289
+    z1: -78.389
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.36
+    x1: 0
+    y0: -0.5
+    y1: 1
+    z0: -74.014
+    z1: -73.114
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.05
+    x1: 2.95
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 6.41
+    x1: 7.31
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 12.726
+    x1: 13.626
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 18.942
+    x1: 19.842
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 25.171
+    x1: 26.071
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 32.152
+    x1: 33.052
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -123.95
+    x1: -123.05
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -118.241
+    x1: -117.341
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -111.833
+    x1: -110.933
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -99.589
+    x1: -98.689
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -94.168
+    x1: -93.268
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -85.016
+    x1: -84.116
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -80.57
+    x1: -79.67
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -70.936
+    x1: -70.036
+    y0: -0.5
+    y1: 1
+    z0: -62
+    z1: -61.64
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -66
+    x1: -65.64
+    y0: -0.5
+    y1: 1
+    z0: -82.46
+    z1: -81.56
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -66
+    x1: -65.64
+    y0: -0.5
+    y1: 1
+    z0: -70.72
+    z1: -69.82
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -66
+    x1: -65.64
+    y0: -0.5
+    y1: 1
+    z0: -65.688
+    z1: -64.788
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -101.95
+    z1: -101.05
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -97.406
+    z1: -96.506
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -89.487
+    z1: -88.587
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -85.112
+    z1: -84.212
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -79.45
+    z1: -78.55
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -73.518
+    z1: -72.618
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: -66.296
+    z1: -65.396
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -123.95
+    x1: -123.05
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -117.454
+    x1: -116.554
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -111.895
+    x1: -110.995
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -106.006
+    x1: -105.106
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -101.241
+    x1: -100.341
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -91.648
+    x1: -90.748
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -85.547
+    x1: -84.647
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -78.179
+    x1: -77.279
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -71.108
+    x1: -70.208
+    y0: -0.5
+    y1: 1
+    z0: -104.36
+    z1: -104
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -17.805
+    x1: -16.905
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4
+    x1: -3.64
+    y0: -0.5
+    y1: 1
+    z0: 72.05
+    z1: 72.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4
+    x1: -3.64
+    y0: -0.5
+    y1: 1
+    z0: 90.661
+    z1: 91.561
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4
+    x1: -3.64
+    y0: -0.5
+    y1: 1
+    z0: 96.384
+    z1: 97.284
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: 72.05
+    z1: 72.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: 79.23
+    z1: 80.13
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: 87.062
+    z1: 87.962
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -40.36
+    x1: -40
+    y0: -0.5
+    y1: 1
+    z0: 94.31
+    z1: 95.21
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -37.95
+    x1: -37.05
+    y0: -0.5
+    y1: 1
+    z0: 69.64
+    z1: 70
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -30.416
+    x1: -29.516
+    y0: -0.5
+    y1: 1
+    z0: 69.64
+    z1: 70
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -17.899
+    x1: -16.999
+    y0: -0.5
+    y1: 1
+    z0: 69.64
+    z1: 70
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 6.05
+    x1: 6.95
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.383
+    x1: 11.283
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 14.514
+    x1: 15.414
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 20.377
+    x1: 21.277
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 31.172
+    x1: 32.072
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40
+    x1: 40.36
+    y0: -0.5
+    y1: 1
+    z0: 92.195
+    z1: 93.095
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 40
+    x1: 40.36
+    y0: -0.5
+    y1: 1
+    z0: 99.412
+    z1: 100.312
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.64
+    x1: 4
+    y0: -0.5
+    y1: 1
+    z0: 72.05
+    z1: 72.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.64
+    x1: 4
+    y0: -0.5
+    y1: 1
+    z0: 76.216
+    z1: 77.116
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.64
+    x1: 4
+    y0: -0.5
+    y1: 1
+    z0: 81.741
+    z1: 82.641
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.64
+    x1: 4
+    y0: -0.5
+    y1: 1
+    z0: 101.348
+    z1: 102.248
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 6.05
+    x1: 6.95
+    y0: -0.5
+    y1: 1
+    z0: 69.64
+    z1: 70
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 33.635
+    x1: 34.535
+    y0: -0.5
+    y1: 1
+    z0: 69.64
+    z1: 70
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -123.95
+    x1: -123.05
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -111.009
+    x1: -110.109
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -99.805
+    x1: -98.905
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -94.621
+    x1: -93.721
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -86.991
+    x1: -86.091
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -81.641
+    x1: -80.741
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -73.989
+    x1: -73.089
+    y0: -0.5
+    y1: 1
+    z0: 104
+    z1: 104.36
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -62
+    x1: -61.64
+    y0: -0.5
+    y1: 1
+    z0: 71.066
+    z1: 71.966
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -62
+    x1: -61.64
+    y0: -0.5
+    y1: 1
+    z0: 77.559
+    z1: 78.459
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -62
+    x1: -61.64
+    y0: -0.5
+    y1: 1
+    z0: 90.08
+    z1: 90.98
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: 62.05
+    z1: 62.95
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: 85.823
+    z1: 86.723
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: 92.674
+    z1: 93.574
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -126.36
+    x1: -126
+    y0: -0.5
+    y1: 1
+    z0: 99.052
+    z1: 99.952
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -123.95
+    x1: -123.05
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -118.575
+    x1: -117.675
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -112.46
+    x1: -111.56
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -105.096
+    x1: -104.196
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -93.014
+    x1: -92.114
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -88.216
+    x1: -87.316
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -69.567
+    x1: -68.667
+    y0: -0.5
+    y1: 1
+    z0: 59.64
+    z1: 60
+    id: ac
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -60.96
+    x1: -60.24
+    y0: -0.5
+    y1: 2
+    z0: 37.12
+    z1: 38.08
+    id: vending
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: 43.04
+    x1: 43.76
+    y0: -0.5
+    y1: 2
+    z0: 14.72
+    z1: 15.68
+    id: vending
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: 6.72
+    x1: 7.68
+    y0: -0.5
+    y1: 2
+    z0: 10.94
+    z1: 11.66
+    id: vending
+    off: 0
+    noClimb: 1
+    noVault: 0
+  - x0: 114.8
+    x1: 120.2
+    y0: -0.5
+    y1: 2.4
+    z0: 42.5
+    z1: 43.65
+    id: recycling
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 114.8
+    x1: 115
+    y0: -0.5
+    y1: 2.7
+    z0: 44.5
+    z1: 44.7
+    id: recyclingPost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 120
+    x1: 120.2
+    y0: -0.5
+    y1: 2.7
+    z0: 44.5
+    z1: 44.7
+    id: recyclingPost
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -42.375
+    x1: -35.625
+    y0: -0.5
+    y1: 2
+    z0: -10.375
+    z1: -9.625
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 3.92
+    x1: 42.08
+    y0: -0.5
+    y1: 2.4
+    z0: -10.08
+    z1: -9.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.375
+    x1: -41.625
+    y0: -0.5
+    y1: 2
+    z0: -52.375
+    z1: -9.625
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.15
+    x1: 42.15
+    y0: -0.5
+    y1: 2.4
+    z0: -52.15
+    z1: -51.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 41.92
+    x1: 42.08
+    y0: -0.5
+    y1: 1.97
+    z0: -52.08
+    z1: -9.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -36.15
+    x1: -35.85
+    y0: -0.5
+    y1: 1.94
+    z0: -24.15
+    z1: -9.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 3.85
+    x1: 4.15
+    y0: -0.5
+    y1: 2.4
+    z0: -24.15
+    z1: -9.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.08
+    x1: -2.92
+    y0: -0.5
+    y1: 2
+    z0: 11.92
+    z1: 12.08
+    id: fence:park
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 2.92
+    x1: 12.08
+    y0: -0.5
+    y1: 2
+    z0: 11.92
+    z1: 12.08
+    id: fence:park
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.08
+    x1: -41.92
+    y0: -0.5
+    y1: 2
+    z0: 11.92
+    z1: 28.08
+    id: fence:park
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.08
+    x1: -41.92
+    y0: -0.5
+    y1: 2
+    z0: 32.92
+    z1: 52.08
+    id: fence:park
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.08
+    x1: 12.08
+    y0: -0.5
+    y1: 2
+    z0: 51.92
+    z1: 52.08
+    id: fence:park
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 11.92
+    x1: 12.08
+    y0: -0.5
+    y1: 2.4
+    z0: 11.92
+    z1: 52.08
+    id: fence:park
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 11.85
+    x1: 16.15
+    y0: -0.5
+    y1: 1.94
+    z0: 11.85
+    z1: 12.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 28.85
+    x1: 30.15
+    y0: -0.5
+    y1: 1.94
+    z0: 11.85
+    z1: 12.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 41.92
+    x1: 42.08
+    y0: -0.5
+    y1: 1.97
+    z0: 21.92
+    z1: 52.08
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 11.92
+    x1: 42.08
+    y0: -0.5
+    y1: 2.4
+    z0: 51.92
+    z1: 52.08
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.15
+    x1: 42.15
+    y0: -0.5
+    y1: 1.94
+    z0: -68.15
+    z1: -67.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.15
+    x1: -41.85
+    y0: -0.5
+    y1: 1.94
+    z0: -110.15
+    z1: -67.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 41.85
+    x1: 42.15
+    y0: -0.5
+    y1: 1.94
+    z0: -110.15
+    z1: -67.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.15
+    x1: 42.15
+    y0: -0.5
+    y1: 1.94
+    z0: 67.85
+    z1: 68.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -42.15
+    x1: -41.85
+    y0: -0.5
+    y1: 1.94
+    z0: 67.85
+    z1: 110.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 41.85
+    x1: 42.15
+    y0: -0.5
+    y1: 1.94
+    z0: 67.85
+    z1: 110.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -130.375
+    x1: -125.625
+    y0: -0.5
+    y1: 2
+    z0: -16.375
+    z1: -15.625
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -110.375
+    x1: -103.625
+    y0: -0.5
+    y1: 2
+    z0: -16.375
+    z1: -15.625
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -104.375
+    x1: -103.625
+    y0: -0.5
+    y1: 2
+    z0: -28.375
+    z1: -15.625
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -74.375
+    x1: -57.825
+    y0: -0.5
+    y1: 2
+    z0: -27.875
+    z1: -27.125
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -58.575
+    x1: -57.825
+    y0: -0.5
+    y1: 2
+    z0: -27.875
+    z1: -9.625
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -74.15
+    x1: -73.85
+    y0: -0.5
+    y1: 1.94
+    z0: -56.65
+    z1: -49.85
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -74.15
+    x1: -57.85
+    y0: -0.5
+    y1: 1.94
+    z0: -56.65
+    z1: -56.35
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -58.15
+    x1: -57.85
+    y0: -0.5
+    y1: 1.94
+    z0: -110.15
+    z1: -56.35
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -130.15
+    x1: -111.85
+    y0: -0.5
+    y1: 1.94
+    z0: 16.35
+    z1: 16.65
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -130.15
+    x1: -111.85
+    y0: -0.5
+    y1: 1.94
+    z0: 45.85
+    z1: 46.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -70.375
+    x1: -57.625
+    y0: -0.5
+    y1: 2
+    z0: 45.625
+    z1: 46.375
+    id: fence:hedge
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -130.15
+    x1: -125.85
+    y0: -0.5
+    y1: 1.94
+    z0: 59.85
+    z1: 60.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -62.15
+    x1: -57.85
+    y0: -0.5
+    y1: 1.94
+    z0: 59.85
+    z1: 60.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -58.15
+    x1: -57.85
+    y0: -0.5
+    y1: 1.94
+    z0: 59.85
+    z1: 110.15
+    id: fence:wall
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 57.92
+    x1: 62.08
+    y0: -0.5
+    y1: 1.97
+    z0: -10.08
+    z1: -9.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 71.92
+    x1: 84.08
+    y0: -0.5
+    y1: 2.4
+    z0: -10.08
+    z1: -9.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 89.92
+    x1: 130.08
+    y0: -0.5
+    y1: 2.4
+    z0: -10.08
+    z1: -9.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 57.92
+    x1: 58.08
+    y0: -0.5
+    y1: 1.97
+    z0: -110.08
+    z1: -9.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 57.92
+    x1: 64.08
+    y0: -0.5
+    y1: 1.97
+    z0: -60.08
+    z1: -59.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 123.92
+    x1: 130.08
+    y0: -0.5
+    y1: 2.4
+    z0: -60.08
+    z1: -59.92
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 57.92
+    x1: 130.08
+    y0: -0.5
+    y1: 1.97
+    z0: 9.92
+    z1: 10.08
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 57.92
+    x1: 58.08
+    y0: -0.5
+    y1: 2.4
+    z0: 9.92
+    z1: 15.08
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 57.92
+    x1: 58.08
+    y0: -0.5
+    y1: 1.97
+    z0: 24.92
+    z1: 110.08
+    id: fence:mesh
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: -132
+    x1: -129.6
+    y0: -5
+    y1: 20
+    z0: -112
+    z1: 112
+    id: bounds
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 129.6
+    x1: 132
+    y0: -5
+    y1: 20
+    z0: -112
+    z1: 112
+    id: bounds
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -132
+    x1: 132
+    y0: -5
+    y1: 20
+    z0: -112
+    z1: -109.6
+    id: bounds
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -132
+    x1: 132
+    y0: -5
+    y1: 20
+    z0: 109.6
+    z1: 112
+    id: bounds
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 27
+    x1: 29
+    y0: -1
+    y1: 3
+    z0: -10
+    z1: 12
+    id: closure:yeonmuCenter
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -46
+    x1: -42
+    y0: -1
+    y1: 3
+    z0: -10
+    z1: 12
+    id: closure:yeonmuCenter
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: 29.9
+    x1: 30.9
+    y0: -1
+    y1: 3
+    z0: 6.5
+    z1: 7.1
+    id: closure:yeonmuCenter
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -1
+    x1: 1
+    y0: -1
+    y1: 3
+    z0: 52
+    z1: 68
+    id: closure:danji
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: 1.9
+    x1: 2.9
+    y0: -1
+    y1: 3
+    z0: 52.1
+    z1: 52.7
+    id: closure:danji
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -1
+    x1: 1
+    y0: -1
+    y1: 3
+    z0: -68
+    z1: -52
+    id: closure:sijang
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: 1.9
+    x1: 2.9
+    y0: -1
+    y1: 3
+    z0: -55.9
+    z1: -55.3
+    id: closure:sijang
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -58
+    x1: -42
+    y0: -1
+    y1: 3
+    z0: 44
+    z1: 46
+    id: closure:munhwaSouth
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -54.9
+    x1: -53.9
+    y0: -1
+    y1: 3
+    z0: 47.1
+    z1: 47.7
+    id: closure:munhwaSouth
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -58
+    x1: -42
+    y0: -1
+    y1: 3
+    z0: -20
+    z1: -18
+    id: closure:munhwaNorth
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -58.1
+    x1: -57.1
+    y0: -1
+    y1: 3
+    z0: -21.7
+    z1: -21.1
+    id: closure:munhwaNorth
+    off: 1
+    noClimb: 1
+    noVault: 1
+  - x0: -82.6
+    x1: -77.4
+    y0: -1
+    y1: 3
+    z0: -21.9
+    z1: -19.45
+    id: waterTank
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -85.2
+    x1: -83.2
+    y0: -1
+    y1: 1
+    z0: -19.58
+    z1: -18.8
+    id: waterTable
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -78.1
+    x1: -69.8
+    y0: -1
+    y1: 1.2
+    z0: -19.2
+    z1: -19.1
+    id: queueBelt
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -78.1
+    x1: -69.8
+    y0: -1
+    y1: 1.2
+    z0: -17.7
+    z1: -17.6
+    id: queueBelt
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -70.85
+    x1: -68.15
+    y0: -1
+    y1: 3.3
+    z0: -46.1
+    z1: -34.9
+    id: bus
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -66.35
+    x1: -63.65
+    y0: -1
+    y1: 3.3
+    z0: -46.1
+    z1: -34.9
+    id: bus
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -59.12
+    x1: -58.88
+    y0: -1
+    y1: 3
+    z0: -28.72
+    z1: -28.48
+    id: assemblySign
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -60.6
+    x1: -59.8
+    y0: -1
+    y1: 1
+    z0: -33.95
+    z1: -32.05
+    id: assemblyTable
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -32.18
+    x1: -30.2
+    y0: -0.5
+    y1: 1.8
+    z0: -21.826
+    z1: -17.126
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -24.605
+    x1: -22.745
+    y0: -0.5
+    y1: 1.8
+    z0: -22.219
+    z1: -17.019
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.198
+    x1: -0.218
+    y0: -0.5
+    y1: 1.8
+    z0: -21.711
+    z1: -17.011
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 8.87
+    x1: 10.79
+    y0: -0.5
+    y1: 1.8
+    z0: -51.39
+    z1: -46.59
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 18.735
+    x1: 20.655
+    y0: -0.5
+    y1: 1.8
+    z0: -51.436
+    z1: -46.636
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 21.242
+    x1: 23.102
+    y0: -0.5
+    y1: 1.8
+    z0: -51.749
+    z1: -46.549
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 23.886
+    x1: 25.746
+    y0: -0.5
+    y1: 1.8
+    z0: -51.599
+    z1: -46.399
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 26.256
+    x1: 28.176
+    y0: -0.5
+    y1: 1.8
+    z0: -51.465
+    z1: -46.665
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 28.756
+    x1: 30.736
+    y0: -0.5
+    y1: 1.8
+    z0: -51.361
+    z1: -46.661
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 36.251
+    x1: 38.171
+    y0: -0.5
+    y1: 1.8
+    z0: -51.372
+    z1: -46.572
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 6.332
+    x1: 8.252
+    y0: -0.5
+    y1: 1.8
+    z0: -15.305
+    z1: -10.505
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 8.74
+    x1: 10.66
+    y0: -0.5
+    y1: 1.8
+    z0: -15.388
+    z1: -10.588
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 11.213
+    x1: 13.193
+    y0: -0.5
+    y1: 1.8
+    z0: -15.38
+    z1: -10.68
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.755
+    x1: 15.735
+    y0: -0.5
+    y1: 1.8
+    z0: -15.426
+    z1: -10.726
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 16.381
+    x1: 18.301
+    y0: -0.5
+    y1: 1.8
+    z0: -15.309
+    z1: -10.509
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 21.283
+    x1: 23.263
+    y0: -0.5
+    y1: 1.8
+    z0: -15.461
+    z1: -10.761
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 31.302
+    x1: 33.282
+    y0: -0.5
+    y1: 1.8
+    z0: -15.22
+    z1: -10.52
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 33.725
+    x1: 35.585
+    y0: -0.5
+    y1: 1.8
+    z0: -15.468
+    z1: -10.268
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 36.296
+    x1: 38.216
+    y0: -0.5
+    y1: 1.8
+    z0: -15.286
+    z1: -10.486
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 6.278
+    x1: 8.198
+    y0: -0.5
+    y1: 1.8
+    z0: -30.856
+    z1: -26.056
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 11.251
+    x1: 13.171
+    y0: -0.5
+    y1: 1.8
+    z0: -30.858
+    z1: -26.058
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.847
+    x1: 15.707
+    y0: -0.5
+    y1: 1.8
+    z0: -31.117
+    z1: -25.917
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 18.78
+    x1: 20.64
+    y0: -0.5
+    y1: 1.8
+    z0: -31.023
+    z1: -25.823
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 21.181
+    x1: 23.161
+    y0: -0.5
+    y1: 1.8
+    z0: -30.755
+    z1: -26.055
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 23.705
+    x1: 25.625
+    y0: -0.5
+    y1: 1.8
+    z0: -30.961
+    z1: -26.161
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 28.812
+    x1: 30.732
+    y0: -0.5
+    y1: 1.8
+    z0: -30.824
+    z1: -26.024
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 33.847
+    x1: 35.707
+    y0: -0.5
+    y1: 1.8
+    z0: -30.975
+    z1: -25.775
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 18.795
+    x1: 20.775
+    y0: -0.5
+    y1: 1.8
+    z0: -35.793
+    z1: -31.093
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 26.303
+    x1: 28.223
+    y0: -0.5
+    y1: 1.8
+    z0: -35.922
+    z1: -31.122
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 28.743
+    x1: 30.603
+    y0: -0.5
+    y1: 1.8
+    z0: -36.24
+    z1: -31.04
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 31.328
+    x1: 33.248
+    y0: -0.5
+    y1: 1.8
+    z0: -35.791
+    z1: -30.991
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 33.709
+    x1: 35.629
+    y0: -0.5
+    y1: 1.8
+    z0: -35.799
+    z1: -30.999
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 36.333
+    x1: 38.193
+    y0: -0.5
+    y1: 1.8
+    z0: -36.016
+    z1: -30.816
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 77.239
+    x1: 79.219
+    y0: -0.5
+    y1: 1.8
+    z0: -15.696
+    z1: -10.996
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 92.34
+    x1: 94.32
+    y0: -0.5
+    y1: 1.8
+    z0: -15.667
+    z1: -10.967
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 94.829
+    x1: 96.749
+    y0: -0.5
+    y1: 1.8
+    z0: -15.545
+    z1: -10.745
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 99.69
+    x1: 101.61
+    y0: -0.5
+    y1: 1.8
+    z0: -15.603
+    z1: -10.803
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.748
+    x1: 111.728
+    y0: -0.5
+    y1: 1.8
+    z0: -15.487
+    z1: -10.787
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 112.271
+    x1: 114.191
+    y0: -0.5
+    y1: 1.8
+    z0: -15.706
+    z1: -10.906
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 117.365
+    x1: 119.285
+    y0: -0.5
+    y1: 1.8
+    z0: -15.568
+    z1: -10.768
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 119.795
+    x1: 121.715
+    y0: -0.5
+    y1: 1.8
+    z0: -15.743
+    z1: -10.943
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 122.274
+    x1: 124.194
+    y0: -0.5
+    y1: 1.8
+    z0: -15.621
+    z1: -10.821
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 105.123
+    x1: 106.983
+    y0: -0.5
+    y1: 1.8
+    z0: -58.63
+    z1: -53.43
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 117.904
+    x1: 119.764
+    y0: -0.5
+    y1: 1.8
+    z0: -58.809
+    z1: -53.609
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 121.15
+    x1: 123.01
+    y0: -0.5
+    y1: 1.8
+    z0: -58.655
+    z1: -53.455
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -118.821
+    x1: -116.841
+    y0: -0.5
+    y1: 1.8
+    z0: 54.551
+    z1: 59.251
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -116.18
+    x1: -114.26
+    y0: -0.5
+    y1: 1.8
+    z0: 54.599
+    z1: 59.399
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -93.77
+    x1: -91.85
+    y0: -0.5
+    y1: 1.8
+    z0: 54.715
+    z1: 59.515
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 60.373
+    x1: 62.293
+    y0: -0.5
+    y1: 1.8
+    z0: 13.601
+    z1: 18.401
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 65.17
+    x1: 67.15
+    y0: -0.5
+    y1: 1.8
+    z0: 13.753
+    z1: 18.453
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 67.793
+    x1: 69.713
+    y0: -0.5
+    y1: 1.8
+    z0: 13.471
+    z1: 18.271
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 72.74
+    x1: 74.66
+    y0: -0.5
+    y1: 1.8
+    z0: 13.517
+    z1: 18.317
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 75.323
+    x1: 77.243
+    y0: -0.5
+    y1: 1.8
+    z0: 13.496
+    z1: 18.296
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 82.803
+    x1: 84.723
+    y0: -0.5
+    y1: 1.8
+    z0: 13.581
+    z1: 18.381
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 85.216
+    x1: 87.196
+    y0: -0.5
+    y1: 1.8
+    z0: 13.559
+    z1: 18.259
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 90.22
+    x1: 92.14
+    y0: -0.5
+    y1: 1.8
+    z0: 13.732
+    z1: 18.532
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 95.411
+    x1: 97.271
+    y0: -0.5
+    y1: 1.8
+    z0: 13.365
+    z1: 18.565
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 100.328
+    x1: 102.248
+    y0: -0.5
+    y1: 1.8
+    z0: 13.745
+    z1: 18.545
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 102.748
+    x1: 104.668
+    y0: -0.5
+    y1: 1.8
+    z0: 13.594
+    z1: 18.394
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 107.778
+    x1: 109.758
+    y0: -0.5
+    y1: 1.8
+    z0: 13.6
+    z1: 18.3
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 110.296
+    x1: 112.276
+    y0: -0.5
+    y1: 1.8
+    z0: 13.622
+    z1: 18.322
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 115.345
+    x1: 117.325
+    y0: -0.5
+    y1: 1.8
+    z0: 13.536
+    z1: 18.236
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 122.739
+    x1: 124.659
+    y0: -0.5
+    y1: 1.8
+    z0: 13.558
+    z1: 18.358
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 62.218
+    x1: 64.198
+    y0: -0.5
+    y1: 1.8
+    z0: 52.049
+    z1: 56.749
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 69.878
+    x1: 71.798
+    y0: -0.5
+    y1: 1.8
+    z0: 52.241
+    z1: 57.041
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 72.228
+    x1: 74.208
+    y0: -0.5
+    y1: 1.8
+    z0: 52.002
+    z1: 56.702
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 79.882
+    x1: 81.802
+    y0: -0.5
+    y1: 1.8
+    z0: 52.155
+    z1: 56.955
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 92.321
+    x1: 94.241
+    y0: -0.5
+    y1: 1.8
+    z0: 52.105
+    z1: 56.905
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 97.195
+    x1: 99.115
+    y0: -0.5
+    y1: 1.8
+    z0: 52.196
+    z1: 56.996
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 99.702
+    x1: 101.682
+    y0: -0.5
+    y1: 1.8
+    z0: 52.255
+    z1: 56.955
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.778
+    x1: 111.698
+    y0: -0.5
+    y1: 1.8
+    z0: 51.967
+    z1: 56.767
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 112.267
+    x1: 114.187
+    y0: -0.5
+    y1: 1.8
+    z0: 52.09
+    z1: 56.89
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 64.765
+    x1: 66.625
+    y0: -0.5
+    y1: 1.8
+    z0: 79.8
+    z1: 85
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 72.269
+    x1: 74.129
+    y0: -0.5
+    y1: 1.8
+    z0: 80
+    z1: 85.2
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 97.32
+    x1: 99.3
+    y0: -0.5
+    y1: 1.8
+    z0: 80.082
+    z1: 84.782
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 99.804
+    x1: 101.664
+    y0: -0.5
+    y1: 1.8
+    z0: 79.795
+    z1: 84.995
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 102.384
+    x1: 104.304
+    y0: -0.5
+    y1: 1.8
+    z0: 80.185
+    z1: 84.985
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 104.736
+    x1: 106.716
+    y0: -0.5
+    y1: 1.8
+    z0: 80.065
+    z1: 84.765
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 107.3
+    x1: 109.22
+    y0: -0.5
+    y1: 1.8
+    z0: 80.005
+    z1: 84.805
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 109.69
+    x1: 111.61
+    y0: -0.5
+    y1: 1.8
+    z0: 80.046
+    z1: 84.846
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 16.774
+    x1: 18.754
+    y0: -0.5
+    y1: 1.8
+    z0: 46.622
+    z1: 51.322
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 19.219
+    x1: 21.199
+    y0: -0.5
+    y1: 1.8
+    z0: 46.725
+    z1: 51.425
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 26.758
+    x1: 28.738
+    y0: -0.5
+    y1: 1.8
+    z0: 46.583
+    z1: 51.283
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 29.228
+    x1: 31.208
+    y0: -0.5
+    y1: 1.8
+    z0: 46.743
+    z1: 51.443
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 31.693
+    x1: 33.613
+    y0: -0.5
+    y1: 1.8
+    z0: 46.483
+    z1: 51.283
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 34.299
+    x1: 36.279
+    y0: -0.5
+    y1: 1.8
+    z0: 46.638
+    z1: 51.338
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 36.871
+    x1: 38.791
+    y0: -0.5
+    y1: 1.8
+    z0: 46.48
+    z1: 51.28
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 14.355
+    x1: 16.335
+    y0: -0.5
+    y1: 1.8
+    z0: 22.523
+    z1: 27.223
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 24.303
+    x1: 26.163
+    y0: -0.5
+    y1: 1.8
+    z0: 22.307
+    z1: 27.507
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 31.717
+    x1: 33.637
+    y0: -0.5
+    y1: 1.8
+    z0: 22.579
+    z1: 27.379
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 36.663
+    x1: 38.643
+    y0: -0.5
+    y1: 1.8
+    z0: 22.648
+    z1: 27.348
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -41.505
+    x1: -36.705
+    y0: -0.5
+    y1: 1.8
+    z0: 56.34
+    z1: 58.26
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -29.284
+    x1: -24.084
+    y0: -0.5
+    y1: 1.8
+    z0: 56.37
+    z1: 58.23
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.181
+    x1: -10.981
+    y0: -0.5
+    y1: 1.8
+    z0: 56.37
+    z1: 58.23
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -9.727
+    x1: -5.027
+    y0: -0.5
+    y1: 1.8
+    z0: 56.31
+    z1: 58.29
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.274
+    x1: 8.474
+    y0: -0.5
+    y1: 1.8
+    z0: 56.37
+    z1: 58.23
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.356
+    x1: 15.556
+    y0: -0.5
+    y1: 1.8
+    z0: 56.37
+    z1: 58.23
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 16.549
+    x1: 21.749
+    y0: -0.5
+    y1: 1.8
+    z0: 56.37
+    z1: 58.23
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 29.547
+    x1: 34.747
+    y0: -0.5
+    y1: 1.8
+    z0: 56.37
+    z1: 58.23
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -28.814
+    x1: -24.014
+    y0: -0.5
+    y1: 1.8
+    z0: 61.74
+    z1: 63.66
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.269
+    x1: -11.569
+    y0: -0.5
+    y1: 1.8
+    z0: 61.71
+    z1: 63.69
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.263
+    x1: 8.063
+    y0: -0.5
+    y1: 1.8
+    z0: 61.74
+    z1: 63.66
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 16.524
+    x1: 21.224
+    y0: -0.5
+    y1: 1.8
+    z0: 61.71
+    z1: 63.69
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 22.663
+    x1: 27.863
+    y0: -0.5
+    y1: 1.8
+    z0: 61.77
+    z1: 63.63
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -28.688
+    x1: -23.988
+    y0: -0.5
+    y1: 1.8
+    z0: -63.69
+    z1: -61.71
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -22.344
+    x1: -17.144
+    y0: -0.5
+    y1: 1.8
+    z0: -63.63
+    z1: -61.77
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.303
+    x1: -11.103
+    y0: -0.5
+    y1: 1.8
+    z0: -63.63
+    z1: -61.77
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -9.253
+    x1: -4.053
+    y0: -0.5
+    y1: 1.8
+    z0: -63.63
+    z1: -61.77
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 22.95
+    x1: 27.65
+    y0: -0.5
+    y1: 1.8
+    z0: -63.69
+    z1: -61.71
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 29.863
+    x1: 35.063
+    y0: -0.5
+    y1: 1.8
+    z0: -63.63
+    z1: -61.77
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 36.099
+    x1: 41.299
+    y0: -0.5
+    y1: 1.8
+    z0: -63.63
+    z1: -61.77
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -42.363
+    x1: -37.563
+    y0: -0.5
+    y1: 1.8
+    z0: -58.26
+    z1: -56.34
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -29.006
+    x1: -24.206
+    y0: -0.5
+    y1: 1.8
+    z0: -58.26
+    z1: -56.34
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.005
+    x1: -11.305
+    y0: -0.5
+    y1: 1.8
+    z0: -58.29
+    z1: -56.31
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -9.733
+    x1: -4.533
+    y0: -0.5
+    y1: 1.8
+    z0: -58.23
+    z1: -56.37
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.443
+    x1: 8.243
+    y0: -0.5
+    y1: 1.8
+    z0: -58.26
+    z1: -56.34
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.236
+    x1: 15.436
+    y0: -0.5
+    y1: 1.8
+    z0: -58.23
+    z1: -56.37
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 23.503
+    x1: 28.303
+    y0: -0.5
+    y1: 1.8
+    z0: -58.26
+    z1: -56.34
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 29.023
+    x1: 34.223
+    y0: -0.5
+    y1: 1.8
+    z0: -58.23
+    z1: -56.37
+    id: car
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -298.749
+    x1: -293.949
+    y0: -0.5
+    y1: 1.8
+    z0: 0.64
+    z1: 2.56
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -131.448
+    x1: -126.748
+    y0: -0.5
+    y1: 1.8
+    z0: 0.61
+    z1: 2.59
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 88.54
+    x1: 93.34
+    y0: -0.5
+    y1: 1.8
+    z0: 0.64
+    z1: 2.56
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 255.851
+    x1: 260.651
+    y0: -0.5
+    y1: 1.8
+    z0: 0.64
+    z1: 2.56
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -256.524
+    x1: -251.824
+    y0: -0.5
+    y1: 1.8
+    z0: 3.41
+    z1: 5.39
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -65.225
+    x1: -60.525
+    y0: -0.5
+    y1: 1.8
+    z0: 3.41
+    z1: 5.39
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 43.903
+    x1: 48.703
+    y0: -0.5
+    y1: 1.8
+    z0: 3.44
+    z1: 5.36
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 223.698
+    x1: 228.498
+    y0: -0.5
+    y1: 1.8
+    z0: 3.44
+    z1: 5.36
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 296.101
+    x1: 300.801
+    y0: -0.5
+    y1: 1.8
+    z0: -2.59
+    z1: -0.61
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 92.543
+    x1: 97.743
+    y0: -0.5
+    y1: 1.8
+    z0: -2.53
+    z1: -0.67
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -99.483
+    x1: -94.283
+    y0: -0.5
+    y1: 1.8
+    z0: -2.53
+    z1: -0.67
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -286.543
+    x1: -281.743
+    y0: -0.5
+    y1: 1.8
+    z0: -2.56
+    z1: -0.64
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 225.622
+    x1: 230.822
+    y0: -0.5
+    y1: 1.8
+    z0: -5.33
+    z1: -3.47
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 126.023
+    x1: 130.723
+    y0: -0.5
+    y1: 1.8
+    z0: -5.39
+    z1: -3.41
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -45.536
+    x1: -40.836
+    y0: -0.5
+    y1: 1.8
+    z0: -5.39
+    z1: -3.41
+    id: movingCar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -300.852
+    x1: -295.652
+    y0: -0.5
+    y1: 1.8
+    z0: -5.33
+    z1: -3.47
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -48.96
+    x1: -47.04
+    y0: -0.5
+    y1: 1.8
+    z0: 114.528
+    z1: 119.328
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -48.99
+    x1: -47.01
+    y0: -0.5
+    y1: 1.8
+    z0: -229.702
+    z1: -225.002
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -52.99
+    x1: -51.01
+    y0: -0.5
+    y1: 1.8
+    z0: -261.583
+    z1: -256.883
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -52.96
+    x1: -51.04
+    y0: -0.5
+    y1: 1.8
+    z0: 261.068
+    z1: 265.868
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 51.04
+    x1: 52.96
+    y0: -0.5
+    y1: 1.8
+    z0: 154.59
+    z1: 159.39
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 51.01
+    x1: 52.99
+    y0: -0.5
+    y1: 1.8
+    z0: -260.24
+    z1: -255.54
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 47.04
+    x1: 48.96
+    y0: -0.5
+    y1: 1.8
+    z0: -123.52
+    z1: -118.72
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: 47.01
+    x1: 48.99
+    y0: -0.5
+    y1: 1.8
+    z0: 224.772
+    z1: 229.472
+    id: movingCar
+    off: 1
+    noClimb: 0
+    noVault: 0
+  - x0: -100.9
+    x1: -100.5
+    y0: -0.5
+    y1: 4
+    z0: 6.45
+    z1: 6.85
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -56.9
+    x1: -56.5
+    y0: -0.5
+    y1: 4
+    z0: 6.45
+    z1: 6.85
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.1
+    x1: 3.5
+    y0: -0.5
+    y1: 4
+    z0: 6.45
+    z1: 6.85
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.9
+    x1: 55.3
+    y0: -0.5
+    y1: 4
+    z0: 6.45
+    z1: 6.85
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 56.5
+    x1: 56.9
+    y0: -0.5
+    y1: 4
+    z0: -6.85
+    z1: -6.45
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.5
+    x1: -3.1
+    y0: -0.5
+    y1: 4
+    z0: -6.85
+    z1: -6.45
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.3
+    x1: -54.9
+    y0: -0.5
+    y1: 4
+    z0: -6.85
+    z1: -6.45
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -107.5
+    x1: -107.1
+    y0: -0.5
+    y1: 4
+    z0: -6.85
+    z1: -6.45
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 54.45
+    x1: 54.85
+    y0: -0.5
+    y1: 4
+    z0: 10.5
+    z1: 10.9
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 45.15
+    x1: 45.55
+    y0: -0.5
+    y1: 4
+    z0: -10.9
+    z1: -10.5
+    id: signalPole
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -101.25
+    x1: -100.95
+    y0: -0.5
+    y1: 3
+    z0: -7.75
+    z1: -7.45
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -107.05
+    x1: -106.75
+    y0: -0.5
+    y1: 3
+    z0: 7.45
+    z1: 7.75
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -57.25
+    x1: -56.95
+    y0: -0.5
+    y1: 3
+    z0: -7.75
+    z1: -7.45
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -63.05
+    x1: -62.75
+    y0: -0.5
+    y1: 3
+    z0: 7.45
+    z1: 7.75
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.75
+    x1: 3.05
+    y0: -0.5
+    y1: 3
+    z0: -7.75
+    z1: -7.45
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.05
+    x1: -2.75
+    y0: -0.5
+    y1: 3
+    z0: 7.45
+    z1: 7.75
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 62.75
+    x1: 63.05
+    y0: -0.5
+    y1: 3
+    z0: -7.75
+    z1: -7.45
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 56.95
+    x1: 57.25
+    y0: -0.5
+    y1: 3
+    z0: 7.45
+    z1: 7.75
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.75
+    x1: -55.45
+    y0: -0.5
+    y1: 3
+    z0: -17.05
+    z1: -16.75
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -44.55
+    x1: -44.25
+    y0: -0.5
+    y1: 3
+    z0: -11.25
+    z1: -10.95
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -55.75
+    x1: -55.45
+    y0: -0.5
+    y1: 3
+    z0: 10.95
+    z1: 11.25
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -44.55
+    x1: -44.25
+    y0: -0.5
+    y1: 3
+    z0: 16.75
+    z1: 17.05
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.25
+    x1: 44.55
+    y0: -0.5
+    y1: 3
+    z0: -17.05
+    z1: -16.75
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 55.45
+    x1: 55.75
+    y0: -0.5
+    y1: 3
+    z0: -11.25
+    z1: -10.95
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 44.25
+    x1: 44.55
+    y0: -0.5
+    y1: 3
+    z0: 10.95
+    z1: 11.25
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 55.45
+    x1: 55.75
+    y0: -0.5
+    y1: 3
+    z0: 16.75
+    z1: 17.05
+    id: pedSignal
+    off: 0
+    noClimb: 0
+    noVault: 0
+  ceilings: []
+  spawns:
+  - name: home
+    x: 78
+    y: 0.12
+    z: 26
+    yaw: 0
+  - name: store
+    x: 36
+    y: 0.12
+    z: 8.6
+    yaw: 0
+  - name: mart
+    x: -16
+    y: 0.12
+    z: -21
+    yaw: 3.142
+  - name: office
+    x: 87
+    y: 0.12
+    z: -18.5
+    yaw: 3.142
+  - name: cafe
+    x: -118
+    y: 0.12
+    z: -12.5
+    yaw: 3.142
+  - name: shelter
+    x: -86
+    y: 0.12
+    z: 10.8
+    yaw: 3.142
+  - name: water
+    x: -80
+    y: 0.12
+    z: -15.6
+    yaw: 3.142
+  - name: assembly
+    x: -57.2
+    y: 0.12
+    z: -36
+    yaw: 1.571
+  - name: shelterC
+    x: -100.6
+    y: 0.12
+    z: 12
+    yaw: 1.571
+  - name: east
+    x: -65.6
+    y: 0.12
+    z: 31
+    yaw: 1.571
+  - name: park
+    x: 0
+    y: 0.12
+    z: 9.2
+    yaw: 3.142
+  - name: crossing
+    x: 0
+    y: 0.12
+    z: -8.6
+    yaw: 3.142
+  points:
+  - id: home
+    label: "103\uB3D9 \uCD9C\uC785\uAD6C"
+    kind: door
+    x: 78
+    y: 0.12
+    z: 28.5
+    r: 1.8
+    reach: 0
+    host: 
+    enabled: 1
+  - id: store
+    label: "\uBC14\uB85C\uD3B8\uC758\uC810"
+    kind: door
+    x: 36
+    y: 0.12
+    z: 10.6
+    r: 1.8
+    reach: 0
+    host: 
+    enabled: 1
+  - id: mart
+    label: "\uC5F0\uBB34\uB9C8\uD2B8 \uC785\uAD6C"
+    kind: door
+    x: -16
+    y: 0.12
+    z: -22.8
+    r: 1.8
+    reach: 0
+    host: 
+    enabled: 1
+  - id: office
+    label: "\uD55C\uACB0\uBB3C\uB958 \uC5F0\uBB34\uC13C\uD130"
+    kind: door
+    x: 87
+    y: 0.12
+    z: -20.8
+    r: 1.8
+    reach: 0
+    host: 
+    enabled: 1
+  - id: center
+    label: "\uD589\uC815\uBCF5\uC9C0\uC13C\uD130"
+    kind: place
+    x: -89
+    y: 0.12
+    z: -26.8
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 1
+  - id: water
+    label: "\uBE44\uC0C1\uAE09\uC218\uC2DC\uC124"
+    kind: place
+    x: -80
+    y: 0.12
+    z: -17
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 0
+  - id: cafe
+    label: "\uCE74\uD398 \uC27C\uD45C"
+    kind: place
+    x: -118
+    y: 0.2
+    z: -14.8
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 1
+  - id: assembly
+    label: "\uC784\uC2DC \uC9D1\uACB0\uC9C0"
+    kind: place
+    x: -60
+    y: 0.12
+    z: -36
+    r: 4.5
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelterEast
+    label: "\uB3D9\uCABD \uCD9C\uC785\uAD6C"
+    kind: shelter
+    x: -68.6
+    y: 0.12
+    z: 31
+    r: 3
+    reach: 0
+    host: gateEast
+    enabled: 1
+  - id: shelterA
+    label: "\uCD9C\uC785\uAD6C A \xB7 \uACC4\uB2E8"
+    kind: shelter
+    x: -86
+    y: 0.12
+    z: 13.4
+    r: 2.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelterB
+    label: "\uCD9C\uC785\uAD6C B \xB7 \uC9C0\uD558\uC8FC\uCC28\uC7A5 \uC9C4\uCD9C\uC785\uB85C"
+    kind: shelter
+    x: -80
+    y: -0.581
+    z: 48.5
+    r: 2.8
+    reach: 0
+    host: boomB
+    enabled: 1
+  - id: shelterC
+    label: "\uCD9C\uC785\uAD6C C \xB7 \uACBD\uC0AC\uB85C"
+    kind: shelter
+    x: -108.5
+    y: -0.413
+    z: 14.9
+    r: 3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelterNotice
+    label: "\uD604\uC7A5 \uC548\uB0B4\uD310"
+    kind: notice
+    x: -94
+    y: 0.12
+    z: 12
+    r: 1.9
+    reach: 0
+    host: 
+    enabled: 1
+  - id: aptNotice
+    label: "\uB2E8\uC9C0 \uAC8C\uC2DC\uD310"
+    kind: notice
+    x: 72
+    y: 0.12
+    z: 28.5
+    r: 1.9
+    reach: 0
+    host: 
+    enabled: 1
+  - id: centerNotice
+    label: "\uD589\uC815\uBCF5\uC9C0\uC13C\uD130 \uAC8C\uC2DC\uD310"
+    kind: notice
+    x: -96
+    y: 0.12
+    z: -20
+    r: 1.9
+    reach: 0
+    host: 
+    enabled: 1
+  - id: closure_yeonmuCenter
+    label: "\uC548\uB0B4 \uC694\uC6D0 \xB7 \uC5F0\uBB34\uB85C \uC911\uC559 \uAD6C\uAC04
+      \uD1B5\uC81C"
+    kind: npc
+    x: 30.4
+    y: 0.12
+    z: 8.4
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 0
+  - id: closure_danji
+    label: "\uC548\uB0B4 \uC694\uC6D0 \xB7 \uB2E8\uC9C0\uAE38 \uD1B5\uC81C"
+    kind: npc
+    x: 2.4
+    y: 0.12
+    z: 54
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 0
+  - id: closure_sijang
+    label: "\uC548\uB0B4 \uC694\uC6D0 \xB7 \uC2DC\uC7A5\uAE38 \uD1B5\uC81C"
+    kind: npc
+    x: 2.4
+    y: 0.12
+    z: -54
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 0
+  - id: closure_munhwaSouth
+    label: "\uC548\uB0B4 \uC694\uC6D0 \xB7 \uBB38\uD654\uB85C \uB0A8\uCABD \uD1B5\uC81C"
+    kind: npc
+    x: -56
+    y: 0.12
+    z: 47.4
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 0
+  - id: closure_munhwaNorth
+    label: "\uC548\uB0B4 \uC694\uC6D0 \xB7 \uBB38\uD654\uB85C \uBD81\uCABD \uD1B5\uC81C"
+    kind: npc
+    x: -56
+    y: 0.12
+    z: -21.4
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 0
+  - id: vending0
+    label: "\uC74C\uB8CC \uC790\uD310\uAE30"
+    kind: vending
+    x: -60.6
+    y: 0.12
+    z: 37.6
+    r: 1.5
+    reach: 0
+    host: 
+    enabled: 1
+  - id: vending1
+    label: "\uC74C\uB8CC \uC790\uD310\uAE30"
+    kind: vending
+    x: 43.4
+    y: 0.12
+    z: 15.2
+    r: 1.5
+    reach: 0
+    host: 
+    enabled: 1
+  - id: vending2
+    label: "\uC74C\uB8CC \uC790\uD310\uAE30"
+    kind: vending
+    x: 7.2
+    y: 0.12
+    z: 11.3
+    r: 1.5
+    reach: 0
+    host: 
+    enabled: 1
+  - id: busStop
+    label: "\uBC84\uC2A4 \uC815\uB958\uC7A5"
+    kind: busStop
+    x: 11.5
+    y: 0.12
+    z: -8.4
+    r: 2.2
+    reach: 0
+    host: 
+    enabled: 1
+  doors: []
+  npcs:
+  - name: guideEast
+    preset: guide
+    x: -66.4
+    y: 0.12
+    z: 28.9
+    yaw: -1.571
+    visible: 0
+  - name: guideC
+    preset: guide
+    x: -100.4
+    y: 0.12
+    z: 12.7
+    yaw: -0.381
+    visible: 0
+  - name: closureGuide
+    preset: guide
+    x: 0
+    y: 0
+    z: 0
+    yaw: 0
+    visible: 0
+  - name: clerkOutside
+    preset: clerk
+    x: 39.4
+    y: 0.12
+    z: 11.1
+    yaw: 0
+    visible: 1

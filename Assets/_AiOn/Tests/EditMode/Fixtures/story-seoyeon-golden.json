@@ -1,0 +1,836 @@
+{
+ "chips": {
+  "events": [
+   [
+    "gate_observed",
+    {
+     "who": "jeongmin",
+     "minute": 1209,
+     "via": "sign"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "jeongmin",
+     "route": "stairs",
+     "minute": 1211
+    }
+   ],
+   [
+    "handover_written",
+    {
+     "kind": "partial",
+     "edited": false,
+     "length": 49
+    }
+   ],
+   [
+    "reread_done",
+    {
+     "pins": [
+      "body",
+      "time",
+      "advice"
+     ]
+    }
+   ],
+   [
+    "notice_read",
+    {
+     "who": "seoyeon",
+     "minute": 1218
+    }
+   ],
+   [
+    "notice_choice",
+    {
+     "who": "seoyeon",
+     "route": "access"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "seoyeon",
+     "route": "access",
+     "minute": 1218
+    }
+   ]
+  ],
+  "relay": {
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14",
+   "accessOpenAt": "20:17",
+   "receivedAt": "20:18"
+  },
+  "handover": {
+   "text": "20:09에 동쪽 출입구가 닫혀 있었어. 나는 계단(A)으로 들어왔어. 나처럼 오면 돼.",
+   "chips": {
+    "what": "gate_closed",
+    "time": true,
+    "route": true,
+    "unknowns": false,
+    "advice": "follow_me"
+   },
+   "edited": false,
+   "claims": {
+    "what": "gate_closed",
+    "time": "20:09",
+    "route": "stairs",
+    "unknowns": false,
+    "advice": "follow_me",
+    "quotes": {
+     "what": "20:09에 동쪽 출입구가 닫혀 있었어",
+     "route": "나는 계단(A)으로 들어왔어",
+     "advice": "나처럼 오면 돼",
+     "time": "20:09에 동쪽 출입구가 닫혀 있었어"
+    },
+    "parsedBy": "chips"
+   },
+   "kind": "partial",
+   "actualRoute": "stairs",
+   "observedVia": "sign",
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14",
+   "accessOpenAt": "20:17",
+   "receivedAt": "20:18"
+  },
+  "minute": 1223,
+  "battery": 38,
+  "powerbank": null,
+  "info": [
+   [
+    "현장 안내 20:17: C 경사로 개방 (서연이 확인)",
+    "site"
+   ]
+  ],
+  "toasts": [
+   "통신망이 붐빌 때는 통화보다 문자 메시지가 대역폭을 적게 써서 더 잘 전달됩니다. (미국 Ready.gov)",
+   "메모: 현장 안내 20:17: C 경사로 개방 (서연이 확인)",
+   "C 경사로 · 20:17에 열림 · 정민이 문자를 보낸 20:14 뒤의 일"
+  ],
+  "talks": [],
+  "cards": [
+   [
+    "시점 전환 · 오서연",
+    "20:18 · 카페 쉼표 앞",
+    [
+     "이제 303호 서연입니다. 서연은 보행 보조기를 쓰고, 병원 진료 뒤 카페에 있다가 경보를 들었습니다.",
+     "· 보행 보조기를 씁니다",
+     "· 평지와 완만한 경사로는 혼자 갑니다",
+     "· 계단과 가파른 내리막은 혼자 내려가지 않습니다",
+     "· 보조기와 떨어지지 않습니다",
+     "· 도움이 필요하면 제가 말합니다"
+    ]
+   ],
+   [
+    "지금 운영 중인 출입구",
+    "현장 안내 · 20:17 갱신 · 이 시설",
+    [
+     "동쪽 출입구: 폐쇄 유지",
+     "A 계단: 운영",
+     "B 지하주차장 진출입로: 운영 · 차량 통제 · 내리막이 가파름",
+     "C 경사로: 20:17 개방 · 유도블록 · 안내 요원 있음",
+     "어느 입구로 갈지는 서연이 정합니다."
+    ]
+   ],
+   [
+    "서연이 출입구 C로 대피했습니다",
+    "20:18",
+    [
+     "완만한 경사로를 보조기와 함께 내려갔습니다.",
+     "대피소에서는 관리자의 안내를 따르고, 출입구와 통로를 막지 않으며, 불을 써서 요리하지 않습니다."
+    ]
+   ]
+  ],
+  "chapters": [
+   [
+    "2장",
+    "같은 문장, 다른 사람"
+   ],
+   [
+    "2장",
+    "정전과 경보"
+   ]
+  ],
+  "players": [
+   "seoyeon",
+   "jeongmin"
+  ],
+  "views": [
+   "first",
+   "third",
+   "third"
+  ],
+  "cinematic": [
+   true,
+   false
+  ],
+  "composeOpened": {
+   "route": "stairs",
+   "observedVia": "sign",
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14"
+  },
+  "captions": [
+   [
+    "방금 정민으로서 쓴 문장입니다. 서연에게 닿은 것은 이 문장뿐입니다.",
+    null,
+    false
+   ],
+   [
+    "문장을 나눠 봅니다. 표시한 부분이 이 문장이 서연에게 말하는 것입니다.",
+    null,
+    false
+   ],
+   [
+    "정민이 실제로 걸은 길 — 당신은 알고 있지만, 서연은 보지 못했습니다.",
+    null,
+    false
+   ],
+   [
+    "정민이 들어갈 수 있던 입구는 둘 다 서연의 기준과 다릅니다.",
+    [
+     "body",
+     "stairs",
+     "“나는 계단(A)으로 들어왔어”",
+     "서연의 카드: 계단은 혼자 내려가지 않음"
+    ],
+    false
+   ],
+   [
+    "메시지는 20:14에 보낸 것입니다. 지금은 20:18, 그 사이 안내판이 바뀌었습니다.",
+    [
+     "time",
+     "notice",
+     "메시지: 20:09 · 보냄 20:14",
+     "지금 20:18 · 안내판이 20:17에 바뀜 — 메시지 뒤의 일"
+    ],
+    false
+   ],
+   [
+    "정민의 시각, 정민의 몸, 정민의 자리에서 쓴 말이었습니다. 서연은 지금의 안내로 다시 판단합니다.",
+    [
+     "advice",
+     "start1",
+     "“나처럼 오면 돼”",
+     "정민의 다리, 정민의 출발점 기준의 길"
+    ],
+    true
+   ]
+  ],
+  "notes": [
+   "phone",
+   "marked",
+   "hide",
+   "hide"
+  ],
+  "fx": [
+   [
+    "start",
+    -118,
+    -12.5
+   ],
+   [
+    "eye",
+    -0.5
+   ],
+   [
+    "crane"
+   ],
+   [
+    "path",
+    0
+   ],
+   [
+    "pin",
+    "1",
+    -86,
+    13.4,
+    "“나는 계단(A)으로 들어왔어”",
+    "서연의 카드: 계단은 혼자 내려가지 않음",
+    null
+   ],
+   [
+    "pin",
+    "✕",
+    -80,
+    50,
+    "출입구 B · 지하주차장 진출입로",
+    "✕ B 진출입로 · 가파른 내리막은 혼자 내려가지 않음",
+    2.2
+   ],
+   [
+    "pin",
+    "2",
+    -94,
+    12,
+    "메시지: 20:09 · 보냄 20:14",
+    "지금 20:18 · 안내판이 20:17에 바뀜 — 메시지 뒤의 일",
+    null
+   ],
+   [
+    "pin",
+    "3",
+    -118,
+    -12.5,
+    "“나처럼 오면 돼”",
+    "정민의 다리, 정민의 출발점 기준의 길",
+    null
+   ],
+   [
+    "dispose"
+   ]
+  ],
+  "calm": false,
+  "speedOverride": null,
+  "leftTalk": 0,
+  "leftCard": 0
+ },
+ "nocontact": {
+  "events": [
+   [
+    "gate_observed",
+    {
+     "who": "jeongmin",
+     "minute": 1209,
+     "via": "sign"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "jeongmin",
+     "route": "stairs",
+     "minute": 1211
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "seoyeon",
+     "route": "stairs",
+     "minute": 1218
+    }
+   ],
+   [
+    "help_choice",
+    {
+     "who": "seoyeon",
+     "choice": "escort"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "seoyeon",
+     "route": "access",
+     "minute": 1218
+    }
+   ]
+  ],
+  "relay": {
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14",
+   "accessOpenAt": "20:17",
+   "receivedAt": "20:18"
+  },
+  "handover": null,
+  "minute": 1223,
+  "battery": 40,
+  "powerbank": null,
+  "info": [],
+  "toasts": [
+   "동쪽 출입구 폐쇄 · 안내판을 확인하세요",
+   "C 경사로로 계획을 바꿨다."
+  ],
+  "talks": [
+   [
+    "오서연",
+    "가까이 와서 보니",
+    [
+     "계단은 혼자 내려가지 않아요. 보조기와 떨어지지도 않을 거예요.",
+     "입구의 안내 요원이 C 경사로가 20:17에 열렸다고 알려 준다."
+    ]
+   ],
+   [
+    "안내 요원",
+    "출입구",
+    [
+     "어떻게 도와드릴까요?"
+    ]
+   ],
+   [
+    "오서연",
+    "도움 요청",
+    [
+     "C까지 옆에서 같이 걸어 주세요. 보조기는 제가 밀게요.",
+     "장애인을 도울 때는 그 사람이 무엇을 원하는지 잘 듣고, 요청이 있을 때 돕습니다. 혼자 판단해서 하는 행동은 친절이 아닙니다."
+    ]
+   ]
+  ],
+  "cards": [
+   [
+    "서연에게 연락할 방법이 없다",
+    "303호 이웃",
+    [
+     "서연의 번호를 모른다. 서연은 오늘 저녁 밖에 있다고 했던 것 같은데….",
+     "준비할 때 이웃과 연락 방법을 정해 두지 않았다."
+    ]
+   ],
+   [
+    "시점 전환 · 오서연",
+    "20:18 · 카페 쉼표 앞",
+    [
+     "이제 303호 서연입니다. 서연은 보행 보조기를 쓰고, 병원 진료 뒤 카페에 있다가 경보를 들었습니다.",
+     "· 보행 보조기를 씁니다",
+     "· 평지와 완만한 경사로는 혼자 갑니다",
+     "· 계단과 가파른 내리막은 혼자 내려가지 않습니다",
+     "· 보조기와 떨어지지 않습니다",
+     "· 도움이 필요하면 제가 말합니다"
+    ]
+   ],
+   [
+    "받은 문자 없음",
+    "20:18",
+    [
+     "서연에게 정민의 문자는 오지 않았습니다. 서연은 지금의 현장 안내만으로 판단합니다."
+    ]
+   ],
+   [
+    "서연이 출입구 C로 대피했습니다",
+    "20:18",
+    [
+     "완만한 경사로를 보조기와 함께 내려갔습니다.",
+     "대피소에서는 관리자의 안내를 따르고, 출입구와 통로를 막지 않으며, 불을 써서 요리하지 않습니다."
+    ]
+   ]
+  ],
+  "chapters": [
+   [
+    "2장",
+    "같은 문장, 다른 사람"
+   ],
+   [
+    "2장",
+    "정전과 경보"
+   ]
+  ],
+  "players": [
+   "seoyeon",
+   "jeongmin"
+  ],
+  "views": [],
+  "cinematic": [],
+  "composeOpened": null,
+  "captions": [],
+  "notes": [],
+  "fx": [],
+  "calm": false,
+  "speedOverride": null,
+  "leftTalk": 0,
+  "leftCard": 0
+ },
+ "edited": {
+  "events": [
+   [
+    "gate_observed",
+    {
+     "who": "jeongmin",
+     "minute": 1209,
+     "via": "sign"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "jeongmin",
+     "route": "stairs",
+     "minute": 1211
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "powerbank",
+     "moment": "꺼져 가던 휴대폰을 보조배터리로 살렸다"
+    }
+   ],
+   [
+    "handover_written",
+    {
+     "kind": "generalized",
+     "edited": true,
+     "length": 18
+    }
+   ],
+   [
+    "reread_done",
+    {
+     "pins": [
+      "body",
+      "time",
+      "scope"
+     ]
+    }
+   ],
+   [
+    "notice_read",
+    {
+     "who": "seoyeon",
+     "minute": 1218
+    }
+   ],
+   [
+    "notice_choice",
+    {
+     "who": "seoyeon",
+     "route": "stairs"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "seoyeon",
+     "route": "ramp",
+     "minute": 1218
+    }
+   ],
+   [
+    "help_choice",
+    {
+     "who": "seoyeon",
+     "choice": "self"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "seoyeon",
+     "route": "access",
+     "minute": 1218
+    }
+   ]
+  ],
+  "relay": {
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14",
+   "accessOpenAt": "20:17",
+   "receivedAt": "20:18"
+  },
+  "handover": {
+   "text": "다 막혔어. 나 따라 계단으로 와",
+   "chips": {
+    "what": "all_closed",
+    "time": false,
+    "route": false,
+    "unknowns": false,
+    "advice": null
+   },
+   "edited": true,
+   "claims": {
+    "what": "all_closed",
+    "time": null,
+    "route": "stairs",
+    "unknowns": false,
+    "advice": null,
+    "quotes": {
+     "what": "다 막혔어",
+     "route": "나 따라 계단으로 와"
+    },
+    "parsedBy": "rules"
+   },
+   "kind": "generalized",
+   "actualRoute": "stairs",
+   "observedVia": "sign",
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14",
+   "accessOpenAt": "20:17",
+   "receivedAt": "20:18"
+  },
+  "minute": 1223,
+  "battery": 43,
+  "powerbank": {
+   "home": 0,
+   "bag": 1,
+   "bought": 1,
+   "checked": true,
+   "used": 1
+  },
+  "info": [
+   [
+    "현장 안내 20:17: C 경사로 개방 (서연이 확인)",
+    "site"
+   ]
+  ],
+  "toasts": [
+   "준비가 도움이 됐습니다 · 꺼져 가던 휴대폰을 보조배터리로 살렸다",
+   "통신망이 붐빌 때는 통화보다 문자 메시지가 대역폭을 적게 써서 더 잘 전달됩니다. (미국 Ready.gov)",
+   "메모: 현장 안내 20:17: C 경사로 개방 (서연이 확인)",
+   "C 경사로로 계획을 바꿨다."
+  ],
+  "talks": [
+   [
+    "오서연",
+    "가까이 와서 보니",
+    [
+     "이 내리막은 가팔라서 혼자 내려가지 않아요.",
+     "입구의 안내 요원이 C 경사로가 20:17에 열렸다고 알려 준다."
+    ]
+   ]
+  ],
+  "cards": [
+   [
+    "시점 전환 · 오서연",
+    "20:18 · 카페 쉼표 앞",
+    [
+     "이제 303호 서연입니다. 서연은 보행 보조기를 쓰고, 병원 진료 뒤 카페에 있다가 경보를 들었습니다.",
+     "· 보행 보조기를 씁니다",
+     "· 평지와 완만한 경사로는 혼자 갑니다",
+     "· 계단과 가파른 내리막은 혼자 내려가지 않습니다",
+     "· 보조기와 떨어지지 않습니다",
+     "· 도움이 필요하면 제가 말합니다"
+    ]
+   ],
+   [
+    "지금 운영 중인 출입구",
+    "현장 안내 · 20:17 갱신 · 이 시설",
+    [
+     "동쪽 출입구: 폐쇄 유지",
+     "A 계단: 운영",
+     "B 지하주차장 진출입로: 운영 · 차량 통제 · 내리막이 가파름",
+     "C 경사로: 20:17 개방 · 유도블록 · 안내 요원 있음",
+     "어느 입구로 갈지는 서연이 정합니다."
+    ]
+   ],
+   [
+    "서연이 출입구 C로 대피했습니다",
+    "20:18",
+    [
+     "완만한 경사로를 보조기와 함께 내려갔습니다.",
+     "대피소에서는 관리자의 안내를 따르고, 출입구와 통로를 막지 않으며, 불을 써서 요리하지 않습니다."
+    ]
+   ]
+  ],
+  "chapters": [
+   [
+    "2장",
+    "같은 문장, 다른 사람"
+   ],
+   [
+    "2장",
+    "정전과 경보"
+   ]
+  ],
+  "players": [
+   "seoyeon",
+   "jeongmin"
+  ],
+  "views": [
+   "first",
+   "third",
+   "third"
+  ],
+  "cinematic": [
+   true,
+   false
+  ],
+  "composeOpened": {
+   "route": "stairs",
+   "observedVia": "sign",
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14"
+  },
+  "captions": [
+   [
+    "방금 정민으로서 쓴 문장입니다. 서연에게 닿은 것은 이 문장뿐입니다.",
+    null,
+    false
+   ],
+   [
+    "문장을 나눠 봅니다. 표시한 부분이 이 문장이 서연에게 말하는 것입니다.",
+    null,
+    false
+   ],
+   [
+    "정민이 본 것보다 넓은 말이었습니다. 그리고 정민의 시각, 정민의 몸, 정민의 자리에서 쓴 말이었습니다. 서연은 지금의 안내로 다시 판단합니다.",
+    [
+     "scope",
+     "gate",
+     "“다 막혔어”",
+     "정민이 확인한 것: 직접 본 동쪽 출입구 한 곳 (20:09)"
+    ],
+    true
+   ]
+  ],
+  "notes": [
+   "phone",
+   "marked",
+   "hide",
+   "hide"
+  ],
+  "fx": [
+   [
+    "start",
+    -118,
+    -12.5
+   ],
+   [
+    "eye",
+    -0.5
+   ],
+   [
+    "crane"
+   ],
+   [
+    "path",
+    0
+   ],
+   [
+    "pin",
+    "1",
+    -86,
+    13.4,
+    "“나 따라 계단으로 와”",
+    "서연의 카드: 계단은 혼자 내려가지 않음",
+    null
+   ],
+   [
+    "pin",
+    "✕",
+    -80,
+    50,
+    "출입구 B · 지하주차장 진출입로",
+    "✕ B 진출입로 · 가파른 내리막은 혼자 내려가지 않음",
+    2.2
+   ],
+   [
+    "pin",
+    "2",
+    -94,
+    12,
+    "메시지: 시각 없음 · 보냄 20:14",
+    "지금 20:18 · 안내판이 20:17에 바뀜 — 메시지 뒤의 일",
+    null
+   ],
+   [
+    "pin",
+    "3",
+    -68.6,
+    31,
+    "“다 막혔어”",
+    "정민이 확인한 것: 직접 본 동쪽 출입구 한 곳 (20:09)",
+    null
+   ],
+   [
+    "dispose"
+   ]
+  ],
+  "calm": false,
+  "speedOverride": null,
+  "leftTalk": 0,
+  "leftCard": 0
+ },
+ "deadphone": {
+  "events": [
+   [
+    "gate_observed",
+    {
+     "who": "jeongmin",
+     "minute": 1209,
+     "via": "sign"
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "jeongmin",
+     "route": "stairs",
+     "minute": 1211
+    }
+   ],
+   [
+    "route_attempt",
+    {
+     "who": "seoyeon",
+     "route": "access",
+     "minute": 1218
+    }
+   ]
+  ],
+  "relay": {
+   "gateSeenAt": "20:09",
+   "sentAt": "20:14",
+   "accessOpenAt": "20:17",
+   "receivedAt": "20:18"
+  },
+  "handover": null,
+  "minute": 1223,
+  "battery": 0,
+  "powerbank": null,
+  "info": [],
+  "toasts": [],
+  "talks": [],
+  "cards": [
+   [
+    "휴대폰이 꺼졌다",
+    "배터리 0%",
+    [
+     "서연에게 문자를 보내려 했지만 휴대폰이 켜지지 않는다."
+    ]
+   ],
+   [
+    "시점 전환 · 오서연",
+    "20:18 · 카페 쉼표 앞",
+    [
+     "이제 303호 서연입니다. 서연은 보행 보조기를 쓰고, 병원 진료 뒤 카페에 있다가 경보를 들었습니다.",
+     "· 보행 보조기를 씁니다",
+     "· 평지와 완만한 경사로는 혼자 갑니다",
+     "· 계단과 가파른 내리막은 혼자 내려가지 않습니다",
+     "· 보조기와 떨어지지 않습니다",
+     "· 도움이 필요하면 제가 말합니다"
+    ]
+   ],
+   [
+    "받은 문자 없음",
+    "20:18",
+    [
+     "서연에게 정민의 문자는 오지 않았습니다. 서연은 지금의 현장 안내만으로 판단합니다."
+    ]
+   ],
+   [
+    "서연이 출입구 C로 대피했습니다",
+    "20:18",
+    [
+     "완만한 경사로를 보조기와 함께 내려갔습니다.",
+     "대피소에서는 관리자의 안내를 따르고, 출입구와 통로를 막지 않으며, 불을 써서 요리하지 않습니다."
+    ]
+   ]
+  ],
+  "chapters": [
+   [
+    "2장",
+    "같은 문장, 다른 사람"
+   ],
+   [
+    "2장",
+    "정전과 경보"
+   ]
+  ],
+  "players": [
+   "seoyeon",
+   "jeongmin"
+  ],
+  "views": [],
+  "cinematic": [],
+  "composeOpened": null,
+  "captions": [],
+  "notes": [],
+  "fx": [],
+  "calm": false,
+  "speedOverride": null,
+  "leftTalk": 0,
+  "leftCard": 0
+ }
+}

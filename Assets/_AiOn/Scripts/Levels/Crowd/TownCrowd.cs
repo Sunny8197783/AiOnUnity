@@ -1,0 +1,180 @@
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+
+namespace AiOn.Levels.Crowd
+{
+    /// <summary>
+    /// The town's crowds (port of levels/town-crowd.js createTownCrowd plus the crowd side of town.js setState):
+    /// groups main / extra / few / line created lazily in first-use order (seed 900 + 17 per group made before),
+    /// sidewalk strolls cut by closures, evacuation to the open shelter gates, the water-point and assembly queues, and
+    /// strollers waiting at the signalled zebras. Also switches the crowd's solids (closures, water point, buses, gates)
+    /// and says which of the town's own NPCs show (town.js refreshNpcs).
+    /// </summary>
+    public sealed class TownCrowd : ICrowdLogic
+    {
+        readonly List<(string name, CrowdGroup group)> _groups = new();
+        readonly List<CrowdAgent> _peers = new();
+        readonly List<CrowdGroup.Hold> _holds = TownCrowdPlan.SignalHolds();
+        readonly List<CrowdBody> _bodies = new();
+        readonly Func<double, double, double> _height;
+        readonly SolidGrid _solids;
+        string _mode = "none", _traffic = "normal";
+        List<string> _closures = new();
+        readonly Dictionary<string, string> _gates = new(TownCrowdPlan.DefaultGates);
+        bool _waterPoint, _buses;
+
+        public TownCrowd(WalkHeight walk, SolidGrid solids)
+        {
+            _height = walk != null ? walk.At : (Func<double, double, double>)((x, z) => 0);
+            _solids = solids;
+            // the original's defaults (town.js setState calls at build): closures none, gates default, water point and buses off
+            SyncSolids();
+            SetMode("normal");
+        }
+
+        public IReadOnlyList<CrowdBody> Bodies => _bodies;
+        public string Mode => _mode;
+        public IReadOnlyList<CrowdGroup.Hold> Holds => _holds;
+        public IReadOnlyDictionary<string, string> Gates => _gates;
+        public IReadOnlyList<string> Closures => _closures;
+        public string Traffic => _traffic;
+
+        /// <summary>The group made for a name, or null while it has not been used.</summary>
+        public CrowdGroup Group(string name)
+        {
+            foreach (var (n, g) in _groups) if (n == name) return g;
+            return null;
+        }
+
+        public IEnumerable<(string name, CrowdGroup group)> Groups => _groups;
+
+        // town.js refreshNpcs
+        public bool GuideEastVisible => _gates.TryGetValue("east", out var e) && e == "closed";
+        public bool GuideCVisible => _gates.TryGetValue("access", out var a) && a == "open" && _mode != "none";
+        public bool ClerkOutsideVisible => _mode == "normal" || _mode == "busy";
+
+        CrowdGroup Get(string name)
+        {
+            var g = Group(name);
+            if (g != null) return g;
+            g = new CrowdGroup(TownCrowdPlan.Sizes[name], 900 + _groups.Count * 17, _height, _solids, _holds, _peers);
+            _groups.Add((name, g));
+            _bodies.AddRange(g.Bodies);
+            return g;
+        }
+
+        void Run(string name, Action<CrowdGroup> fn) { var c = Get(name); c.Visible = true; fn(c); }
+
+        void ApplyMode()
+        {
+            foreach (var (_, g) in _groups) g.Visible = false;
+            var walkers = TownCrowdPlan.StrollFor(_closures);
+            switch (_mode)
+            {
+                case "none": return;
+                case "normal": Run("main", c => { c.SetPaths(walkers); c.SetMode("stroll"); }); return; // speed 1.25 is passed but crowd.js ignores it
+                case "busy":
+                    foreach (var n in new[] { "main", "extra" }) Run(n, c => { c.SetPaths(walkers); c.SetMode("stroll"); });
+                    return;
+                case "sparse": Run("few", c => { c.SetPaths(walkers); c.SetMode("stroll"); }); return;
+                case "evacuating":
+                    {
+                        var (paths, targets) = TownCrowdPlan.EvacFor(_gates, _closures);
+                        foreach (var n in new[] { "main", "extra" }) Run(n, c => { c.SetPaths(paths); c.SetMode("brisk", new CrowdGroup.ModeOpts { Targets = targets, Then = "despawn" }); });
+                        return;
+                    }
+                case "queue":
+                    // Served people leave west through the yard, not across 연무로. The original passed no carry here, so its
+                    // leavers walked off empty-handed; they carry a 10 L jug now (a mood-keeping upgrade, queueTick's own path).
+                    Run("line", c => c.SetMode("queue", new CrowdGroup.ModeOpts
+                    {
+                        At = TownCrowdPlan.WaterQueue, Dir = new Pt(1, 0), Spacing = 0.9, Leave = new Pt(-1, 0), Carry = "waterJug",
+                    }));
+                    Run("few", c => { c.SetPaths(walkers); c.SetMode("stroll"); });
+                    return;
+                case "assembly":
+                    Run("main", c => c.SetMode("idle", new CrowdGroup.ModeOpts { Area = TownCrowdPlan.AssemblyArea, Paths = new List<Pt[]>(), Instant = true }));
+                    // served leave east toward 문화로, clear of the buses
+                    Run("line", c => c.SetMode("queue", new CrowdGroup.ModeOpts { At = TownCrowdPlan.AssemblyQueue, Dir = new Pt(0, 1), Spacing = 0.85, Leave = new Pt(1, 0) }));
+                    return;
+            }
+        }
+
+        /// <summary>town-crowd setMode: false (mode unchanged, an error) for an unknown mode.</summary>
+        public bool SetMode(string m)
+        {
+            if (Array.IndexOf(TownCrowdPlan.Modes, m) < 0)
+            {
+                UnityEngine.Debug.LogError($"[town] crowd \"{m}\" unknown; use {string.Join(" | ", TownCrowdPlan.Modes)}");
+                return false;
+            }
+            _mode = m; ApplyMode();
+            return true;
+        }
+
+        void SetContext()
+        {
+            if (_mode == "normal" || _mode == "busy" || _mode == "sparse" || _mode == "evacuating" || _mode == "queue") ApplyMode();
+        }
+
+        void SyncSolids()
+        {
+            if (_solids == null) return;
+            foreach (var id in TownCrowdPlan.Barricades.Keys) _solids.SetOff("closure:" + id, !_closures.Contains(id));
+            foreach (var id in new[] { "waterTank", "waterTable", "queueBelt" }) _solids.SetOff(id, !_waterPoint);
+            foreach (var id in new[] { "bus", "assemblySign", "assemblyTable" }) _solids.SetOff(id, !_buses);
+            _solids.SetOff("gateEast", !(_gates.TryGetValue("east", out var e) && e == "closed"));
+            _solids.SetOff("boomB", !(_gates.TryGetValue("ramp", out var r) && r == "closed"));
+            _solids.SetOff("movingCar", true); // no traffic in the port: the cars' boxes never stand in the street
+        }
+
+        public bool Apply(string key, JToken v)
+        {
+            switch (key)
+            {
+                case "crowd":
+                    SetMode(v?.Type == JTokenType.String ? (string)v : v?.ToString());
+                    return true;
+                case "closures":
+                    {
+                        var list = new List<string>();
+                        if (v is JArray arr) { foreach (var t in arr) if (t.Type == JTokenType.String) list.Add((string)t); }
+                        else if (v != null && v.Type == JTokenType.String && !string.IsNullOrEmpty((string)v)) list.Add((string)v);
+                        _closures = list;
+                        SyncSolids(); SetContext();
+                        return true;
+                    }
+                case "gates":
+                    if (v is JObject o)
+                        foreach (var p in o.Properties())
+                        {
+                            string val = p.Value.Type == JTokenType.String ? (string)p.Value : null;
+                            if (!_gates.ContainsKey(p.Name) || (val != "open" && val != "closed"))
+                            { UnityEngine.Debug.LogError($"[town] gates.{p.Name} = \"{p.Value}\" invalid; use east/stairs/ramp/access : open | closed"); continue; }
+                            _gates[p.Name] = val;
+                        }
+                    SyncSolids(); SetContext();
+                    return true;
+                case "traffic":
+                    _traffic = v?.ToString() ?? "normal";
+                    return true;
+                case "waterPoint":
+                    _waterPoint = v?.ToString() == "on"; SyncSolids();
+                    return true;
+                case "buses":
+                    _buses = v?.ToString() == "on"; SyncSolids();
+                    return true;
+            }
+            return false;
+        }
+
+        public void Update(double dt, in CrowdFrame f)
+        {
+            // No grid power after the blackout: dead signals (town.js also stops the traffic then).
+            bool on = f.Power && f.Env != "blackout" && _traffic != "none";
+            TownCrowdPlan.SetSignals(_holds, f.T, on);
+            foreach (var (_, g) in _groups) if (g.Visible) g.Update(dt, f);
+        }
+    }
+}

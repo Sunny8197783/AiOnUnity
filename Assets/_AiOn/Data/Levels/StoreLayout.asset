@@ -1,0 +1,394 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8976f9aad0230d748bf739ab227325f8, type: 3}
+  m_Name: StoreLayout
+  m_EditorClassIdentifier: AiOn.Runtime::AiOn.Levels.LevelLayout
+  levelId: store
+  env: interior
+  walk:
+  - x0: -5
+    x1: 5
+    z0: -9
+    z1: 0
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  solids:
+  - x0: -5.28
+    x1: -4.97
+    y0: 0
+    y1: 2.9
+    z0: -9.28
+    z1: 0.28
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4.97
+    x1: 5.28
+    y0: 0
+    y1: 2.9
+    z0: -9.28
+    z1: 0.28
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5.28
+    x1: 5.28
+    y0: 0
+    y1: 2.9
+    z0: -9.28
+    z1: -8.97
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5
+    x1: 5
+    y0: 0
+    y1: 2.9
+    z0: -0.15
+    z1: 0.4
+    id: storefront
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4.75
+    x1: -0.2
+    y0: 0
+    y1: 1.1
+    z0: -1.18
+    z1: -0.15
+    id: windowBar
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5.03
+    x1: -4.42
+    y0: 0
+    y1: 0.88
+    z0: -2.78
+    z1: -1.52
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5
+    x1: -4.58
+    y0: 0
+    y1: 0.9
+    z0: -3.8
+    z1: -2.75
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -5.03
+    x1: -4.515
+    y0: 0
+    y1: 1.9
+    z0: -7.36
+    z1: -3.84
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.005
+    x1: -1.995
+    y0: 0
+    y1: 1.45
+    z0: -6.76
+    z1: -2.44
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.205
+    x1: 0.805
+    y0: 0
+    y1: 1.45
+    z0: -6.76
+    z1: -2.44
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.99
+    x1: -2.01
+    y0: 0
+    y1: 1.45
+    z0: -2.52
+    z1: -2.25
+    id: endcap
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -0.19
+    x1: 0.79
+    y0: 0
+    y1: 1.45
+    z0: -2.52
+    z1: -2.25
+    id: endcap
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4.97
+    x1: 1.21
+    y0: 0
+    y1: 2.4
+    z0: -9
+    z1: -8.12
+    id: fridges
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 1.42
+    x1: 2.98
+    y0: 0
+    y1: 0.9
+    z0: -8.98
+    z1: -8.18
+    id: freezer
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.3
+    x1: 4.6
+    y0: 0
+    y1: 1.05
+    z0: -9
+    z1: -7.95
+    id: waterStack
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4.3
+    x1: 5
+    y0: 0
+    y1: 1.2
+    z0: -6.1
+    z1: -5.6
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 2.62
+    x1: 3.28
+    y0: 0
+    y1: 0.92
+    z0: -4.93
+    z1: -1.87
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 2.435
+    x1: 2.69
+    y0: 0
+    y1: 0.92
+    z0: -4.635
+    z1: -3.965
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 4.515
+    x1: 5.025
+    y0: 0
+    y1: 0.9
+    z0: -4.93
+    z1: -1.87
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 4.625
+    x1: 5.04
+    y0: 0
+    y1: 2.1
+    z0: -4.96
+    z1: -1.84
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 3.22
+    x1: 5.03
+    y0: 0
+    y1: 0.92
+    z0: -1.93
+    z1: -1.47
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 3.22
+    x1: 5.03
+    y0: 0
+    y1: 0.92
+    z0: -5.31
+    z1: -4.89
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  - x0: 4.068
+    x1: 5.04
+    y0: 0
+    y1: 2.03
+    z0: -1.11
+    z1: -0.13
+    id: 
+    off: 0
+    noClimb: 1
+    noVault: 1
+  ceilings:
+  - x0: -5.25
+    x1: 5.25
+    z0: -9.25
+    z1: 0.25
+    y: 2.9
+  spawns:
+  - name: entry
+    x: 0.6
+    y: 0
+    z: -1.35
+    yaw: 0
+  - name: counter
+    x: 2
+    y: 0
+    z: -3.3
+    yaw: -1.571
+  points:
+  - id: storeExit
+    label: "\uBC16\uC73C\uB85C \uB098\uAC00\uAE30"
+    kind: door
+    x: 0.6
+    y: 0
+    z: -0.75
+    r: 1.4
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeCounter
+    label: "\uACC4\uC0B0\uB300 \xB7 \uC774\uC218\uC544"
+    kind: npc
+    x: 2.1
+    y: 0
+    z: -3.3
+    r: 1.7
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeShelf
+    label: "\uC9C4\uC5F4\uB300 \uC0B4\uD3B4\uBCF4\uAE30"
+    kind: shelf
+    x: -1.1
+    y: 0
+    z: -4.6
+    r: 2.4
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeFridge
+    label: "\uC74C\uB8CC \uB0C9\uC7A5\uACE0"
+    kind: shelf
+    x: -1.6
+    y: 0
+    z: -7.5
+    r: 2.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeAtm
+    label: "ATM (\uC790\uB3D9\uD654\uAE30\uAE30)"
+    kind: atm
+    x: 4.05
+    y: 0
+    z: -0.62
+    r: 1.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeCoffee
+    label: "\uC140\uD504 \uCEE4\uD53C\uBA38\uC2E0"
+    kind: look
+    x: 3
+    y: 0
+    z: -1.7
+    r: 1.3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeSteamer
+    label: "\uCC10\uBE75 \uCC1C\uAE30"
+    kind: look
+    x: 2.5
+    y: 0
+    z: -2.25
+    r: 1.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeRack
+    label: "\uAC74\uC804\uC9C0 \uC9C4\uC5F4\uB300"
+    kind: look
+    x: 2.4
+    y: 0
+    z: -4.3
+    r: 1.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeRamen
+    label: "\uB77C\uBA74 \uC870\uB9AC\uB300"
+    kind: look
+    x: -4.35
+    y: 0
+    z: -2.15
+    r: 1.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeIce
+    label: "\uC544\uC774\uC2A4\uD06C\uB9BC \uB0C9\uB3D9\uACE0"
+    kind: look
+    x: 2.2
+    y: 0
+    z: -7.9
+    r: 1.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: storeWindowBar
+    label: "\uCC3D\uAC00 \uC790\uB9AC"
+    kind: look
+    x: -2.5
+    y: 0
+    z: -1.4
+    r: 1.4
+    reach: 0
+    host: 
+    enabled: 1
+  doors: []
+  npcs:
+  - name: clerk
+    preset: clerk
+    x: 3.9
+    y: 0
+    z: -3.3
+    yaw: 1.571
+    visible: 1

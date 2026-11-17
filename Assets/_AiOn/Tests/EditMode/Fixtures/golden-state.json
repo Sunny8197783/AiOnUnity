@@ -1,0 +1,7129 @@
+{
+ "conditions": [
+  {
+   "seed": 0,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 2,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 3,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 7,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 42,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 99,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 12345,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 2147483647,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 4294967295,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 13,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 7932,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 15851,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 23770,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 31689,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 39608,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 47527,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 55446,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 63365,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 71284,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 79203,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 87122,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 95041,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 102960,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 110879,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 118798,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 126717,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 134636,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 142555,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 150474,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 158393,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 166312,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 174231,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 182150,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 190069,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 197988,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 205907,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 213826,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 221745,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 229664,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 237583,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 245502,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 253421,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 261340,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 269259,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 277178,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 285097,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 293016,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 300935,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 308854,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 316773,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 324692,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 332611,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 340530,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 348449,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 356368,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 364287,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 372206,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 380125,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 388044,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 395963,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 403882,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 411801,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 419720,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 427639,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 435558,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 443477,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 451396,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 459315,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 467234,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 475153,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 483072,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 490991,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 498910,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 506829,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 514748,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 522667,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 530586,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 538505,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 546424,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 554343,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 562262,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 570181,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 578100,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 586019,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 593938,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 601857,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 609776,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 617695,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 625614,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 633533,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 641452,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 649371,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 657290,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 665209,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 673128,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 681047,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 688966,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 696885,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 704804,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 712723,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 720642,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 728561,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 736480,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 744399,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 752318,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 760237,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 768156,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 776075,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 783994,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 791913,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 799832,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 807751,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 815670,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 823589,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 831508,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 839427,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 847346,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 855265,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 863184,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 871103,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 879022,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 886941,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 894860,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 902779,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 910698,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 918617,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 926536,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 934455,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 942374,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 950293,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 958212,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 966131,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 974050,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 981969,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 989888,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 997807,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1005726,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1013645,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1021564,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1029483,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1037402,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1045321,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1053240,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1061159,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1069078,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1076997,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1084916,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1092835,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1100754,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1108673,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1116592,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1124511,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1132430,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1140349,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1148268,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1156187,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1164106,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1172025,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1179944,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1187863,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1195782,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1203701,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1211620,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1219539,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1227458,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1235377,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1243296,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1251215,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1259134,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1267053,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1274972,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1187,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1282891,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1290810,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1298729,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1306648,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1314567,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1322486,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1330405,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1338324,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1346243,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1354162,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1362081,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1189,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1370000,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1377919,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1385838,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1393757,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1401676,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1409595,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1417514,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1425433,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1433352,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1441271,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1449190,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1184,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1457109,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1185,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1465028,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1472947,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1192,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 540,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1480866,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1488785,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1193,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1496704,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1190,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 435,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1504623,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1512542,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1520461,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "sijang",
+      "munhwaSouth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 570,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1528380,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1536299,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1194,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1544218,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1552137,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1186,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1560056,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1188,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 480,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1567975,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "sijang"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [],
+     "late": [
+      "water",
+      "elec"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 630,
+    "evacNoticeAt": 465,
+    "seoyeonAt": "cafe"
+   }
+  },
+  {
+   "seed": 1575894,
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "yeonmuCenter",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1195,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 450,
+    "seoyeonAt": "cafe"
+   }
+  }
+ ],
+ "scenario": {
+  "drained": 87.5,
+  "speed": 0.93,
+  "clock": "D-2 05:35",
+  "steps": [
+   {
+    "label": "buy"
+   },
+   {
+    "label": "advance95"
+   },
+   {
+    "label": "packed",
+    "bagLoad": {
+     "weightKg": 4.94,
+     "volumeL": 5.25,
+     "over": {
+      "weight": false,
+      "volume": false
+     }
+    },
+    "bagCells": {
+     "used": 16,
+     "total": 50,
+     "fits": true
+    },
+    "pocketLoad": 0.3,
+    "layout": {
+     "placed": [
+      {
+       "id": "water_2l",
+       "x": 0,
+       "y": 0,
+       "w": 3,
+       "h": 2,
+       "rotated": false
+      },
+      {
+       "id": "water_2l",
+       "x": 3,
+       "y": 0,
+       "w": 3,
+       "h": 2,
+       "rotated": false
+      },
+      {
+       "id": "bars",
+       "x": 6,
+       "y": 0,
+       "w": 1,
+       "h": 1,
+       "rotated": false
+      },
+      {
+       "id": "bars",
+       "x": 7,
+       "y": 0,
+       "w": 1,
+       "h": 1,
+       "rotated": false
+      },
+      {
+       "id": "bars",
+       "x": 8,
+       "y": 0,
+       "w": 1,
+       "h": 1,
+       "rotated": false
+      },
+      {
+       "id": "meds",
+       "x": 9,
+       "y": 0,
+       "w": 1,
+       "h": 1,
+       "rotated": false
+      }
+     ],
+     "pocket": [
+      {
+       "id": "powerbank",
+       "n": 2
+      }
+     ],
+     "overflow": [],
+     "used": 16,
+     "free": 34,
+     "pocketL": 0.3,
+     "fits": true
+    }
+   }
+  ],
+  "final": {
+   "v": 2,
+   "seed": 11,
+   "chapter": "prologue",
+   "day": -2,
+   "minute": 335,
+   "slots": {
+    "total": 6,
+    "used": 2,
+    "done": [
+     "mart"
+    ]
+   },
+   "money": 66700,
+   "stats": {
+    "health": 100,
+    "thirst": 46,
+    "fatigue": 24,
+    "tension": 35
+   },
+   "phone": {
+    "battery": 64,
+    "signal": "ok"
+   },
+   "items": {
+    "water_2l": {
+     "home": 0,
+     "bag": 2,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "ramen": {
+     "home": 3,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 2
+    },
+    "rice_instant": {
+     "home": 2,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "canned": {
+     "home": 1,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "flashlight": {
+     "home": 1,
+     "bag": 0,
+     "bought": 0,
+     "checked": true,
+     "used": 0,
+     "charge": 87.5
+    },
+    "meds": {
+     "home": 0,
+     "bag": 1,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "clothes": {
+     "home": 2,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "hygiene_kit": {
+     "home": 1,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "tissue": {
+     "home": 2,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "fridge_food": {
+     "home": 4,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "cooked_meat": {
+     "home": 1,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "old_bars": {
+     "home": 2,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "towel": {
+     "home": 3,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "photo_album": {
+     "home": 1,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "radio": {
+     "home": 1,
+     "bag": 0,
+     "bought": 1,
+     "checked": true,
+     "used": 0,
+     "charge": 100
+    },
+    "batteries_aa": {
+     "home": 0,
+     "bag": 0,
+     "bought": 2,
+     "checked": false,
+     "used": 2
+    },
+    "powerbank": {
+     "home": 0,
+     "bag": 2,
+     "bought": 2,
+     "checked": false,
+     "used": 0,
+     "pocket": 2
+    },
+    "bars": {
+     "home": 0,
+     "bag": 2,
+     "bought": 3,
+     "checked": false,
+     "used": 1
+    },
+    "batteries_old": {
+     "home": 1,
+     "bag": 0,
+     "bought": 0,
+     "checked": false,
+     "used": 0
+    },
+    "water_500": {
+     "home": 3,
+     "bag": 0,
+     "bought": 3,
+     "checked": false,
+     "used": 0
+    }
+   },
+   "know": {
+    "shelterLocated": false,
+    "entrancesChecked": false,
+    "routeChecked": false,
+    "extinguisherLocated": false,
+    "radioChecked": false,
+    "contactsCard": false,
+    "docsCopied": false,
+    "meetPoint": null,
+    "waterPoint": false,
+    "gateClosedSeen": false,
+    "bagOn": true
+   },
+   "rel": {
+    "manager": {
+     "trust": 0,
+     "contact": null
+    },
+    "clerk": {
+     "trust": 0,
+     "contact": null
+    },
+    "seoyeon": {
+     "trust": 0,
+     "contact": null
+    }
+   },
+   "skill": {
+    "radio": [],
+    "bag": [],
+    "route": [],
+    "extinguisher": [],
+    "docs": [],
+    "info": []
+   },
+   "info": [
+    {
+     "chapter": "prologue",
+     "day": -3,
+     "minute": 1145,
+     "text": "급수차 9시",
+     "label": "official",
+     "place": "centerNotice"
+    }
+   ],
+   "cond": {
+    "closures": {
+     "dday": [
+      "yeonmuCenter",
+      "danji"
+     ],
+     "evac": [
+      "danji",
+      "munhwaNorth"
+     ]
+    },
+    "eastGateClosed": true,
+    "accessOpensAt": "20:16",
+    "commsWeakAt": 1191,
+    "soldOut": {
+     "early": [
+      "water"
+     ],
+     "late": [
+      "water",
+      "elec",
+      "food"
+     ]
+    },
+    "rumorTrue": false,
+    "waterAt": 600,
+    "evacNoticeAt": 420,
+    "seoyeonAt": "cafe"
+   },
+   "events": [
+    {
+     "seq": 1,
+     "type": "buy",
+     "chapter": "prologue",
+     "day": -3,
+     "minute": 1050,
+     "details": {
+      "cart": {
+       "radio": 1,
+       "batteries_aa": 2,
+       "powerbank": 2,
+       "bars": 3
+      },
+      "total": 81500
+     }
+    },
+    {
+     "seq": 2,
+     "type": "slot",
+     "chapter": "prologue",
+     "day": -3,
+     "minute": 1145,
+     "details": {
+      "actionId": "mart",
+      "cost": 2
+     }
+    },
+    {
+     "seq": 3,
+     "type": "check",
+     "chapter": "prologue",
+     "day": -3,
+     "minute": 1145,
+     "details": {
+      "id": "radio",
+      "charge": 100
+     }
+    },
+    {
+     "seq": 4,
+     "type": "check",
+     "chapter": "prologue",
+     "day": -3,
+     "minute": 1145,
+     "details": {
+      "id": "flashlight",
+      "charge": 100
+     }
+    },
+    {
+     "seq": 5,
+     "type": "trade",
+     "chapter": "prologue",
+     "day": -3,
+     "minute": 1145,
+     "details": {
+      "give": {
+       "ramen": 2
+      },
+      "get": {
+       "batteries_old": 1
+      },
+      "from": "clerk"
+     }
+    },
+    {
+     "seq": 6,
+     "type": "buy",
+     "chapter": "prologue",
+     "day": -2,
+     "minute": 305,
+     "details": {
+      "cart": {
+       "water_500": 3
+      },
+      "total": 1800
+     }
+    }
+   ],
+   "ledger": [],
+   "checkpoint": {
+    "key": "dday",
+    "state": {
+     "v": 2,
+     "seed": 11,
+     "chapter": "prologue",
+     "day": -2,
+     "minute": 305,
+     "slots": {
+      "total": 6,
+      "used": 2,
+      "done": [
+       "mart"
+      ]
+     },
+     "money": 68500,
+     "stats": {
+      "health": 100,
+      "thirst": 45,
+      "fatigue": 23,
+      "tension": 35
+     },
+     "phone": {
+      "battery": 64,
+      "signal": "ok"
+     },
+     "items": {
+      "water_2l": {
+       "home": 0,
+       "bag": 2,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "ramen": {
+       "home": 3,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 2
+      },
+      "rice_instant": {
+       "home": 2,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "canned": {
+       "home": 1,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "flashlight": {
+       "home": 1,
+       "bag": 0,
+       "bought": 0,
+       "checked": true,
+       "used": 0,
+       "charge": 87.5
+      },
+      "meds": {
+       "home": 0,
+       "bag": 1,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "clothes": {
+       "home": 2,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "hygiene_kit": {
+       "home": 1,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "tissue": {
+       "home": 2,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "fridge_food": {
+       "home": 4,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "cooked_meat": {
+       "home": 1,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "old_bars": {
+       "home": 2,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "towel": {
+       "home": 3,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "photo_album": {
+       "home": 1,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      },
+      "radio": {
+       "home": 1,
+       "bag": 0,
+       "bought": 1,
+       "checked": true,
+       "used": 0,
+       "charge": 100
+      },
+      "batteries_aa": {
+       "home": 0,
+       "bag": 0,
+       "bought": 2,
+       "checked": false,
+       "used": 2
+      },
+      "powerbank": {
+       "home": 0,
+       "bag": 2,
+       "bought": 2,
+       "checked": false,
+       "used": 0,
+       "pocket": 2
+      },
+      "bars": {
+       "home": 0,
+       "bag": 2,
+       "bought": 3,
+       "checked": false,
+       "used": 1
+      },
+      "batteries_old": {
+       "home": 1,
+       "bag": 0,
+       "bought": 0,
+       "checked": false,
+       "used": 0
+      }
+     },
+     "know": {
+      "shelterLocated": false,
+      "entrancesChecked": false,
+      "routeChecked": false,
+      "extinguisherLocated": false,
+      "radioChecked": false,
+      "contactsCard": false,
+      "docsCopied": false,
+      "meetPoint": null,
+      "waterPoint": false,
+      "gateClosedSeen": false,
+      "bagOn": true
+     },
+     "rel": {
+      "manager": {
+       "trust": 0,
+       "contact": null
+      },
+      "clerk": {
+       "trust": 0,
+       "contact": null
+      },
+      "seoyeon": {
+       "trust": 0,
+       "contact": null
+      }
+     },
+     "skill": {
+      "radio": [],
+      "bag": [],
+      "route": [],
+      "extinguisher": [],
+      "docs": [],
+      "info": []
+     },
+     "info": [
+      {
+       "chapter": "prologue",
+       "day": -3,
+       "minute": 1145,
+       "text": "급수차 9시",
+       "label": "official",
+       "place": "centerNotice"
+      }
+     ],
+     "cond": {
+      "closures": {
+       "dday": [
+        "yeonmuCenter",
+        "danji"
+       ],
+       "evac": [
+        "danji",
+        "munhwaNorth"
+       ]
+      },
+      "eastGateClosed": true,
+      "accessOpensAt": "20:16",
+      "commsWeakAt": 1191,
+      "soldOut": {
+       "early": [
+        "water"
+       ],
+       "late": [
+        "water",
+        "elec",
+        "food"
+       ]
+      },
+      "rumorTrue": false,
+      "waterAt": 600,
+      "evacNoticeAt": 420,
+      "seoyeonAt": "cafe"
+     },
+     "events": [
+      {
+       "seq": 1,
+       "type": "buy",
+       "chapter": "prologue",
+       "day": -3,
+       "minute": 1050,
+       "details": {
+        "cart": {
+         "radio": 1,
+         "batteries_aa": 2,
+         "powerbank": 2,
+         "bars": 3
+        },
+        "total": 81500
+       }
+      },
+      {
+       "seq": 2,
+       "type": "slot",
+       "chapter": "prologue",
+       "day": -3,
+       "minute": 1145,
+       "details": {
+        "actionId": "mart",
+        "cost": 2
+       }
+      },
+      {
+       "seq": 3,
+       "type": "check",
+       "chapter": "prologue",
+       "day": -3,
+       "minute": 1145,
+       "details": {
+        "id": "radio",
+        "charge": 100
+       }
+      },
+      {
+       "seq": 4,
+       "type": "check",
+       "chapter": "prologue",
+       "day": -3,
+       "minute": 1145,
+       "details": {
+        "id": "flashlight",
+        "charge": 100
+       }
+      },
+      {
+       "seq": 5,
+       "type": "trade",
+       "chapter": "prologue",
+       "day": -3,
+       "minute": 1145,
+       "details": {
+        "give": {
+         "ramen": 2
+        },
+        "get": {
+         "batteries_old": 1
+        },
+        "from": "clerk"
+       }
+      }
+     ],
+     "ledger": [],
+     "checkpoint": null
+    }
+   }
+  }
+ },
+ "bigPack": {
+  "placed": [
+   {
+    "id": "gas_stove",
+    "x": 0,
+    "y": 0,
+    "w": 4,
+    "h": 3,
+    "rotated": false
+   },
+   {
+    "id": "gas_stove",
+    "x": 4,
+    "y": 0,
+    "w": 4,
+    "h": 3,
+    "rotated": false
+   },
+   {
+    "id": "clothes",
+    "x": 0,
+    "y": 3,
+    "w": 3,
+    "h": 2,
+    "rotated": false
+   },
+   {
+    "id": "water_2l",
+    "x": 3,
+    "y": 3,
+    "w": 3,
+    "h": 2,
+    "rotated": false
+   },
+   {
+    "id": "water_2l",
+    "x": 6,
+    "y": 3,
+    "w": 3,
+    "h": 2,
+    "rotated": false
+   },
+   {
+    "id": "water_2l",
+    "x": 8,
+    "y": 0,
+    "w": 2,
+    "h": 3,
+    "rotated": true
+   },
+   {
+    "id": "radio",
+    "x": 9,
+    "y": 3,
+    "w": 1,
+    "h": 2,
+    "rotated": true
+   }
+  ],
+  "pocket": [
+   {
+    "id": "bars",
+    "n": 3
+   }
+  ],
+  "overflow": [
+   {
+    "id": "blackout_curtain",
+    "n": 1
+   },
+   {
+    "id": "first_aid",
+    "n": 2
+   },
+   {
+    "id": "radio",
+    "n": 1
+   },
+   {
+    "id": "bars",
+    "n": 6
+   }
+  ],
+  "used": 50,
+  "free": 0,
+  "pocketL": 0.45,
+  "fits": false
+ }
+}

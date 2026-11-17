@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 410b5f64ae6c2b44d8f5c96e6cae1255, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: AiOn.Runtime::AiOn.Story.AudioLibrary
+  entries:
+  - name: ambience_indoor
+    clip: {fileID: 8300000, guid: ea54119bd6d06dc49a229faa6ca77de5, type: 3}
+  - name: ambience_city
+    clip: {fileID: 8300000, guid: 921b4908a82d1f34584b3fc610063d5d, type: 3}
+  - name: ambience_night
+    clip: {fileID: 8300000, guid: 63979abd9c43e2a4eae1095576872f97, type: 3}
+  - name: ambience_blackout
+    clip: {fileID: 8300000, guid: 498b175726595c24a9840a3914aa27c2, type: 3}
+  - name: ambience_office
+    clip: {fileID: 8300000, guid: cbc8f4b528652704397ef965036433c0, type: 3}
+  - name: ambience_mart
+    clip: {fileID: 8300000, guid: bc91f8a07202e3742941c6bdd175113f, type: 3}
+  - name: ambience_shelter
+    clip: {fileID: 8300000, guid: 96f0633ea1c740c4dbecae422e170da0, type: 3}
+  - name: rain
+    clip: {fileID: 8300000, guid: c97a2aef0aafc54489486725db8fe750, type: 3}
+  - name: door
+    clip: {fileID: 8300000, guid: 36cf8b28279940647b53f74b2998ba3a, type: 3}
+  - name: doorClose
+    clip: {fileID: 8300000, guid: 77abb36bb47ff894e9771126016ef5c1, type: 3}
+  - name: glassDoor
+    clip: {fileID: 8300000, guid: 1a8982d2501728b41aded217cec9ec54, type: 3}
+  - name: knock
+    clip: {fileID: 8300000, guid: 1f00c48a42de31a40b41444ede7bbc69, type: 3}
+  - name: footstep
+    clip: {fileID: 8300000, guid: df5aa5eafdc3c3441bab14781e4d6285, type: 3}
+  - name: land
+    clip: {fileID: 8300000, guid: 0c8157c6078300b4597a217555be2f99, type: 3}
+  - name: phoneAlert
+    clip: {fileID: 8300000, guid: a66e5a69c4b8f58418b863f8009dfdc2, type: 3}
+  - name: phoneMessage
+    clip: {fileID: 8300000, guid: abe471528847c2240a351e5c1f9e796c, type: 3}
+  - name: radio
+    clip: {fileID: 8300000, guid: 3ec5c6c2e0e68744b9b2d9069d37aeaa, type: 3}
+  - name: radioTune
+    clip: {fileID: 8300000, guid: 1929d46f385ecea458e3f927581a0cc2, type: 3}
+  - name: click
+    clip: {fileID: 8300000, guid: 3f30d9eb10cdffb4dadea747eeff293e, type: 3}
+  - name: hit
+    clip: {fileID: 8300000, guid: bdfabcc6b42a2664597558cf2189e2d6, type: 3}
+  - name: glass
+    clip: {fileID: 8300000, guid: b7d0523c9375a044e83c56bd38e6df73, type: 3}
+  - name: powerDown
+    clip: {fileID: 8300000, guid: e96ff29468454bb49b9e407692964cee, type: 3}
+  - name: powerUp
+    clip: {fileID: 8300000, guid: 72efca3c3ffbfec4c99938775e17aa73, type: 3}
+  - name: page
+    clip: {fileID: 8300000, guid: f93a5740ce6ef3a4d83215e4aaca5dee, type: 3}
+  - name: zip
+    clip: {fileID: 8300000, guid: 25fa536c1cce7c6419fe44ae1274de97, type: 3}
+  - name: tape
+    clip: {fileID: 8300000, guid: c0de0fd284aef4f4e94cc3e1dbf52eaa, type: 3}

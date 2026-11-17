@@ -1,0 +1,1382 @@
+{
+ "helper": {
+  "fail": null,
+  "events": [
+   [
+    "tossed_food",
+    {
+     "id": "fridge_food"
+    }
+   ],
+   [
+    "tossed_food",
+    {
+     "id": "cooked_meat"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "board_offer"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "queue_carry_elder"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "water_jug",
+     "moment": "접이식 물통으로 급수소 물을 받아 왔다"
+    }
+   ],
+   [
+    "water_fetched",
+    {
+     "litres": 20,
+     "forSeoyeon": true
+    }
+   ],
+   [
+    "help",
+    {
+     "who": "seoyeon",
+     "kind": "water",
+     "what": "급수소에서 물 한 통을 받아 3층까지 날라 주었다"
+    }
+   ],
+   [
+    "help",
+    {
+     "who": "seoyeon",
+     "kind": "powerbank",
+     "what": "서연이 충전된 보조배터리를 나눠 주었다",
+     "by": "other"
+    }
+   ],
+   [
+    "buy",
+    {
+     "cart": {
+      "batteries_aa": 1,
+      "water_500": 2
+     },
+     "total": 50000,
+     "goods": 6900,
+     "paid": "cash",
+     "change": 0
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "cash",
+     "moment": "카드가 안 되는 편의점에서 현금으로 건전지와 물을 샀다"
+    }
+   ],
+   [
+    "rumor_judged",
+    {
+     "id": "shelter_closed",
+     "item": "claim",
+     "pick": "rumor",
+     "ok": true
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "info",
+     "result": "sorted",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_checked",
+    {
+     "id": "shelter_closed"
+    }
+   ],
+   [
+    "deed",
+    {
+     "after": "check",
+     "id": "rumor_corrected"
+    }
+   ],
+   [
+    "trade",
+    {
+     "give": {
+      "canned": 1
+     },
+     "get": {
+      "batteries_old": 1
+     },
+     "from": "trader"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "store_shuttered"
+    }
+   ],
+   [
+    "help",
+    {
+     "who": "clerk",
+     "what": "가게를 닫으며 쪽지와 현금 통을 남겨 이웃이 필요한 물건을 가져가게 했다",
+     "by": "other"
+    }
+   ],
+   [
+    "knock",
+    {
+     "pick": "info"
+    }
+   ],
+   [
+    "help",
+    {
+     "who": "stranger",
+     "what": "밤에 문을 두드린 이웃에게 급수소 위치와 운영 시간을 알려 주었다"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "elder",
+     "moment": "어르신이 먼저 문을 두드려, 불이 작을 때 알았다"
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "extinguisher",
+     "result": "out",
+     "stage": "guided"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "extinguisher",
+     "moment": "소화기 위치와 순서를 알고 있어 작은 불을 바로 껐다"
+    }
+   ],
+   [
+    "help",
+    {
+     "who": "seoyeon",
+     "kind": "memo",
+     "what": "라디오 메모와 급수소 소식을 서로 나누기로 했다"
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "elder_visit"
+    }
+   ]
+  ],
+  "items": {
+   "water_2l": [
+    6,
+    0,
+    1,
+    false
+   ],
+   "ramen": [
+    5,
+    0,
+    0,
+    false
+   ],
+   "rice_instant": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "canned": [
+    0,
+    0,
+    1,
+    false
+   ],
+   "flashlight": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "meds": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "clothes": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "hygiene_kit": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "tissue": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "fridge_food": [
+    0,
+    0,
+    4,
+    false
+   ],
+   "cooked_meat": [
+    0,
+    0,
+    1,
+    false
+   ],
+   "old_bars": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "towel": [
+    3,
+    0,
+    0,
+    false
+   ],
+   "photo_album": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "water_jug": [
+    1,
+    0,
+    1,
+    false
+   ],
+   "cash": [
+    0,
+    0,
+    1,
+    false
+   ],
+   "powerbank": [
+    1,
+    0,
+    0,
+    true
+   ],
+   "batteries_aa": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "water_500": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "batteries_old": [
+    1,
+    0,
+    0,
+    false
+   ]
+  },
+  "know": {
+   "shelterLocated": false,
+   "entrancesChecked": false,
+   "routeChecked": false,
+   "extinguisherLocated": true,
+   "radioChecked": false,
+   "contactsCard": false,
+   "docsCopied": false,
+   "meetPoint": null,
+   "waterPoint": true,
+   "gateClosedSeen": false,
+   "elderPick": "help",
+   "bagOn": false,
+   "clerkLeft": true
+  },
+  "rel": {
+   "manager": {
+    "trust": 0,
+    "contact": null
+   },
+   "clerk": {
+    "trust": 0,
+    "contact": null
+   },
+   "seoyeon": {
+    "trust": 4,
+    "contact": null
+   }
+  },
+  "stats": {
+   "health": 100,
+   "thirst": 1,
+   "fatigue": 0,
+   "tension": 17
+  },
+  "day": 3,
+  "minute": 610,
+  "info": [
+   [
+    "정전 중 문을 닫아 두면 냉장고는 약 4시간, 가득 찬 냉동고는 약 48시간 온도를 유지합니다. (미국 FEMA)",
+    "official"
+   ],
+   [
+    "전기 없이 4시간이 지나면 냉장고 속 고기, 생선, 남은 음식처럼 상하기 쉬운 음식은 버립니다. (미국 CDC)",
+    "official"
+   ],
+   [
+    "정전되면 냉장·냉동 상태를 지키도록 냉장고 문을 자주 열지 않습니다. (식약처)",
+    "official"
+   ],
+   [
+    "서연: 행정복지센터 마당 비상급수 09:30부터",
+    "neighbor"
+   ],
+   [
+    "관리사무소: 비상급수 09:30~17:00, 물통 지참",
+    "official"
+   ],
+   [
+    "민방위 비상급수시설은 상수도가 끊겼을 때 복구 전까지 1인 1일 25리터를 임시로 공급하는 시설입니다.",
+    "official"
+   ],
+   [
+    "국제 인도주의 기준(Sphere)으로 사람이 마실 물은 하루 2.5~3리터, 마시고 씻고 조리하는 물은 최소 15리터입니다.",
+    "official"
+   ],
+   [
+    "물을 쓸 수 없을 때는 알코올 60% 이상 손소독제로 손을 소독합니다.",
+    "official"
+   ],
+   [
+    "SNS: 생활문화센터 대피소 폐쇄? (출처 불명)",
+    "rumor"
+   ],
+   [
+    "생활문화센터 대피소 정상 운영 (공식 안내로 확인)",
+    "official"
+   ],
+   [
+    "비상시에는 거짓 선전이나 유언비어에 흔들리지 말고 공식 안내를 확인합니다.",
+    "official"
+   ],
+   [
+    "대피소에서는 정부 안내방송에 귀 기울이고 SNS로 퍼지는 유언비어에 주의합니다.",
+    "official"
+   ],
+   [
+    "ICRC는 잘못된 경보나 구호 정보가 민간인을 위험에 노출시킬 수 있다고 설명합니다.",
+    "official"
+   ],
+   [
+    "서연 메모: 전기 복구 시점 미정 (라디오)",
+    "neighbor"
+   ]
+  ],
+  "karma": 0,
+  "talks": [
+   [
+    "냉장고 반찬",
+    "냉장고 · 4통",
+    "반찬 통이 미지근하다."
+   ],
+   [
+    "남은 익힌 고기",
+    "냉장고 · 1통",
+    "익힌 고기라 괜찮지 않을까? 냄새는 아직 잘 모르겠다."
+   ],
+   [
+    "오서연",
+    "303호",
+    "아침 라디오에서 들었어요. 행정복지센터 마당에서 비상급수를 한대요. 9시 반부터요."
+   ],
+   [
+    "1층 게시판",
+    "빈자리",
+    "안내문 아래에 빈자리가 있다."
+   ],
+   [
+    "급수대",
+    "행정복지센터 마당",
+    "304호 어르신이 물통을 들기 힘들어 보인다."
+   ],
+   [
+    "304호 어르신",
+    "급수대",
+    "아이고, 그래 줄래요? 계단 앞까지만 들어 주면 돼요. 거기서부턴 내가 쉬엄쉬엄 갈게."
+   ],
+   [
+    "오서연",
+    "303호",
+    "정말 고마워요. 덕분에 오늘은 버틸 수 있겠어요."
+   ],
+   [
+    "계산대 옆 현금 통",
+    "현금만",
+    "선반에 건전지 한 팩과 작은 생수 몇 병이 남아 있다."
+   ],
+   [
+    "102동 주민",
+    "바로편의점 앞",
+    "여기 주인도 떠났나 봐요. 참, 그 얘기 들었어요?"
+   ],
+   [
+    "102동 주민",
+    "바로편의점 앞",
+    "저도 확실한 건 모르겠어요. 어떡하죠?"
+   ],
+   [
+    "행정복지센터 게시판(주민의 휴대폰 사진)",
+    "공식 안내",
+    "생활문화센터 대피소는 정상 운영 중입니다. 확인되지 않은 정보에 주의해 주십시오. (가상 안내)"
+   ],
+   [
+    "102동 주민",
+    "바로편의점 앞",
+    "…뭐래요? 확인됐어요?"
+   ],
+   [
+    "102동 주민",
+    "바로편의점 앞",
+    "아, 정상 운영이에요? 다행이다. 저도 다른 데 퍼뜨릴 뻔했네요."
+   ],
+   [
+    "102동 주민",
+    "물물교환",
+    "그런데 혹시 먹을 거 남는 거 있어요? 저한테 AA 건전지 한 팩이 있는데, 바꿀래요?"
+   ],
+   [
+    "정민",
+    "집에 와서",
+    "받은 건전지를 넣어 보니 불빛이 약하다. 쓰던 건전지였다. 그분도 몰랐던 것 같다."
+   ],
+   [
+    "바로편의점",
+    "나가는 길",
+    "가게 셔터가 반쯤 열린 채다."
+   ],
+   [
+    "현관 너머",
+    "D+1 21:00",
+    "똑똑. 문 너머에서 낮은 목소리가 들린다."
+   ],
+   [
+    "정민",
+    "문 너머로",
+    "\"행정복지센터 마당에 비상급수시설이 있어요. 오전 9시 반부터 오후 5시까지예요. 물통을 가져가세요.\""
+   ],
+   [
+    "오서연",
+    "303호 앞",
+    "어젯밤 괜찮으셨어요? 저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요."
+   ],
+   [
+    "304호 어르신",
+    "304호 앞",
+    "어젯밤엔 다들 놀랐지요. 나는 괜찮아요."
+   ]
+  ],
+  "cards": [
+   "관리사무소 안내",
+   "계산대 위 쪽지"
+  ],
+  "opens": [
+   "extinguisher",
+   "chapterCard"
+  ],
+  "captions": [
+   "쾅쾅— \"302호! 302호! 내가 초를 넘어뜨렸어요! 불이야!\" 304호 어르신이 문을 두드린다."
+  ],
+  "checkpoints": [
+   "fire"
+  ],
+  "timeSkips": [
+   [
+    "D-day 금 밤",
+    "D+1 토 07:00"
+   ],
+   [
+    "D+1 토 밤",
+    "D+2 일 21:40"
+   ]
+  ],
+  "phone": 64,
+  "leftTalk": 0
+ },
+ "alone": {
+  "fail": null,
+  "events": [
+   [
+    "ate_spoiled",
+    {
+     "id": "fridge_food"
+    }
+   ],
+   [
+    "ate_spoiled",
+    {
+     "id": "cooked_meat"
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "radio",
+     "result": "tuned",
+     "stage": "guided"
+    }
+   ],
+   [
+    "water_fetched",
+    {
+     "litres": 4,
+     "forSeoyeon": false
+    }
+   ],
+   [
+    "deed",
+    {
+     "id": "store_took"
+    }
+   ],
+   [
+    "rumor_judged",
+    {
+     "id": "shelter_closed",
+     "item": "claim",
+     "pick": "official",
+     "ok": false
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "info",
+     "result": "misled",
+     "stage": "guided"
+    }
+   ],
+   [
+    "rumor_believed",
+    {
+     "id": "shelter_closed",
+     "truth": false
+    }
+   ],
+   [
+    "rumor_spread",
+    {
+     "id": "shelter_closed"
+    }
+   ],
+   [
+    "deed",
+    {
+     "after": "spread",
+     "id": "rumor_corrected"
+    }
+   ],
+   [
+    "barter_old_bars",
+    {}
+   ],
+   [
+    "help",
+    {
+     "who": "clerk",
+     "what": "가게를 닫으며 쪽지와 현금 통을 남겨 이웃이 필요한 물건을 가져가게 했다",
+     "by": "other"
+    }
+   ],
+   [
+    "knock",
+    {
+     "pick": "none"
+    }
+   ],
+   [
+    "fire_shout",
+    {}
+   ],
+   [
+    "fire_retreat",
+    {
+     "size": "large"
+    }
+   ],
+   [
+    "smoke_escape",
+    {
+     "exposure": 0,
+     "towel": false,
+     "crouch": false
+    }
+   ]
+  ],
+  "items": {
+   "water_2l": [
+    4,
+    0,
+    0,
+    false
+   ],
+   "ramen": [
+    5,
+    0,
+    0,
+    false
+   ],
+   "rice_instant": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "canned": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "flashlight": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "meds": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "clothes": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "hygiene_kit": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "tissue": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "fridge_food": [
+    3,
+    0,
+    1,
+    false
+   ],
+   "cooked_meat": [
+    0,
+    0,
+    1,
+    false
+   ],
+   "old_bars": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "towel": [
+    3,
+    0,
+    0,
+    false
+   ],
+   "photo_album": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "batteries_aa": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "water_500": [
+    2,
+    0,
+    0,
+    false
+   ]
+  },
+  "know": {
+   "shelterLocated": false,
+   "entrancesChecked": false,
+   "routeChecked": false,
+   "extinguisherLocated": false,
+   "radioChecked": false,
+   "contactsCard": false,
+   "docsCopied": false,
+   "meetPoint": null,
+   "waterPoint": true,
+   "gateClosedSeen": false,
+   "bagOn": false,
+   "radioFreq": 102.1,
+   "misled": null,
+   "clerkLeft": true
+  },
+  "rel": {
+   "manager": {
+    "trust": 0,
+    "contact": null
+   },
+   "clerk": {
+    "trust": 0,
+    "contact": null
+   },
+   "seoyeon": {
+    "trust": 0,
+    "contact": null
+   }
+  },
+  "stats": {
+   "health": 76,
+   "thirst": 12,
+   "fatigue": 0,
+   "tension": 33
+  },
+  "day": 3,
+  "minute": 600,
+  "info": [
+   [
+    "정전 중 문을 닫아 두면 냉장고는 약 4시간, 가득 찬 냉동고는 약 48시간 온도를 유지합니다. (미국 FEMA)",
+    "official"
+   ],
+   [
+    "전기 없이 4시간이 지나면 냉장고 속 고기, 생선, 남은 음식처럼 상하기 쉬운 음식은 버립니다. (미국 CDC)",
+    "official"
+   ],
+   [
+    "정전되면 냉장·냉동 상태를 지키도록 냉장고 문을 자주 열지 않습니다. (식약처)",
+    "official"
+   ],
+   [
+    "익힌 고기도 냉장 없이 4시간이 지나면 버려야 합니다. \"익히면 오래 간다\"는 근거가 없습니다. (미국 CDC)",
+    "official"
+   ],
+   [
+    "냄새·색·질감이 이상한 음식은 버립니다. 의심스러우면 버립니다.",
+    "official"
+   ],
+   [
+    "급수소 09:30~17:00",
+    "official"
+   ],
+   [
+    "민방위 비상급수시설은 상수도가 끊겼을 때 복구 전까지 1인 1일 25리터를 임시로 공급하는 시설입니다.",
+    "official"
+   ],
+   [
+    "국제 인도주의 기준(Sphere)으로 사람이 마실 물은 하루 2.5~3리터, 마시고 씻고 조리하는 물은 최소 15리터입니다.",
+    "official"
+   ],
+   [
+    "물을 쓸 수 없을 때는 알코올 60% 이상 손소독제로 손을 소독합니다.",
+    "official"
+   ],
+   [
+    "SNS: 생활문화센터 대피소 폐쇄? (출처 불명)",
+    "rumor"
+   ],
+   [
+    "박 소장: 생활문화센터 출입구 A 열려 있음 (직접 다녀옴)",
+    "site"
+   ],
+   [
+    "비상시에는 거짓 선전이나 유언비어에 흔들리지 말고 공식 안내를 확인합니다.",
+    "official"
+   ],
+   [
+    "대피소에서는 정부 안내방송에 귀 기울이고 SNS로 퍼지는 유언비어에 주의합니다.",
+    "official"
+   ],
+   [
+    "ICRC는 잘못된 경보나 구호 정보가 민간인을 위험에 노출시킬 수 있다고 설명합니다.",
+    "official"
+   ],
+   [
+    "촛불 화재에 물을 뿌리면 파라핀 때문에 더 커질 수 있습니다. 소화기를 쓰거나 담요를 덮어 산소를 막습니다.",
+    "official"
+   ],
+   [
+    "불을 발견하면 \"불이야!\" 하고 크게 외치거나 비상벨을 눌러 주변에 알립니다.",
+    "official"
+   ],
+   [
+    "119 신고는 하되, 신고하느라 대피 시간을 놓치지 않습니다.",
+    "official"
+   ],
+   [
+    "화재로 대피할 때는 엘리베이터를 이용하지 않고 계단으로 지상까지 내려갑니다.",
+    "official"
+   ],
+   [
+    "불길이 커지면 끄려 하지 말고, 젖은 수건 등으로 코와 입을 막고 몸을 낮춰 계단으로 대피합니다.",
+    "official"
+   ],
+   [
+    "서연 메모: 전기 복구 시점 미정 (라디오)",
+    "neighbor"
+   ]
+  ],
+  "karma": 0,
+  "talks": [
+   [
+    "냉장고 반찬",
+    "냉장고 · 4통",
+    "반찬 통이 미지근하다."
+   ],
+   [
+    "남은 익힌 고기",
+    "냉장고 · 1통",
+    "익힌 고기라 괜찮지 않을까? 냄새는 아직 잘 모르겠다."
+   ],
+   [
+    "라디오",
+    "라디오 없음",
+    "쓸 수 있는 라디오가 없다. 휴대폰 FM 라디오 앱으로 들어 볼까?"
+   ],
+   [
+    "303호",
+    "문 너머",
+    "\"누구세요? …아, 302호요. 지금은 좀 바빠서요.\""
+   ],
+   [
+    "급수대",
+    "행정복지센터 마당",
+    "304호 어르신이 물통을 들기 힘들어 보인다."
+   ],
+   [
+    "정민",
+    "지갑",
+    "현금이 없다. 카드뿐이다. 카드로는 아무것도 살 수 없다."
+   ],
+   [
+    "102동 주민",
+    "바로편의점 앞",
+    "여기 주인도 떠났나 봐요. 참, 그 얘기 들었어요?"
+   ],
+   [
+    "102동 주민",
+    "바로편의점 앞",
+    "저도 확실한 건 모르겠어요. 어떡하죠?"
+   ],
+   [
+    "박영수 소장",
+    "오늘 오후 · 직접 다녀옴",
+    "아까 생활문화센터 앞까지 다녀왔는데, 출입구 A는 열려 있고 안내 요원도 있었어요."
+   ],
+   [
+    "정민",
+    "바로편의점 앞",
+    "아까 102동 주민에게 폐쇄됐다고 맞장구친 게 마음에 걸린다."
+   ],
+   [
+    "102동 주민",
+    "물물교환",
+    "그런데 혹시 먹을 거 남는 거 있어요? 저한테 AA 건전지 한 팩이 있는데, 바꿀래요?"
+   ],
+   [
+    "102동 주민",
+    "봉지를 뒤집어 보며",
+    "아, 이거 기한이 한참 지났네요. 이건 저도 못 받아요. 드시지도 마세요."
+   ],
+   [
+    "102동 주민",
+    "물물교환",
+    "다른 걸로 바꿀래요?"
+   ],
+   [
+    "102동 주민",
+    "물물교환",
+    "네, 그래요. 필요하면 102동 1층으로 와요."
+   ],
+   [
+    "바로편의점",
+    "나가는 길",
+    "가게 셔터가 반쯤 열린 채다."
+   ],
+   [
+    "현관 너머",
+    "D+1 21:00",
+    "똑똑. 문 너머에서 낮은 목소리가 들린다."
+   ],
+   [
+    "복도",
+    "택배 상자에 붙은 작은 불",
+    "304호 앞 택배 상자 위로 촛불이 넘어져 있다. 불길은 아직 작다."
+   ],
+   [
+    "복도",
+    "택배 상자에 붙은 작은 불",
+    "304호 앞 택배 상자 위로 촛불이 넘어져 있다. 불길은 아직 작다."
+   ],
+   [
+    "복도",
+    "천장까지 닿는 불길",
+    "불길이 천장에 닿았다. 연기가 복도를 채운다."
+   ],
+   [
+    "박영수 소장",
+    "1층",
+    "다들 내려왔죠? 119에 신고했어요. 소방대가 금방 껐대요. 304호 어르신도 무사하시고요."
+   ],
+   [
+    "오서연",
+    "303호 앞",
+    "어젯밤 괜찮으셨어요? 저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요."
+   ],
+   [
+    "304호 어르신",
+    "304호 앞",
+    "어젯밤엔 고마웠어요. 그 소리 듣고 바로 나왔지."
+   ]
+  ],
+  "cards": [
+   "계산대 위 쪽지"
+  ],
+  "opens": [
+   "radio",
+   "chapterCard"
+  ],
+  "captions": [
+   "잠시 뒤 발소리가 계단 쪽으로 멀어졌다.",
+   "복도에서 타는 냄새가 난다. 문틈으로 주황빛이 흔들린다."
+  ],
+  "checkpoints": [
+   "fire"
+  ],
+  "timeSkips": [
+   [
+    "D-day 금 밤",
+    "D+1 토 07:00"
+   ],
+   [
+    "D+1 토 밤",
+    "D+2 일 21:40"
+   ]
+  ],
+  "phone": 61,
+  "leftTalk": 0
+ },
+ "fireRetreat": {
+  "fail": null,
+  "events": [
+   [
+    "payoff",
+    {
+     "prep": "elder",
+     "moment": "어르신이 먼저 문을 두드려, 불이 작을 때 알았다"
+    }
+   ],
+   [
+    "encounter",
+    {
+     "tool": "extinguisher",
+     "result": "retreat-ok",
+     "stage": "guided"
+    }
+   ],
+   [
+    "fire_retreat",
+    {
+     "size": "small"
+    }
+   ],
+   [
+    "towel_wet",
+    {
+     "with": "water_2l"
+    }
+   ],
+   [
+    "payoff",
+    {
+     "prep": "towel",
+     "moment": "젖은 수건으로 코와 입을 막고 연기 속을 내려왔다"
+    }
+   ],
+   [
+    "smoke_escape",
+    {
+     "exposure": 0,
+     "towel": true,
+     "crouch": false
+    }
+   ]
+  ],
+  "items": {
+   "water_2l": [
+    1,
+    0,
+    1,
+    false
+   ],
+   "ramen": [
+    5,
+    0,
+    0,
+    false
+   ],
+   "rice_instant": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "canned": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "flashlight": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "meds": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "clothes": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "hygiene_kit": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "tissue": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "fridge_food": [
+    4,
+    0,
+    0,
+    false
+   ],
+   "cooked_meat": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "old_bars": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "towel": [
+    3,
+    0,
+    0,
+    false
+   ],
+   "photo_album": [
+    1,
+    0,
+    0,
+    false
+   ]
+  },
+  "know": {
+   "shelterLocated": false,
+   "entrancesChecked": false,
+   "routeChecked": false,
+   "extinguisherLocated": false,
+   "radioChecked": false,
+   "contactsCard": false,
+   "docsCopied": false,
+   "meetPoint": null,
+   "waterPoint": false,
+   "gateClosedSeen": false,
+   "elderPick": "manager",
+   "elderTold": true,
+   "bagOn": false
+  },
+  "rel": {
+   "manager": {
+    "trust": 0,
+    "contact": null
+   },
+   "clerk": {
+    "trust": 0,
+    "contact": null
+   },
+   "seoyeon": {
+    "trust": 0,
+    "contact": null
+   }
+  },
+  "stats": {
+   "health": 100,
+   "thirst": 10,
+   "fatigue": 0,
+   "tension": 25
+  },
+  "day": 3,
+  "minute": 600,
+  "info": [
+   [
+    "불을 발견하면 \"불이야!\" 하고 크게 외치거나 비상벨을 눌러 주변에 알립니다.",
+    "official"
+   ],
+   [
+    "119 신고는 하되, 신고하느라 대피 시간을 놓치지 않습니다.",
+    "official"
+   ],
+   [
+    "화재로 대피할 때는 엘리베이터를 이용하지 않고 계단으로 지상까지 내려갑니다.",
+    "official"
+   ],
+   [
+    "불길이 커지면 끄려 하지 말고, 젖은 수건 등으로 코와 입을 막고 몸을 낮춰 계단으로 대피합니다.",
+    "official"
+   ],
+   [
+    "서연 메모: 전기 복구 시점 미정 (라디오)",
+    "neighbor"
+   ]
+  ],
+  "karma": 0,
+  "talks": [
+   [
+    "박영수 소장",
+    "1층",
+    "다들 내려왔죠? 119에 신고했어요. 소방대가 금방 껐대요. 304호 어르신도 무사하시고요."
+   ],
+   [
+    "오서연",
+    "303호 앞",
+    "어젯밤 괜찮으셨어요? 저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요."
+   ],
+   [
+    "304호 어르신",
+    "304호 앞",
+    "어젯밤엔 다들 놀랐지요. 나는 괜찮아요."
+   ]
+  ],
+  "cards": [],
+  "opens": [
+   "extinguisher",
+   "chapterCard"
+  ],
+  "captions": [
+   "쾅쾅— \"302호! 302호! 내가 초를 넘어뜨렸어요! 불이야!\" 304호 어르신이 문을 두드린다."
+  ],
+  "checkpoints": [],
+  "timeSkips": [],
+  "phone": 64,
+  "leftTalk": 0
+ },
+ "fireEscalated": {
+  "fail": "fire",
+  "events": [
+   [
+    "encounter",
+    {
+     "tool": "extinguisher",
+     "result": "escalated",
+     "stage": "guided"
+    }
+   ]
+  ],
+  "items": {
+   "water_2l": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "ramen": [
+    5,
+    0,
+    0,
+    false
+   ],
+   "rice_instant": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "canned": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "flashlight": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "meds": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "clothes": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "hygiene_kit": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "tissue": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "fridge_food": [
+    4,
+    0,
+    0,
+    false
+   ],
+   "cooked_meat": [
+    1,
+    0,
+    0,
+    false
+   ],
+   "old_bars": [
+    2,
+    0,
+    0,
+    false
+   ],
+   "towel": [
+    3,
+    0,
+    0,
+    false
+   ],
+   "photo_album": [
+    1,
+    0,
+    0,
+    false
+   ]
+  },
+  "know": {
+   "shelterLocated": false,
+   "entrancesChecked": false,
+   "routeChecked": false,
+   "extinguisherLocated": false,
+   "radioChecked": false,
+   "contactsCard": false,
+   "docsCopied": false,
+   "meetPoint": null,
+   "waterPoint": false,
+   "gateClosedSeen": false,
+   "bagOn": false
+  },
+  "rel": {
+   "manager": {
+    "trust": 0,
+    "contact": null
+   },
+   "clerk": {
+    "trust": 0,
+    "contact": null
+   },
+   "seoyeon": {
+    "trust": 0,
+    "contact": null
+   }
+  },
+  "stats": {
+   "health": 100,
+   "thirst": 10,
+   "fatigue": 20,
+   "tension": 25
+  },
+  "day": 2,
+  "minute": 1300,
+  "info": [
+   [
+    "촛불 화재에 물을 뿌리면 파라핀 때문에 더 커질 수 있습니다. 소화기를 쓰거나 담요를 덮어 산소를 막습니다.",
+    "official"
+   ]
+  ],
+  "karma": 0,
+  "talks": [
+   [
+    "복도",
+    "택배 상자에 붙은 작은 불",
+    "304호 앞 택배 상자 위로 촛불이 넘어져 있다. 불길은 아직 작다."
+   ]
+  ],
+  "cards": [],
+  "opens": [
+   "extinguisher"
+  ],
+  "captions": [
+   "복도에서 타는 냄새가 난다. 문틈으로 주황빛이 흔들린다."
+  ],
+  "checkpoints": [],
+  "timeSkips": [],
+  "phone": 64,
+  "leftTalk": 0
+ }
+}

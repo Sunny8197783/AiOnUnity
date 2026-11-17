@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a55e9d150745f34cb7a6fb8722f99e0, type: 3}
+  m_Name: radio
+  m_EditorClassIdentifier: Assembly-CSharp::AiOn.Data.ItemDefinition
+  id: radio
+  displayName: "\uD734\uB300\uC6A9 \uB77C\uB514\uC624(\uAC74\uC804\uC9C0\uC2DD)"
+  unit: "\uB300"
+  price: 24000
+  weightKg: 0.3
+  volumeL: 0.6
+  category: 2
+  cells: {x: 2, y: 1}
+  pocket: 0
+  notSold: 0
+  atmOnly: 0
+  fixture: 0
+  needsCheck: 1
+  risk: 0
+  charge: -1
+  needs: []
+  facts:
+  - radio_batt
+  - power_prep
+  - radio_listen

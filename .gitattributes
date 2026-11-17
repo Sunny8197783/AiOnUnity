@@ -1,0 +1,12 @@
+* text=auto
+*.glb binary
+*.hdr binary
+*.exr binary
+*.png binary
+*.jpg binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.fbx binary

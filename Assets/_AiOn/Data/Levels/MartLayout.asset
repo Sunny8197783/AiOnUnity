@@ -1,0 +1,551 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8976f9aad0230d748bf739ab227325f8, type: 3}
+  m_Name: MartLayout
+  m_EditorClassIdentifier: AiOn.Runtime::AiOn.Levels.LevelLayout
+  levelId: mart
+  env: interior
+  walk:
+  - x0: -16
+    x1: 16
+    z0: -24
+    z1: 0
+    y: 0
+    isRamp: 0
+    rampY0: 0
+    rampY1: 0
+    rampAxis: z
+  solids:
+  - x0: -16.34
+    x1: -15.96
+    y0: 0
+    y1: 3.6
+    z0: -24.34
+    z1: 0.34
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 15.96
+    x1: 16.34
+    y0: 0
+    y1: 3.6
+    z0: -24.34
+    z1: 0.34
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.34
+    x1: 16.34
+    y0: 0
+    y1: 3.6
+    z0: -24.34
+    z1: -23.96
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16
+    x1: 16
+    y0: 0
+    y1: 3.6
+    z0: 0
+    z1: 0.5
+    id: southWall
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -16.03
+    x1: -15.415
+    y0: 0
+    y1: 1.86
+    z0: -22.07
+    z1: -6.93
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -13.115
+    x1: -12.085
+    y0: 0
+    y1: 1.86
+    z0: -19.57
+    z1: -8.43
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -9.715
+    x1: -8.685
+    y0: 0
+    y1: 1.86
+    z0: -19.57
+    z1: -8.43
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -6.315
+    x1: -5.285
+    y0: 0
+    y1: 1.86
+    z0: -19.57
+    z1: -8.43
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -2.915
+    x1: -1.885
+    y0: 0
+    y1: 1.86
+    z0: -19.57
+    z1: -8.43
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 0.485
+    x1: 1.515
+    y0: 0
+    y1: 1.86
+    z0: -19.57
+    z1: -8.43
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 3.885
+    x1: 4.915
+    y0: 0
+    y1: 1.86
+    z0: -19.57
+    z1: -8.43
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -15.47
+    x1: 6.07
+    y0: 0
+    y1: 2
+    z0: -24.01
+    z1: -23.275
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -7.25
+    x1: -5.95
+    y0: 0
+    y1: 1.15
+    z0: -4.6
+    z1: -3.5
+    id: waterPallet
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 1.21
+    x1: 1.99
+    y0: 0
+    y1: 0.84
+    z0: -5.04
+    z1: -1.76
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 0.815
+    x1: 1.11
+    y0: 0
+    y1: 1.6
+    z0: -3.37
+    z1: -2.63
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4.61
+    x1: 5.39
+    y0: 0
+    y1: 0.84
+    z0: -5.04
+    z1: -1.76
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 4.215
+    x1: 4.51
+    y0: 0
+    y1: 1.6
+    z0: -3.37
+    z1: -2.63
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 8.01
+    x1: 8.79
+    y0: 0
+    y1: 0.84
+    z0: -5.04
+    z1: -1.76
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 7.615
+    x1: 7.91
+    y0: 0
+    y1: 1.6
+    z0: -3.37
+    z1: -2.63
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 7.2
+    x1: 8.05
+    y0: 0
+    y1: 1
+    z0: -5.2
+    z1: -5
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -3.09
+    x1: -2.11
+    y0: 0
+    y1: 2.05
+    z0: -1.005
+    z1: 0.02
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -15.7
+    x1: -14.2
+    y0: 0
+    y1: 1.1
+    z0: -4.4
+    z1: -0.8
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: -4.05
+    x1: -2.95
+    y0: 0
+    y1: 0.75
+    z0: -1.55
+    z1: -1.05
+    id: baskets
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 7.36
+    x1: 9.24
+    y0: 0
+    y1: 0.72
+    z0: -14.04
+    z1: -9.56
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 7.36
+    x1: 9.24
+    y0: 0
+    y1: 0.72
+    z0: -19.44
+    z1: -14.96
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.56
+    x1: 12.44
+    y0: 0
+    y1: 0.72
+    z0: -14.04
+    z1: -9.56
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 10.56
+    x1: 12.44
+    y0: 0
+    y1: 0.72
+    z0: -19.44
+    z1: -14.96
+    id: 
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.2
+    x1: 15.6
+    y0: 0
+    y1: 3.6
+    z0: -21.95
+    z1: -6.4
+    id: travelator
+    off: 0
+    noClimb: 0
+    noVault: 0
+  - x0: 13.2
+    x1: 15.96
+    y0: 0
+    y1: 3.6
+    z0: -23.96
+    z1: -21.95
+    id: travelatorBack
+    off: 0
+    noClimb: 0
+    noVault: 0
+  ceilings:
+  - x0: 13.2
+    x1: 16
+    z0: -21
+    z1: -14
+    y: 5.3
+  - x0: -16
+    x1: 13.2
+    z0: -24
+    z1: 0
+    y: 3.6
+  - x0: 13.2
+    x1: 16
+    z0: -24
+    z1: -21
+    y: 3.6
+  - x0: 13.2
+    x1: 16
+    z0: -14
+    z1: 0
+    y: 3.6
+  spawns:
+  - name: entry
+    x: -9
+    y: 0
+    z: -2.4
+    yaw: 0
+  points:
+  - id: martExit
+    label: "\uCD9C\uC785\uAD6C"
+    kind: door
+    x: -9
+    y: 0
+    z: -1
+    r: 1.8
+    reach: 0
+    host: 
+    enabled: 1
+  - id: checkout
+    label: "\uACC4\uC0B0\uB300"
+    kind: counter
+    x: 0.75
+    y: 0
+    z: -3.6
+    r: 1.8
+    reach: 0
+    host: 
+    enabled: 1
+  - id: atm
+    label: ATM
+    kind: atm
+    x: -2.6
+    y: 0
+    z: -1.4
+    r: 1.4
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelfWater
+    label: "\uC0DD\uC218\xB7\uC74C\uB8CC \uC9C4\uC5F4\uB300"
+    kind: shelf
+    x: -14.26
+    y: 0
+    z: -14
+    r: 3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelfFood
+    label: "\uC2DD\uD488 \uC9C4\uC5F4\uB300"
+    kind: shelf
+    x: -10.9
+    y: 0
+    z: -14
+    r: 3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelfDaily
+    label: "\uC0DD\uD65C\uC6A9\uD488 \uC9C4\uC5F4\uB300"
+    kind: shelf
+    x: -7.5
+    y: 0
+    z: -14
+    r: 3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelfElec
+    label: "\uC804\uC9C0\xB7\uC804\uAE30\uC6A9\uD488 \uC9C4\uC5F4\uB300"
+    kind: shelf
+    x: -4.1
+    y: 0
+    z: -14
+    r: 3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: shelfHealth
+    label: "\uC758\uC57D\uC678\uD488 \uC9C4\uC5F4\uB300"
+    kind: shelf
+    x: -0.7
+    y: 0
+    z: -14
+    r: 3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martCarts
+    label: "\uCE74\uD2B8 \uBCF4\uAD00\uB300"
+    kind: look
+    x: -14.9
+    y: 0
+    z: -4.9
+    r: 1.3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martBaskets
+    label: "\uC7A5\uBC14\uAD6C\uB2C8"
+    kind: look
+    x: -3.5
+    y: 0
+    z: -2
+    r: 1.1
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martPallet
+    label: "\uC0DD\uC218 \uD314\uB808\uD2B8"
+    kind: look
+    x: -6.6
+    y: 0
+    z: -5
+    r: 1.4
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martChill
+    label: "\uC2E0\uC120\xB7\uC720\uC81C\uD488 \uB0C9\uC7A5\uACE0"
+    kind: look
+    x: -4.7
+    y: 0
+    z: -22.6
+    r: 2.6
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martProduceN
+    label: "\uCC44\uC18C\xB7\uACFC\uC77C \uB9E4\uB300"
+    kind: look
+    x: 9.9
+    y: 0
+    z: -11.8
+    r: 2.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martProduceS
+    label: "\uCC44\uC18C\xB7\uACFC\uC77C \uB9E4\uB300"
+    kind: look
+    x: 9.9
+    y: 0
+    z: -17.2
+    r: 2.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martTravelator
+    label: "\uBB34\uBE59\uC6CC\uD06C (2\uCE35)"
+    kind: look
+    x: 14.4
+    y: 0
+    z: -5.4
+    r: 1.3
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martDetergent
+    label: "\uC138\uC81C\xB7\uC870\uBBF8\uB8CC \uC9C4\uC5F4\uB300"
+    kind: look
+    x: 2.7
+    y: 0
+    z: -14
+    r: 2.6
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martSnacks
+    label: "\uACFC\uC790\xB7\uAC04\uC2DD \uC9C4\uC5F4\uB300"
+    kind: look
+    x: 6.2
+    y: 0
+    z: -14
+    r: 2.6
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martLane3
+    label: "3\uBC88 \uACC4\uC0B0\uB300 (\uB9C8\uAC10)"
+    kind: look
+    x: 8.4
+    y: 0
+    z: -5.6
+    r: 1.2
+    reach: 0
+    host: 
+    enabled: 1
+  - id: martPoster
+    label: "\uD589\uC0AC \uD3EC\uC2A4\uD130"
+    kind: look
+    x: 3
+    y: 0
+    z: -0.9
+    r: 1.3
+    reach: 0
+    host: 
+    enabled: 1
+  doors: []
+  npcs:
+  - name: cashier
+    preset: clerk
+    x: 2.35
+    y: 0
+    z: -3.3
+    yaw: 1.571
+    visible: 1
+  - name: cashier2
+    preset: clerk
+    x: 5.75
+    y: 0
+    z: -3.3
+    yaw: 1.571
+    visible: 1
