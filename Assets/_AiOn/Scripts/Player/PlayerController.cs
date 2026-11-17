@@ -1,3 +1,4 @@
+using System;
 using AiOn.Levels;
 using UnityEngine;
 
@@ -8,6 +9,9 @@ namespace AiOn.Player
     /// walk 3.0 m/s, run 5.2 m/s on stamina, jump 3.6 m/s against gravity 12, crouch at 0.4x speed.
     /// Stamina: running drains it in 7 s (x staminaUse, e.g. a heavy bag); it refills in 11 s on the move or 5 s
     /// standing; emptied, you walk until it is back to 35 %.
+    /// Space in front of a low wall, car, railing or rubble vaults over it or climbs onto it (VaultPlanner, with the level
+    /// data the host gives through <see cref="vaultPlanner"/>); elsewhere it jumps. In third person the body turns toward
+    /// where it walks (BodyYaw), not with the camera.
     /// </summary>
     [RequireComponent(typeof(CharacterController), typeof(PlayerInputReader))]
     public class PlayerController : MonoBehaviour
@@ -36,6 +40,19 @@ namespace AiOn.Player
         [Tooltip("Degrees per mouse pixel (the original's 0.0024 rad).")]
         public float lookSensitivity = 0.1375f;
         public float pitchLimit = 80f;
+        [Tooltip("The 마우스 감도 setting (0.3..3) on top of lookSensitivity.")]
+        public float sensitivity = 1f;
+
+        [Header("Body (the experience profile: controls.js setProfile)")]
+        public bool canRun = true;
+        [Tooltip("Off: Space neither jumps nor vaults (it still stands up from a crouch).")]
+        public bool canJump = true;
+        [Tooltip("Off (wheelchair): a stair flight is a wall; stairBlocked decides where one starts.")]
+        public bool canStairs = true;
+        [Tooltip("Eye height standing (1.62; 1.18 seated in a wheelchair).")]
+        public float eye = Eye;
+        /// <summary>Without stairs: (feet now, feet about to be), Unity, true when that step goes onto a stair flight.</summary>
+        public Func<Vector3, Vector3, bool> stairBlocked;
 
         [Header("Spawn")]
         public string startSpawn = "home";
@@ -47,12 +64,33 @@ namespace AiOn.Player
 
         /// <summary>Back on your feet (after a time skip: still crouched days after the smoke escape looked wrong).</summary>
         public void StandUp() => Crouching = false;
-        public bool Grounded => _cc.isGrounded;
+        public bool Grounded => _move.active || _cc.isGrounded;
         public float Yaw { get; private set; }
         public float Pitch { get; private set; }
         public float HorizontalSpeed { get; private set; }
         public float VerticalSpeed => _vy;
-        public float EyeHeight => Eye * (Crouching ? 0.6f : 1f);
+        public float EyeHeight => eye * (Crouching ? 0.6f : 1f);
+        /// <summary>Where the body faces (Unity yaw degrees): the move direction in third person, the camera in first.</summary>
+        public float BodyYaw { get; private set; }
+        /// <summary>Set by the camera rig: the body turns on its own only in third person.</summary>
+        public bool ThirdPerson { get; set; } = true;
+        /// <summary>The walking velocity this frame (Unity, horizontal).</summary>
+        public Vector3 PlanarVelocity { get; private set; }
+        /// <summary>A vault or climb is under way (the clip owns the body; no jumping, punching or picking up).</summary>
+        public bool Busy => _move.active;
+
+        /// <summary>
+        /// The level's vault rules: (feet, unit heading), both Unity, to a plan in the original frame, or null when there
+        /// is nothing to get over (then Space jumps). Set by the story host; unset, Space only jumps.
+        /// </summary>
+        public Func<Vector3, Vector3, VaultPlanner.Plan?> vaultPlanner;
+        /// <summary>Optional last check of a planned landing against the scene's colliders (Unity feet position).</summary>
+        public Func<Vector3, bool> vaultLandingFree;
+        /// <summary>A body clip to play (vault, climb).</summary>
+        public event Action<string> Acted;
+
+        struct Move { public bool active; public float t, dur; public Vector3 from; public VaultPlanner.Plan plan; }
+        Move _move;
 
         CharacterController _cc;
         PlayerInputReader _in;
@@ -112,6 +150,8 @@ namespace AiOn.Player
             _cc.enabled = false;
             transform.position = position + Vector3.up * 0.02f;
             _cc.enabled = true;
+            _move.active = false;
+            BodyYaw = yaw;
             Yaw = yaw; Pitch = 3f; _planar = Vector3.zero; _vy = 0; // the gaze starts slightly down, like the original
             transform.rotation = Quaternion.Euler(0, Yaw, 0);
             _lastSafe = transform.position; _hasSafe = true;
@@ -124,7 +164,7 @@ namespace AiOn.Player
             bool gated = InputGate.Blocked; // a dialog or menu is open
 
             // Look
-            var look = gated ? Vector2.zero : _in.Look * lookSensitivity;
+            var look = gated ? Vector2.zero : _in.Look * (lookSensitivity * sensitivity);
             Yaw = Mathf.Repeat(Yaw + look.x, 360f);
             Pitch = Mathf.Clamp(Pitch - look.y, -pitchLimit, pitchLimit);
             if (_faceYaw.HasValue) // turning toward someone who speaks (FaceTowards); the player's own look cancels it
@@ -145,10 +185,12 @@ namespace AiOn.Player
             // Run and stamina (the original's numbers)
             var move = gated ? Vector2.zero : Vector2.ClampMagnitude(_in.Move, 1f);
             bool moving = move.sqrMagnitude > 0.0001f;
-            Running = moving && !Winded && !Crouching && _in.Run;
+            Running = moving && canRun && !Winded && !Crouching && _in.Run;
             Stamina = Mathf.Clamp01(Stamina + (Running ? -dt / 7f * staminaUse : dt / (moving ? 11f : 5f)));
             if (Stamina <= 0f) Winded = true;
             else if (Winded && Stamina > 0.35f) Winded = false;
+
+            if (_move.active) { StepMove(dt); return; }
 
             bool grounded = _cc.isGrounded;
             float speed = (Running ? runSpeed : walkSpeed) * speedMul * (grounded ? 1f : airFactor) * (Crouching ? crouchFactor : 1f);
@@ -162,19 +204,83 @@ namespace AiOn.Player
                 if (!gated && _in.JumpPressed)
                 {
                     if (Crouching) Crouching = false;
+                    else if (!canJump) { } // the profile: no jumping, no vaulting
+                    else if (TryVault()) { }
                     else { _vy = jumpSpeed; Stamina = Mathf.Max(0, Stamina - 0.06f); }
                 }
             }
             else _vy -= gravity * dt;
 
+            if (_move.active) { StepMove(dt); return; } // Space started a vault this frame
+
+            // Without stairs a stair flight is a wall (the body stops at its foot or head; the host may offer help).
+            // Runs every grounded frame like controls.js:302-306: standing still asks with ahead == feet, which is never a
+            // stop, so the host's contact latch re-arms and the next push into the same flight offers help again.
+            if (!canStairs && grounded && stairBlocked != null)
+            {
+                var pos = transform.position;
+                var ahead = _planar.sqrMagnitude > 0.0001f ? pos + _planar * dt + _planar.normalized * Radius : pos;
+                if (stairBlocked(pos, ahead)) _planar = Vector3.zero;
+            }
+
             _cc.Move((_planar + Vector3.up * _vy) * dt);
             var v = _cc.velocity; v.y = 0;
             HorizontalSpeed = v.magnitude;
+            PlanarVelocity = v;
+            TurnBody(dt);
 
             // Fell out of the world: back to the last safe spot.
             if (_cc.isGrounded) { _lastSafe = transform.position; _hasSafe = true; }
             var points = LevelSpawnPoints.Current;
             if (points != null && transform.position.y < points.killY && _hasSafe) Teleport(_lastSafe, Yaw);
         }
-    }
+    
+        // controls.js: in first person the body is the camera's; in third it turns toward where it walks (damp 10).
+        void TurnBody(float dt)
+        {
+            if (!ThirdPerson) { BodyYaw = Yaw; return; }
+            if (HorizontalSpeed <= 0.25f || _planar.sqrMagnitude < 0.0625f) return; // walking, not pushed out of something
+            float want = Mathf.Atan2(PlanarVelocity.x, PlanarVelocity.z) * Mathf.Rad2Deg;
+            BodyYaw = Mathf.Repeat(BodyYaw + Mathf.DeltaAngle(BodyYaw, want) * (1f - Mathf.Exp(-10f * dt)), 360f);
+        }
+
+        /// <summary>
+        /// Space in front of something low: plans the vault (or climb) along the walk direction (or, standing, where the
+        /// body faces) and starts it. False when there is nothing to get over.
+        /// </summary>
+        bool TryVault()
+        {
+            if (vaultPlanner == null) return false;
+            var vel = _cc.velocity; vel.y = 0;
+            Vector3 dir = vel.magnitude > 0.3f ? vel.normalized : Quaternion.Euler(0, ThirdPerson ? BodyYaw : Yaw, 0) * Vector3.forward;
+            VaultPlanner.Plan? plan;
+            try { plan = vaultPlanner(transform.position, dir); }
+            catch (Exception e) { Debug.LogException(e); return false; }
+            if (plan == null) return false;
+            var p = plan.Value;
+            if (vaultLandingFree != null && !vaultLandingFree(LevelLayout.ToUnity((float)p.X1, (float)p.Y1, (float)p.Z1))) return false;
+            _move = new Move { active = true, t = 0, dur = (float)p.Duration, from = transform.position, plan = p };
+            Stamina = Mathf.Max(0, Stamina - (float)p.Stamina);
+            _planar = Vector3.zero; _vy = 0; HorizontalSpeed = 0; PlanarVelocity = Vector3.zero;
+            _cc.enabled = false; // the body goes over the top on the planned arc, not through the capsule's collisions
+            BodyYaw = Mathf.Atan2((float)p.X1 - _move.from.x, -(float)p.Z1 - _move.from.z) * Mathf.Rad2Deg;
+            Acted?.Invoke(p.Clip);
+            return true;
+        }
+
+        // The scripted vault / climb: eased along the line with an arc over the top (VaultPlanner.MoveAt).
+        void StepMove(float dt)
+        {
+            _move.t = Mathf.Min(1f, _move.t + dt / Mathf.Max(0.05f, _move.dur));
+            var f = _move.from;
+            var (x, y, z) = VaultPlanner.MoveAt(f.x, f.y, -f.z, _move.plan, _move.t);
+            transform.position = new Vector3((float)x, (float)y, -(float)z);
+            if (_move.t < 1f) return;
+            _move.active = false;
+            _cc.enabled = true;
+            _vy = -2f;
+            _cc.Move(Vector3.down * 0.05f); // settle on the landing
+            _lastSafe = transform.position; _hasSafe = true;
+        }
+}
 }

@@ -308,7 +308,7 @@ namespace AiOn.Levels
                 _color.colorFilter.Override(Color.Lerp(Color.white, new Color((float)t[0], (float)t[1], (float)t[2]), Mathf.Clamp01(((float?)grade["tintAmount"] ?? 0.3f) * 1.5f)));
         }
 
-        /// <summary>Grid power: off is the blackout (lamps out; emergency lighting is a later pass).</summary>
+        /// <summary>Grid power: off is the blackout (lamps out; the interiors' battery lamps are InteriorDressing's).</summary>
         public void SetPower(bool on)
         {
             power = on;
@@ -317,12 +317,27 @@ namespace AiOn.Levels
             if (_skyRig && Current != null) _skyRig.Apply(Current, power); // grid groups: distant city windows + beacons
         }
 
+        /// <summary>The current preset's 'indoor' lit level (1 when it has none).</summary>
+        public float IndoorLit => Current != null && Current.Lit.TryGetValue("indoor", out var v) ? v : 1f;
+
+        System.Func<Vector3, float> _lampFactor;
+
+        /// <summary>
+        /// A per-lamp level on top of the preset and power (by the lamp's Unity position): the apartment's stairwell and
+        /// corridor lamps give way to the motion-sensor lamps, the shelter's circuits on the emergency supply. null = all 1.
+        /// </summary>
+        public void SetLampFactor(System.Func<Vector3, float> factor) { _lampFactor = factor; ApplyLamps(); }
+
         void ApplyLamps()
         {
-            float indoor = Current != null && Current.Lit.TryGetValue("indoor", out var v) ? v : 1f;
-            float k = power ? indoor * lampIntensity : 0f;
+            float k = power ? IndoorLit * lampIntensity : 0f;
             for (int i = 0; i < indoorLamps.Count; i++)
-                if (indoorLamps[i]) { indoorLamps[i].intensity = _lampBase[i] * k; indoorLamps[i].enabled = k > 0.001f; }
+            {
+                var l = indoorLamps[i];
+                if (!l) continue;
+                float f = k * (_lampFactor != null ? _lampFactor(l.transform.position) : 1f);
+                l.intensity = _lampBase[i] * f; l.enabled = f > 0.001f;
+            }
         }
     }
 }

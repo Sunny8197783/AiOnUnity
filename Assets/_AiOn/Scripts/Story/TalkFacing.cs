@@ -110,9 +110,15 @@ namespace AiOn.Story
             player.FaceTowards(npc.position + Vector3.up * HeadHeight);
             var d = player.transform.position - npc.position; d.y = 0;
             if (d.sqrMagnitude < 0.04f) return;
+            // a seated person keeps facing their desk (turning the root would swing the body off the chair); the shot still frames them
+            var pa = npc.GetComponentInChildren<AiOn.People.PersonAnimator>();
+            if (pa && IsSeated(pa.Current)) { StartShot(player, npc); return; }
             _npc = npc; _npcFrom = npc.rotation; _npcTo = Quaternion.LookRotation(d.normalized, Vector3.up); _npcT = 0;
             StartShot(player, npc);
         }
+
+        /// <summary>Seated poses (sit, sitChair) that the talk must not turn.</summary>
+        public static bool IsSeated(string anim) => anim != null && anim.StartsWith("sit", System.StringComparison.Ordinal);
 
         static Transform Nearest(string id, Vector3 from)
         {

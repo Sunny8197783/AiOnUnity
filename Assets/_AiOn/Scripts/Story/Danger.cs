@@ -44,6 +44,8 @@ namespace AiOn.Story
         public virtual void ResetPuffs() { }
         /// <summary>A player reaction (engine.act): 'hurt' for seconds.</summary>
         public virtual void PlayerAct(string act, double seconds) { }
+        /// <summary>The danger layer these effects serve (set by Danger.Create): the hands ask it about the looter.</summary>
+        public DangerLayer Layer { get; internal set; }
     }
 
     public sealed class DangerIntensity
@@ -119,7 +121,7 @@ namespace AiOn.Story
 
         internal DangerLayer(StoryContext ctx, Action<int, string> hurt, DangerFx fx)
         {
-            _ctx = ctx; _hurt = hurt ?? ((n, why) => ctx.Stat("health", -n)); _fx = fx;
+            _ctx = ctx; _hurt = hurt ?? ((n, why) => ctx.Stat("health", -n)); _fx = fx; _fx.Layer = this;
             Engine.Frame += OnFrame;
         }
 

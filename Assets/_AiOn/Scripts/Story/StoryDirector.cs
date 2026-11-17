@@ -303,10 +303,18 @@ namespace AiOn.Story
             Engine.Frame += GuardianFrame;
             Engine.Nearest += p => { if (p != null) SpeakIf(p.Label); };
             Engine.Land += OnLand;
-            Engine.Blocked += b => { _ = OnBlocked(b); };
-            Engine.Key += code => { _ = OnKey(code); };
+            // The only Key / Blocked subscription (app.js engine.onKey has one handler): a second one on the same host made
+            // F switch the light on and straight off again and X use two first-aid kits.
+            Engine.Blocked += b => Observe(OnBlocked(b), "blocked");
+            Engine.Key += code => Observe(OnKey(code), "key " + code);
 
             ApplySettings();
+        }
+
+        async void Observe(Task t, string what)
+        {
+            try { await t; }
+            catch (Exception e) { Log?.Invoke("[app] " + what, e); }
         }
 
         // ------------------------------------------------------------------ settings and profiles
@@ -596,13 +604,34 @@ namespace AiOn.Story
             bool minimap = Settings["minimap"]?.Type != JTokenType.Boolean || (bool)Settings["minimap"];
             if (!minimap || Engine.LevelId == null) { Hud.SetMap(null); return; }
             // walk / solids (the level's floor plan) are the host's: it adds them when it draws.
-            var points = new JArray(Engine.Points.Select(p => new JObject { ["id"] = p.Id, ["kind"] = p.Kind, ["label"] = p.Label, ["x"] = p.X, ["z"] = p.Z, ["enabled"] = p.Enabled }));
-            Hud.SetMap(new JObject
+            // One frame object, updated in place: 15 times a second a fresh JObject per point was steady garbage.
+            var pts = Engine.Points;
+            if (_mapFrame == null || _mapPts.Count != pts.Count)
             {
-                ["level"] = Engine.LevelId, ["x"] = Engine.PlayerX, ["y"] = Engine.PlayerY, ["z"] = Engine.PlayerZ, ["yaw"] = Engine.PlayerYaw,
-                ["points"] = points, ["scale"] = Engine.LevelId == "town" ? 2 : 9,
-            });
+                _mapPts = new JArray();
+                for (int i = 0; i < pts.Count; i++)
+                    _mapPts.Add(new JObject { ["id"] = null, ["kind"] = null, ["label"] = null, ["x"] = 0.0, ["y"] = 0.0, ["z"] = 0.0, ["enabled"] = true });
+                _mapFrame = new JObject { ["level"] = null, ["x"] = 0.0, ["y"] = 0.0, ["z"] = 0.0, ["yaw"] = 0.0, ["points"] = _mapPts, ["scale"] = 9 };
+            }
+            for (int i = 0; i < pts.Count; i++)
+            {
+                var p = pts[i]; var o = (JObject)_mapPts[i];
+                SetIn(o, "id", p.Id); SetIn(o, "kind", p.Kind); SetIn(o, "label", p.Label);
+                SetIn(o, "x", p.X); SetIn(o, "y", p.Y); SetIn(o, "z", p.Z); SetIn(o, "enabled", p.Enabled);
+            }
+            SetIn(_mapFrame, "level", Engine.LevelId);
+            SetIn(_mapFrame, "x", Engine.PlayerX); SetIn(_mapFrame, "y", Engine.PlayerY); SetIn(_mapFrame, "z", Engine.PlayerZ); SetIn(_mapFrame, "yaw", Engine.PlayerYaw);
+            SetIn(_mapFrame, "scale", Engine.LevelId == "town" ? 2.0 : 9.0);
+            Hud.SetMap(_mapFrame);
         }
+
+        JObject _mapFrame;
+        JArray _mapPts;
+
+        // In-place value updates that only box when the value changed.
+        static void SetIn(JObject o, string key, string v) { var j = (JValue)o[key]; if ((string)j.Value != v) j.Value = v; }
+        static void SetIn(JObject o, string key, double v) { var j = (JValue)o[key]; if (!(j.Value is double d) || d != v) j.Value = v; }
+        static void SetIn(JObject o, string key, bool v) { var j = (JValue)o[key]; if (!(j.Value is bool b) || b != v) j.Value = v; }
 
         // 지체 장애 mode: a guardian walks a step behind, to the right.
         void GuardianFrame(double dt)

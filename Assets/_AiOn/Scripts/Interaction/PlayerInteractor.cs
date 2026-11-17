@@ -40,7 +40,7 @@ namespace AiOn.Interaction
             _points.Clear();
             foreach (var p in InteractionPoint.All) _points.Add(p);
             _yaws[0] = cameraRig && cameraRig.cam ? cameraRig.cam.transform.eulerAngles.y : _pc.Yaw;
-            _yaws[1] = _pc.Yaw;
+            _yaws[1] = _pc.BodyYaw; // reach.js: the camera's yaw and the body's
 
             var picked = InputGate.Blocked ? null : _picker.Pick(_points, transform.position, _yaws, Hidden) as InteractionPoint;
             if (picked != Current) { Current = picked; CurrentChanged?.Invoke(Current); }

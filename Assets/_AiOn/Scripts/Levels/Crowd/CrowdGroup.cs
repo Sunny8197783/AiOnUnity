@@ -566,7 +566,7 @@ namespace AiOn.Levels.Crowd
             if (reapply && (_mode == "sit" || ((_mode == "stroll" || _mode == "idle") && _paths.Count == 0))) ApplyMode();
         }
 
-        /// <summary>Hit by the player: flinch, then run from (x, z); ko = knocked down for a while. Nothing calls it yet.</summary>
+        /// <summary>Hit by the player: flinch, then run from (x, z); ko = knocked down for a while (PlayerHands).</summary>
         public void Hit(int agent, double x, double z, bool ko)
         {
             if (agent < 0 || agent >= _agents.Count) return;

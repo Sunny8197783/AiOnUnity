@@ -96,7 +96,7 @@ namespace AiOn.UI
             var t = rt.gameObject.AddComponent<Text>();
             t.font = Font;
             t.text = text;
-            t.fontSize = size;
+            t.fontSize = TextScaler.Register(t, size); // the 글자 크기 setting
             t.color = color;
             t.alignment = align;
             t.fontStyle = style;
@@ -166,7 +166,7 @@ namespace AiOn.UI
 
         public static void Height(Component c, float h)
         {
-            var le = c.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
+            if (!c.TryGetComponent(out LayoutElement le)) le = c.gameObject.AddComponent<LayoutElement>(); // not ??: Unity's fake null
             le.preferredHeight = h; le.minHeight = h;
         }
     }

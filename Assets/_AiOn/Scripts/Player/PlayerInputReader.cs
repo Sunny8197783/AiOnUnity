@@ -24,6 +24,8 @@ namespace AiOn.Player
         public bool InteractPressed => _interact.WasPressedThisFrame();
         public bool ViewPressed => _view.WasPressedThisFrame();
         public bool CursorLocked => Cursor.lockState == CursorLockMode.Locked;
+        /// <summary>A left click while the pointer was already locked (controls.js 'Mouse0': the fist, or a throw).</summary>
+        public bool PunchClicked { get; private set; }
 
         [Tooltip("Stick look speed in 'pixels' per second, to match mouse deltas.")]
         public float stickLookRate = 900f;
@@ -60,6 +62,7 @@ namespace AiOn.Player
 
         void Update()
         {
+            PunchClicked = _lockClick.WasPressedThisFrame() && CursorLocked; // the click that takes the lock is not a punch
             if (_unlock.WasPressedThisFrame()) SetCursorLocked(false);
             else if (_lockClick.WasPressedThisFrame() && !CursorLocked) SetCursorLocked(true);
 

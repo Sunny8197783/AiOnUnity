@@ -39,6 +39,8 @@ namespace AiOn.Levels.Crowd
         public IReadOnlyDictionary<string, string> Gates => _gates;
         public IReadOnlyList<string> Closures => _closures;
         public string Traffic => _traffic;
+        /// <summary>The crowd's solids, with the closures, water point, buses and gates switched as the story set them.</summary>
+        public SolidGrid Solids => _solids;
 
         /// <summary>The group made for a name, or null while it has not been used.</summary>
         public CrowdGroup Group(string name)
@@ -126,7 +128,7 @@ namespace AiOn.Levels.Crowd
             foreach (var id in new[] { "bus", "assemblySign", "assemblyTable" }) _solids.SetOff(id, !_buses);
             _solids.SetOff("gateEast", !(_gates.TryGetValue("east", out var e) && e == "closed"));
             _solids.SetOff("boomB", !(_gates.TryGetValue("ramp", out var r) && r == "closed"));
-            _solids.SetOff("movingCar", true); // no traffic in the port: the cars' boxes never stand in the street
+            _solids.SetOff("movingCar", true); // the crowd keeps to walks and zebras; the cars wait for it (TownStreet)
         }
 
         public bool Apply(string key, JToken v)
@@ -157,8 +159,14 @@ namespace AiOn.Levels.Crowd
                     SyncSolids(); SetContext();
                     return true;
                 case "traffic":
-                    _traffic = v?.ToString() ?? "normal";
-                    return true;
+                    {
+                        // town.js: traffic.setMode(value); state.traffic = traffic.mode (an unknown mode keeps the old one)
+                        string m = v != null && v.Type == JTokenType.String ? (string)v : v?.ToString();
+                        if (Array.IndexOf(AiOn.Levels.Town.TownTraffic.Modes, m) < 0)
+                            UnityEngine.Debug.LogError($"[town] traffic \"{m}\" unknown; use normal | light | none");
+                        else _traffic = m;
+                        return true;
+                    }
                 case "waterPoint":
                     _waterPoint = v?.ToString() == "on"; SyncSolids();
                     return true;

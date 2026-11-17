@@ -105,7 +105,7 @@ namespace AiOn.EditorTools
             i = 0;
             foreach (var s in layout.solids)
             {
-                if (s.off || s.IsEmpty || layout.doors.Any(d => IsDoorSolid(d, s))) continue;
+                if (s.off || s.IsEmpty || layout.doors.Any(d => LevelLayout.IsDoorSolid(d, s))) continue;
                 var go = Box(solids, string.IsNullOrEmpty(s.id) ? $"Solid_{i}" : $"Solid_{s.id}_{i}", s.x0, s.x1, s.y0, s.y1, s.z0, s.z1, mWall, visible);
                 i++;
             }
@@ -265,19 +265,6 @@ namespace AiOn.EditorTools
                 }
                 Debug.Log($"[AiOn] {levelId}: {ps.points.Count} interaction points change with states");
             }
-        }
-
-        /// <summary>A solid that is part of a table door: its leaf boxes (by id) or a thin box in its swing area at its floor.</summary>
-        static bool IsDoorSolid(LevelLayout.DoorDef d, LevelLayout.SolidBox s)
-        {
-            if (!string.IsNullOrEmpty(s.id)) return s.id == d.id;
-            if (Mathf.Abs(s.y0 - d.y) > 0.06f) return false;
-            float w = d.b - d.a;
-            float thin = Mathf.Min(s.x1 - s.x0, s.z1 - s.z0);
-            if (thin > 0.22f) return false;
-            return d.axis == "z"
-                ? s.x0 >= d.a - 0.05f && s.x1 <= d.b + 0.05f && s.z0 >= d.c - w - 0.1f && s.z1 <= d.c + w + 0.1f
-                : s.z0 >= d.a - 0.05f && s.z1 <= d.b + 0.05f && s.x0 >= d.c - w - 0.1f && s.x1 <= d.c + w + 0.1f;
         }
 
         static void BuildDoor(GameObject parent, LevelLayout.DoorDef d, Material mat, GameObject visual)

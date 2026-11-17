@@ -21,6 +21,20 @@ namespace AiOn.UI
         public static GameHud Current { get; private set; }
 
         public bool DialogOpen => _dialog != null && _dialog.activeSelf;
+        /// <summary>The hands' prompt for a loose thing in reach (null when none; the point prompt wins), as actions.js words it
+        /// ("G · 빈 병 줍기"); shown styled like the E prompt, formatted once per change.</summary>
+        public string ItemPrompt
+        {
+            get => _itemPrompt;
+            set
+            {
+                if (_itemPrompt == value) return;
+                _itemPrompt = value;
+                const string key = "G · ";
+                _itemPromptText = string.IsNullOrEmpty(value) ? null : value.StartsWith(key, StringComparison.Ordinal) ? $"<b>G</b>   {value.Substring(key.Length)}" : value;
+            }
+        }
+        string _itemPrompt, _itemPromptText;
         public string PromptText => _prompt && _prompt.gameObject.activeSelf ? _prompt.text : null;
         public string DialogLine => DialogOpen ? _line.text : null;
         public string ToastText => _toast && _toast.gameObject.activeSelf ? _toast.text : null;
@@ -191,12 +205,16 @@ namespace AiOn.UI
 
         void Update()
         {
+            if (!Current) Current = this; // a level scene's own HUD took Current on load and dropped it when it was removed
             if (DialogOpen && Time.unscaledTime >= _armedAt && AdvancePressed()) Advance();
 
             var p = interactor ? interactor.Current : null;
             bool showPrompt = p != null && !DialogOpen;
-            _prompt.transform.parent.gameObject.SetActive(showPrompt);
+            // app.js: a loose thing in reach ("G · 벽돌 줍기") shows when no point is in reach
+            bool showItem = !showPrompt && !DialogOpen && !string.IsNullOrEmpty(ItemPrompt) && !AiOn.Player.InputGate.Blocked;
+            _prompt.transform.parent.gameObject.SetActive(showPrompt || showItem);
             if (showPrompt) _prompt.text = $"<b>E</b>   {p.label}";
+            else if (showItem && _prompt.text != _itemPromptText) _prompt.text = _itemPromptText;
             _dot.SetActive(!DialogOpen);
 
             if (_toast.transform.parent.gameObject.activeSelf && Time.unscaledTime > _toastUntil)

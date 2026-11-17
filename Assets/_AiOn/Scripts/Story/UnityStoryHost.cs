@@ -68,6 +68,11 @@ namespace AiOn.Story
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            if (overlay)
+            {
+                // the minimap draws the level's walk zones and solids as they are now (doors, closures, rubble)
+                overlay.MapLayout = LayoutOf; overlay.MapSolidOff = MapSolidOff; overlay.MapExtraSolids = MapExtraSolids;
+            }
             foreach (var go in new[] { player ? player.gameObject : null, cameraRig ? cameraRig.gameObject : null, overlay ? overlay.gameObject : null })
                 if (go && go.transform.parent == null) DontDestroyOnLoad(go);
             var systems = GameObject.Find("GameSystems");
@@ -77,9 +82,93 @@ namespace AiOn.Story
                 interactor.Interacted += ip => { if (ip && _byIp.TryGetValue(ip, out var sp)) Interact?.Invoke(sp); };
                 interactor.CurrentChanged += ip => Nearest?.Invoke(ip && _byIp.TryGetValue(ip, out var sp) ? sp : null);
             }
+            if (player) _reader = player.GetComponent<PlayerInputReader>();
+            if (player) { player.vaultPlanner = PlanVault; player.vaultLandingFree = VaultLandingFree; player.stairBlocked = StairBlocked; }
+            if (cameraRig) cameraRig.hostOwnsView = true; // V goes through the Director, which saves the view setting
+            AiOn.Settings.AudioBus.Changed += ApplyBuses;
         }
 
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        // ---------- wheelchair: a stair flight is a wall (controls.js prof.stairs) ----------
+
+        bool _stairBlocked;
+        PlayerInputReader _reader;
+
+        /// <summary>
+        /// The player's step from feet to next (Unity) without stairs: true when it goes onto a stair flight of the level's
+        /// walk zones from ground that is not one. The first stop of a contact raises Blocked { kind: 'stairs', x, y, z, toX,
+        /// toZ, zone } (original frame) for the Director's help offer.
+        /// </summary>
+        public bool StairBlocked(Vector3 feet, Vector3 next)
+        {
+            var layout = LayoutOf(_levelId);
+            int i = layout ? AiOn.Settings.StairRule.Blocking(layout.walk, feet.x, -feet.z, next.x, -next.z, feet.y) : -1;
+            bool stop = i >= 0;
+            if (stop && !_stairBlocked)
+            {
+                var zone = AiOn.Settings.StairRule.ZoneJson(layout.walk[i]);
+                Blocked?.Invoke(new JObject { ["kind"] = "stairs", ["x"] = feet.x, ["y"] = feet.y, ["z"] = -feet.z, ["toX"] = next.x, ["toZ"] = -next.z, ["zone"] = zone });
+            }
+            _stairBlocked = stop;
+            return stop;
+        }
+
+        // ---------- vault / climb (engine/vault.js on the level's solids as they are now) ----------
+
+        string _vaultLevel;
+        VaultPlanner.World _vaultWorld;
+        readonly List<(LevelLayout.SolidBox src, VaultPlanner.Box box)> _vaultBoxes = new();
+        readonly List<LevelLayout.SolidBox> _vaultExtra = new();
+
+        /// <summary>The vault plan for the player's feet and heading (Unity), in the original frame; null = just jump.</summary>
+        public VaultPlanner.Plan? PlanVault(Vector3 feet, Vector3 dir)
+        {
+            var layout = LayoutOf(_levelId);
+            if (!layout) return null;
+            if (_vaultLevel != _levelId || _vaultWorld == null)
+            {
+                _vaultLevel = _levelId; _vaultWorld = VaultPlanner.WorldOf(layout); _vaultBoxes.Clear();
+                foreach (var s in layout.solids) if (s != null && !s.IsEmpty) _vaultBoxes.Add((s, VaultPlanner.BoxOf(s)));
+            }
+            double x = feet.x, z = -feet.z;
+            var w = _vaultWorld;
+            w.Solids.Clear();
+            foreach (var (src, box) in _vaultBoxes) // only those near, and only the ones on now (doors, closures, the fire)
+                if (box.X0 <= x + 4 && box.X1 >= x - 4 && box.Z0 <= z + 4 && box.Z1 >= z - 4 && !MapSolidOff(src)) w.Solids.Add(box);
+            MapExtraSolids(_vaultExtra); // rubble heaps from the danger layer
+            foreach (var s in _vaultExtra) w.Solids.Add(VaultPlanner.BoxOf(s));
+            return VaultPlanner.PlanVault(w, x, z, feet.y, dir.x, -dir.z, PlayerController.Radius, PlayerController.Height);
+        }
+
+        static readonly Collider[] VaultOverlap = new Collider[16];
+
+        /// <summary>The scene agrees the body fits where a vault lands (a door leaf or a prop the layout does not know).</summary>
+        public bool VaultLandingFree(Vector3 feet)
+        {
+            const float r = 0.26f;
+            int n = Physics.OverlapCapsuleNonAlloc(feet + Vector3.up * (0.3f + r), feet + Vector3.up * (PlayerController.Height - r), r, VaultOverlap, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var c = VaultOverlap[i];
+                if (!c || (player && c.transform.IsChildOf(player.transform))) continue;
+                if (c.GetComponentInParent<Animator>() || c.GetComponentInChildren<PersonAnimator>()) continue; // people step aside (bodies.js pushes the player out)
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>The story's handle on a person in the scene by its root (a named Npc_ or one the story spawned); null for crowd members.</summary>
+        public IStoryPerson PersonFor(GameObject root)
+        {
+            if (!root) return null;
+            if (_persons.TryGetValue(root, out var p)) return p;
+            return root.name.StartsWith("Npc_", StringComparison.Ordinal) ? Wrap(root.name.Substring(4), root) : null;
+        }
+
+        void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+            AiOn.Settings.AudioBus.Changed -= ApplyBuses;
+        }
 
         public string LevelId => _levelId;
         public IReadOnlyList<StoryPoint> Points => _points;
@@ -94,7 +183,17 @@ namespace AiOn.Story
 
         public static string SceneOf(string levelId) => char.ToUpperInvariant(levelId[0]) + levelId.Substring(1);
 
+        /// <summary>True from the start of Enter until the new level stands (the frame governor does not judge load stalls).</summary>
+        public bool Loading { get; private set; }
+
         public async Task Enter(string levelId, string spawn, Action prepare = null)
+        {
+            Loading = true;
+            try { await EnterLevel(levelId, spawn, prepare); }
+            finally { Loading = false; }
+        }
+
+        async Task EnterLevel(string levelId, string spawn, Action prepare)
         {
             if (overlay) await overlay.FadeTo(1, 0.25);
             var op = SceneManager.LoadSceneAsync(SceneOf(levelId), LoadSceneMode.Single);
@@ -107,7 +206,7 @@ namespace AiOn.Story
 
             _levelId = levelId;
             _landReset = true;
-            _levelState.Clear(); _undrawn.Clear(); _persons.Clear();
+            _levelState.Clear(); _undrawn.Clear(); _persons.Clear(); _slabLevel = null; _slabDoor.Clear();
             _spawns = FindFirstObjectByType<LevelSpawnPoints>();
             _goods = FindFirstObjectByType<ShopGoods>();
             _points.Clear(); _byIp.Clear(); _ipBy.Clear();
@@ -122,6 +221,9 @@ namespace AiOn.Story
                 _points.Add(sp); _byIp[ip] = sp; _ipBy[sp] = ip;
             }
             BuildFx();
+            // Interiors' live dressing: stock shelf, sensor / battery lamps, candle, clerk, office poses and dashboard, shelter supply.
+            _dressing = AiOn.Levels.Interiors.InteriorDressing.Create(levelId, () => player ? player.transform : null,
+                () => cameraRig ? cameraRig.cam : null, Npc, (id, en, label) => SetPoint(id, en, label));
             // The level's lit materials start at the current preset's lit levels and power (whichever of
             // EnvironmentController / LevelMaterials woke first).
             EnvironmentController.Instance?.PushLit();
@@ -154,6 +256,7 @@ namespace AiOn.Story
                 foreach (var (id, en, label) in pointStates.Apply(key, value)) SetPoint(id, en, string.IsNullOrEmpty(label) ? null : label);
                 handled = true;
             }
+            if (_dressing && _dressing.Apply(key, value)) handled = true;
             switch (key)
             {
                 case "power":
@@ -209,6 +312,7 @@ namespace AiOn.Story
             if (!handled && _undrawn.Add(key)) Debug.Log($"[Story] {_levelId}: state '{key}' = {value?.ToString(Newtonsoft.Json.Formatting.None)} is kept but not drawn yet");
         }
 
+        AiOn.Levels.Interiors.InteriorDressing _dressing;
         FireFx _fire;
         SmokeFx _smoke, _haze;
         FireFx[] _strikeFires;
@@ -277,6 +381,52 @@ namespace AiOn.Story
             return null;
         }
 
+        // ---------- the minimap's live solids (original: hud.setMap draws L.solids, which the story switches) ----------
+
+        readonly Dictionary<LevelLayout.SolidBox, Door> _slabDoor = new();
+        string _slabLevel;
+
+        /// <summary>
+        /// Whether a solid of the current level's layout is off right now: a door's closed slab is off once the door
+        /// opens past 0.12 (apartment-parts.js), the town's closures, water point, buses and gates follow the crowd's
+        /// switched solids (town-events.js, town-shelter.js), the shelter's fire block follows the 'fire' state
+        /// (shelter.js); anything else keeps its authored state.
+        /// </summary>
+        public bool MapSolidOff(LevelLayout.SolidBox s)
+        {
+            if (s == null || s.IsEmpty) return true;
+            if (string.IsNullOrEmpty(s.id))
+            {
+                if (_slabLevel != _levelId) IndexDoorSlabs();
+                return _slabDoor.TryGetValue(s, out var door) && door ? door.k > 0.12f : s.off;
+            }
+            if (_crowd != null && _crowd.Logic is TownCrowd town && town.Solids != null && town.Solids.TryGetSwitched(s.id, out bool off)) return off;
+            if (_levelId == "shelter" && s.id == "fire") return !(_levelState.TryGetValue("fire", out var f) && f?.Type == JTokenType.String && (string)f == "large");
+            return s.off;
+        }
+
+        /// <summary>Solids the story added at runtime (the danger layer's rubble heaps), in the original frame.</summary>
+        public void MapExtraSolids(List<LevelLayout.SolidBox> into)
+        {
+            into.Clear();
+            var rig = DangerFxRig.Current;
+            if (rig) rig.RubbleBoxes(into);
+        }
+
+        void IndexDoorSlabs()
+        {
+            _slabLevel = _levelId;
+            _slabDoor.Clear();
+            var layout = LayoutOf(_levelId);
+            if (!layout || layout.doors.Count == 0) return;
+            foreach (var door in FindObjectsByType<Door>(FindObjectsSortMode.None))
+            {
+                if (door.def == null || !door.def.solid) continue; // a non-solid door has no closed slab
+                foreach (var s in layout.solids)
+                    if (string.IsNullOrEmpty(s.id) && !s.IsEmpty && LevelLayout.IsDoorSolid(door.def, s)) _slabDoor[s] = door;
+            }
+        }
+
         /// <summary>The current level's crowd (null in levels without one).</summary>
         public LevelCrowd Crowd => _crowd;
         /// <summary>The level states applied so far (for checks and debugging).</summary>
@@ -327,9 +477,18 @@ namespace AiOn.Story
                 _flashlight = go.AddComponent<Light>();
                 _flashlight.type = LightType.Spot; _flashlight.spotAngle = 48; _flashlight.innerSpotAngle = 22;
                 _flashlight.range = 16; _flashlight.intensity = 6; _flashlight.color = new Color(1f, 0.93f, 0.82f);
-                _flashlight.shadows = LightShadows.Soft;
+                _flashlight.shadows = _flashShadows ? LightShadows.Soft : LightShadows.None;
             }
             if (_flashlight) _flashlight.enabled = on;
+        }
+
+        bool _flashShadows = true;
+
+        /// <summary>The graphics tier: whether the flashlight casts shadows (quality.js flash).</summary>
+        public bool FlashShadows
+        {
+            get => _flashShadows;
+            set { _flashShadows = value; if (_flashlight) _flashlight.shadows = value ? LightShadows.Soft : LightShadows.None; }
         }
 
         public void SetPlayerPreset(string preset)
@@ -429,8 +588,18 @@ namespace AiOn.Story
             (UnityEngine.InputSystem.Key.M, "KeyM"), (UnityEngine.InputSystem.Key.Tab, "Tab"), (UnityEngine.InputSystem.Key.I, "KeyI"),
             (UnityEngine.InputSystem.Key.Escape, "Escape"), (UnityEngine.InputSystem.Key.F, "KeyF"), (UnityEngine.InputSystem.Key.P, "KeyP"),
             (UnityEngine.InputSystem.Key.H, "KeyH"), (UnityEngine.InputSystem.Key.G, "KeyG"), (UnityEngine.InputSystem.Key.Q, "KeyQ"),
-            (UnityEngine.InputSystem.Key.X, "KeyX"), (UnityEngine.InputSystem.Key.B, "KeyB"),
+            (UnityEngine.InputSystem.Key.X, "KeyX"), (UnityEngine.InputSystem.Key.B, "KeyB"), (UnityEngine.InputSystem.Key.V, "KeyV"),
         };
+
+        /// <summary>StoryCine.SkipKeys as keys: raised even while the controls are held.</summary>
+        static readonly (Key key, string code)[] SkipKeys =
+        {
+            (UnityEngine.InputSystem.Key.Space, "Space"), (UnityEngine.InputSystem.Key.Enter, "Enter"),
+            (UnityEngine.InputSystem.Key.NumpadEnter, "NumpadEnter"), (UnityEngine.InputSystem.Key.Escape, "Escape"),
+        };
+
+        /// <summary>The key codes raised while the controls are held (for checks).</summary>
+        public static string[] SkipKeyCodes => System.Array.ConvertAll(SkipKeys, k => k.code);
 
         void Update()
         {
@@ -439,11 +608,25 @@ namespace AiOn.Story
                 if (ip) { ip.interactable = sp.Enabled; ip.label = sp.Label; }
 
             if (_levelId != null) Frame?.Invoke(Time.deltaTime);
+            // app.js onFrame: hud.setStamina(p.stamina, p.winded) every frame.
+            if (overlay && player && _levelId != null) overlay.SetStamina(player.Stamina, player.Winded);
 
             var kb = Keyboard.current;
             if (kb != null && !InputGate.Blocked)
+            {
                 foreach (var (key, code) in UiKeys)
                     if (kb[key].wasPressedThisFrame) Key?.Invoke(code);
+            }
+            // The view toggle from other devices (the gamepad's north button): the rig leaves V to the Director.
+            if (!InputGate.Blocked && _reader && _reader.ViewPressed && (kb == null || !kb[UnityEngine.InputSystem.Key.V].wasPressedThisFrame))
+                Key?.Invoke("KeyV");
+            else if (kb != null)
+            {
+                // A cutscene holds the controls, but its skip keys still count (cine.js listens on window keydown in the
+                // capture phase). The Director ignores keys while the controls are off, so only StoryCine acts on these.
+                foreach (var (key, code) in SkipKeys)
+                    if (kb[key].wasPressedThisFrame) Key?.Invoke(code);
+            }
 
             if (player)
             {
@@ -465,7 +648,7 @@ namespace AiOn.Story
 
         public void Ambience(string name, double fadeSeconds = 1.2)
         {
-            if (!_ambience) { _ambience = gameObject.AddComponent<AudioSource>(); _ambience.loop = true; _ambience.spatialBlend = 0; _ambience.volume = 0.5f; }
+            if (!_ambience) { _ambience = gameObject.AddComponent<AudioSource>(); _ambience.loop = true; _ambience.spatialBlend = 0; _ambience.volume = AmbienceLevel * AiOn.Settings.AudioBus.Ambience; }
             var clip = audioLibrary ? audioLibrary.Get("ambience_" + name) : null;
             if (_ambience.clip == clip) return;
             _ambience.clip = clip;
@@ -473,6 +656,15 @@ namespace AiOn.Story
         }
 
         AudioSource _sfx;
+        const float AmbienceLevel = 0.5f;
+        readonly Dictionary<string, float> _loopLevel = new();
+
+        /// <summary>The bus settings (환경음, 효과음) on the sources that hold a level; the master is AudioListener.volume.</summary>
+        void ApplyBuses()
+        {
+            if (_ambience) _ambience.volume = AmbienceLevel * AiOn.Settings.AudioBus.Ambience;
+            foreach (var kv in _loops) if (kv.Value && _loopLevel.TryGetValue(kv.Key, out var lv)) kv.Value.volume = lv * AiOn.Settings.AudioBus.Effects;
+        }
 
         /// <summary>
         /// One-shot sounds. The ones the original synthesized (boom, the shell whistle and body hits, the phone's
@@ -502,8 +694,12 @@ namespace AiOn.Story
                 }
             }
             if (!clip && audioLibrary) clip = audioLibrary.Get(name);
-            if (clip) _sfx.PlayOneShot(clip, vol);
+            // Menu blips go through the UI bus (audio.js uiBus: open/close/confirm/tick/click), the rest through effects.
+            if (clip) _sfx.PlayOneShot(clip, vol * (IsUiCue(name) ? AiOn.Settings.AudioBus.Ui : AiOn.Settings.AudioBus.Effects));
         }
+
+        /// <summary>The cues that are interface sounds (audio.js routes them to uiBus, which 'UI 효과음' sets).</summary>
+        public static bool IsUiCue(string name) => name == "click" || name == "open" || name == "close" || name == "confirm" || name == "tick";
 
         /// <summary>Loops: the siren (one minute, then it ends by itself like the original) and the fire (its level is
         /// the volume) are synthesized; the others come from the AudioLibrary.</summary>
@@ -514,11 +710,12 @@ namespace AiOn.Story
                 AudioClip clip = name == "siren" ? ProceduralAudio.Siren() : name == "fire" ? ProceduralAudio.FireLoop()
                     : audioLibrary ? audioLibrary.Get(name) : null;
                 if (!clip) return;
-                src = gameObject.AddComponent<AudioSource>(); src.clip = clip; src.loop = name != "siren"; src.volume = 0.6f; src.spatialBlend = 0;
-                _loops[name] = src;
+                src = gameObject.AddComponent<AudioSource>(); src.clip = clip; src.loop = name != "siren"; src.spatialBlend = 0;
+                _loops[name] = src; _loopLevel[name] = 0.6f;
             }
-            if (name == "fire") src.volume = Mathf.Clamp01((float?)args?["level"] ?? 1f) * 0.8f;
-            if (name == "siren") src.volume = 0.9f;
+            if (name == "fire") _loopLevel[name] = Mathf.Clamp01((float?)args?["level"] ?? 1f) * 0.8f;
+            if (name == "siren") _loopLevel[name] = 0.9f;
+            src.volume = _loopLevel[name] * AiOn.Settings.AudioBus.Effects;
             if (on && !src.isPlaying) src.Play(); else if (!on) src.Stop();
         }
 

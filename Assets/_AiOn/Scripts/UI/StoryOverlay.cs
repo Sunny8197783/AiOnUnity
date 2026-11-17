@@ -44,12 +44,40 @@ namespace AiOn.UI
         GameObject _objective, _batteryChip, _bagChip, _caption, _stats, _letterTop, _letterBottom;
         Image _bagFill, _vignette, _hurt, _fade;
         GameObject _smokeHint, _topLeft;
+        RectTransform _chapterBg;
         readonly Dictionary<GameObject, bool> _cineHidden = new();
         readonly Dictionary<string, (Image fill, Text word)> _statBars = new();
         RectTransform _toasts;
         float _hurtLevel, _tension;
         int _captionToken;
-        bool _hidden;
+        bool _hidden, _batteryWanted, _bagWanted;
+
+        // Compass strip, minimap, stamina bar and key strip (original hud.js 59-68): each is wanted by the story or the
+        // player's state, and shows only while the HUD is up and no cutscene runs.
+        HudCompass _compass;
+        RectTransform _mapRoot;
+        HudMinimap _minimap;
+        GameObject _stamina, _keys;
+        Image _staminaFill;
+        bool _cinematic, _compassWanted, _mapWanted, _staminaWanted;
+        float _staminaShown = -1;
+        bool _windedShown;
+        /// <summary>The level layout the minimap draws (walk zones, solids); the host sets it.</summary>
+        public Func<string, AiOn.Levels.LevelLayout> MapLayout;
+        /// <summary>A layout solid's live off state (doors, closures, gates; the host's level state); null: as authored.</summary>
+        public Func<AiOn.Levels.LevelLayout.SolidBox, bool> MapSolidOff;
+        /// <summary>Fills the solids the story added at runtime (rubble); the host sets it.</summary>
+        public Action<List<AiOn.Levels.LevelLayout.SolidBox>> MapExtraSolids;
+        readonly List<AiOn.Levels.LevelLayout.SolidBox> _mapExtra = new();
+
+        const float MapSize = 240, MapTop = 84, ToastTop = 84;
+        static readonly Color StaminaOk = Hex("#7fe0a0"), StaminaWinded = Hex("#ff8a6a");
+        static readonly string[,] KeyHints =
+        {
+            { "WASD", "이동" }, { "Shift", "달리기" }, { "Space", "점프·넘기" }, { "E", "살피기" }, { "Q", "주먹" }, { "G", "줍기·던지기" },
+            { "C", "엎드리기" }, { "X", "구급함" }, { "B", "분필" }, { "F", "불빛" }, { "P", "휴대폰" }, { "Tab", "수첩" }, { "I", "소지품" },
+            { "M", "지도" }, { "V", "시점" }, { "H", "조작법" }, { "Esc", "메뉴" },
+        };
 
         void Awake()
         {
@@ -58,6 +86,7 @@ namespace AiOn.UI
             _canvas.transform.SetParent(transform, false);
             _root = (RectTransform)_canvas.transform;
             Build();
+            Hide(); // the whole HUD waits for the Director's Hud.Show() (original hud.js: .hud starts hidden)
         }
 
         void OnDestroy() { if (Instance == this) Instance = null; }
@@ -83,7 +112,10 @@ namespace AiOn.UI
             // Top-left: chapter, clock, objective.
             var tl = UiKit.Rect("TopLeft", _root); UiKit.At(tl, 28, 24, 560, 520);
             _topLeft = tl.gameObject;
-            _chapterNo = UiKit.Label("ChapterNo", tl, "", 20, UiKit.Amber, style: FontStyle.Bold);
+            // A soft dark plate behind the chapter lines: the shadow alone left them ghostly over a pale ceiling.
+            _chapterBg = UiKit.Box("ChapterBg", tl, new Color(0.04f, 0.06f, 0.07f, 0.5f)).rectTransform;
+            UiKit.At(_chapterBg, -10, -4, 300, 70);
+            _chapterNo =UiKit.Label("ChapterNo", tl, "", 20, UiKit.Amber, style: FontStyle.Bold);
             UiKit.At(_chapterNo.rectTransform, 0, 0, 560, 28);
             _chapterTitle = UiKit.Label("ChapterTitle", tl, "", 26, UiKit.Ink, style: FontStyle.Bold);
             UiKit.At(_chapterTitle.rectTransform, 0, 28, 560, 36);
@@ -136,6 +168,8 @@ namespace AiOn.UI
                 _statBars[key] = (fill, word);
             }
 
+            BuildMapParts();
+
             // Caption: bottom centre, above the prompt.
             var cap = UiKit.Box("Caption", _root, new Color(0.04f, 0.06f, 0.07f, 0.82f)).rectTransform;
             cap.anchorMin = cap.anchorMax = cap.pivot = new Vector2(0.5f, 0); cap.anchoredPosition = new Vector2(0, 300); cap.sizeDelta = new Vector2(1100, 86);
@@ -157,6 +191,67 @@ namespace AiOn.UI
             UiKit.Fill(_fade.rectTransform);
             _fade.raycastTarget = false;
         }
+
+        void BuildMapParts()
+        {
+            // Compass strip: top centre (360 x 34 in the original, x1.3 here like the rest of the HUD).
+            var cr = UiKit.Rect("Compass", _root);
+            cr.anchorMin = cr.anchorMax = cr.pivot = new Vector2(0.5f, 1); cr.anchoredPosition = new Vector2(0, -16); cr.sizeDelta = new Vector2(470, 44);
+            cr.gameObject.AddComponent<CanvasRenderer>();
+            _compass = cr.gameObject.AddComponent<HudCompass>();
+            _compass.raycastTarget = false;
+            cr.gameObject.SetActive(false);
+
+            // Minimap: top right under the battery / bag chips, a dark disc with the map clipped to it.
+            _mapRoot = UiKit.Rect("Minimap", _root);
+            _mapRoot.anchorMin = _mapRoot.anchorMax = _mapRoot.pivot = new Vector2(1, 1);
+            _mapRoot.anchoredPosition = new Vector2(-28, -MapTop); _mapRoot.sizeDelta = new Vector2(MapSize, MapSize);
+            var shadow = UiKit.Box("Shadow", _mapRoot, new Color(0, 0, 0, 0.35f));
+            shadow.sprite = HudDraw.DiscSprite; UiKit.Fill(shadow.rectTransform, -6, -6); shadow.rectTransform.anchoredPosition = new Vector2(0, -4);
+            var disc = UiKit.Box("Disc", _mapRoot, new Color32(8, 12, 15, 214));
+            disc.sprite = HudDraw.DiscSprite; UiKit.Fill(disc.rectTransform);
+            disc.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            var mr = UiKit.Rect("Map", disc.transform); UiKit.Fill(mr);
+            mr.gameObject.AddComponent<CanvasRenderer>();
+            _minimap = mr.gameObject.AddComponent<HudMinimap>();
+            _minimap.raycastTarget = false;
+            var ring = UiKit.Box("Ring", _mapRoot, new Color(1, 1, 1, 0.22f));
+            ring.sprite = HudDraw.RingSprite; UiKit.Fill(ring.rectTransform);
+            float e = MapSize / 2 - 14;
+            foreach (var (t, x, y, north) in new[] { ("N", 0f, e, true), ("S", 0f, -e, false), ("E", e, 0f, false), ("W", -e, 0f, false) })
+            {
+                var b = UiKit.Box("Badge" + t, _mapRoot, new Color32(8, 12, 15, 217));
+                b.sprite = HudDraw.DiscSprite;
+                var rt = b.rectTransform; rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f); rt.anchoredPosition = new Vector2(x, y); rt.sizeDelta = new Vector2(24, 24);
+                UiKit.Fill(UiKit.Label("T", rt, t, 16, north ? Hex("#ff5a4a") : Hex("#e8eef0"), TextAnchor.MiddleCenter, FontStyle.Bold).rectTransform);
+            }
+            _mapRoot.gameObject.SetActive(false);
+
+            // Stamina (기력): bottom centre under the interact prompt, only while it is not full or you are winded.
+            var sr = UiKit.Box("Stamina", _root, new Color(0.04f, 0.06f, 0.07f, 0.72f)).rectTransform; // a dark pill: readable on a pale floor
+            sr.anchorMin = sr.anchorMax = sr.pivot = new Vector2(0.5f, 0); sr.anchoredPosition = new Vector2(0, 124); sr.sizeDelta = new Vector2(300, 32);
+            var sl = UiKit.Label("Label", sr, "기력", 17, UiKit.Ink, TextAnchor.MiddleLeft, FontStyle.Bold); UiKit.At(sl.rectTransform, 16, 0, 52, 32);
+            var track = UiKit.Box("Track", sr, new Color(1, 1, 1, 0.16f)).rectTransform; UiKit.At(track, 68, 12, 214, 8);
+            _staminaFill = UiKit.Box("Fill", track, StaminaOk);
+            _staminaFill.rectTransform.anchorMin = Vector2.zero; _staminaFill.rectTransform.anchorMax = Vector2.one;
+            _staminaFill.rectTransform.offsetMin = _staminaFill.rectTransform.offsetMax = Vector2.zero;
+            _stamina = sr.gameObject;
+            _stamina.SetActive(false);
+
+            // The key strip (hud-keys): bottom right, small and dim.
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < KeyHints.GetLength(0); i++)
+                sb.Append(i == 0 ? "" : i % 6 == 0 ? "\n" : "    ").Append("<b><color=#e8eef0>").Append(KeyHints[i, 0]).Append("</color></b> ").Append(KeyHints[i, 1]);
+            var keys = UiKit.Label("Keys", _root, sb.ToString(), 16, new Color(0.6f, 0.65f, 0.68f, 0.85f), TextAnchor.LowerRight);
+            keys.lineSpacing = 1.15f;
+            keys.horizontalOverflow = HorizontalWrapMode.Overflow; // three fixed rows: a key never parts from its word
+            var kr = keys.rectTransform; kr.anchorMin = kr.anchorMax = kr.pivot = new Vector2(1, 0); kr.anchoredPosition = new Vector2(-28, 24); kr.sizeDelta = new Vector2(500, 80);
+            keys.gameObject.AddComponent<Shadow>().effectColor = new Color(0, 0, 0, 0.8f);
+            _keys = keys.gameObject;
+            _keys.SetActive(false);
+        }
+
+        static void SetActive(GameObject go, bool on) { if (go.activeSelf != on) go.SetActive(on); }
 
         GameObject Chip(string name, float x, float y, float w, out Text text)
         {
@@ -209,6 +304,7 @@ namespace AiOn.UI
 
         public void SetBattery(double percent)
         {
+            _batteryWanted = true;
             ShowPart(_batteryChip, !_hidden);
             int p = Mathf.RoundToInt((float)percent);
             _battery.text = $"휴대폰 {p}%";
@@ -217,6 +313,7 @@ namespace AiOn.UI
 
         public void SetBag(double? weightKg, double limitKg)
         {
+            _bagWanted = weightKg.HasValue;
             ShowPart(_bagChip, weightKg.HasValue && !_hidden);
             if (!weightKg.HasValue) return;
             _bag.text = $"가방 {BagDrill.FormatKg(weightKg.Value)} / {BagDrill.FormatKg(limitKg)}";
@@ -226,7 +323,16 @@ namespace AiOn.UI
         }
 
         public void SetTension(double amount01) => _tension = Mathf.Clamp01((float)amount01);
-        public void SetStamina(double amount01) { }
+        public void SetStamina(double amount01) => SetStamina(amount01, false);
+
+        /// <summary>hud.setStamina(v, winded): the bar fills with what is left and turns orange while you are winded.</summary>
+        public void SetStamina(double amount01, bool winded)
+        {
+            float k = Mathf.Clamp01((float)amount01);
+            _staminaWanted = k <= 0.995f || winded;
+            if (Mathf.Abs(k - _staminaShown) > 0.002f) { _staminaShown = k; _staminaFill.rectTransform.anchorMax = new Vector2(k, 1); }
+            if (winded != _windedShown) { _windedShown = winded; _staminaFill.color = winded ? StaminaWinded : StaminaOk; }
+        }
         public void Prompt(string label) { } // the interact prompt is GameHud's
 
         public void Toast(string text, string label, int ms)
@@ -282,7 +388,13 @@ namespace AiOn.UI
             UiKit.At((RectTransform)_objective.transform, 0, 124, 460, y + stepsH + 16);
         }
 
-        public void SetChapter(string title, string subtitle) { _chapterNo.text = title ?? ""; _chapterTitle.text = subtitle ?? ""; }
+        public void SetChapter(string title, string subtitle)
+        {
+            _chapterNo.text = title ?? ""; _chapterTitle.text = subtitle ?? "";
+            var w = Mathf.Max(_chapterNo.preferredWidth, _chapterTitle.preferredWidth);
+            _chapterBg.gameObject.SetActive(w > 0);
+            _chapterBg.sizeDelta = new Vector2(Mathf.Min(w + 24, 580), _chapterBg.sizeDelta.y);
+        }
 
         /// <summary>A HUD part on/off; during a cinematic only remembered for when the letterbox lifts.</summary>
         void ShowPart(GameObject go, bool on)
@@ -298,6 +410,7 @@ namespace AiOn.UI
         public void SetCinematic(bool on)
         {
             _letterTop.SetActive(on); _letterBottom.SetActive(on);
+            _cinematic = on;
             var parts = new[] { _topLeft, _toasts.gameObject, _stats, _batteryChip, _bagChip };
             if (on)
             {
@@ -315,10 +428,31 @@ namespace AiOn.UI
         }
 
         public void Hurt(double amount01) => _hurtLevel = Mathf.Clamp01(_hurtLevel + (float)amount01);
-        public void Show() { _hidden = false; _stats.SetActive(true); }
-        public void Hide() { _hidden = true; foreach (var go in new[] { _objective, _stats, _batteryChip, _bagChip }) go.SetActive(false); }
-        public void SetMap(Newtonsoft.Json.Linq.JObject map) { }
-        public void SetCompass(double? yaw) { }
+        public void Show()
+        {
+            // puts back what the story set while hidden (the overlay starts hidden, so the first objective may come first)
+            _hidden = false;
+            ShowPart(_stats, true);
+            ShowPart(_batteryChip, _batteryWanted);
+            ShowPart(_bagChip, _bagWanted);
+            _objective.SetActive(!string.IsNullOrEmpty(_objTitle.text));
+        }
+        public void Hide() { _hidden = true; _objective.SetActive(false); ShowPart(_stats, false); ShowPart(_batteryChip, false); ShowPart(_bagChip, false); }
+        public void SetMap(Newtonsoft.Json.Linq.JObject map)
+        {
+            _mapWanted = map != null;
+            if (map == null || _hidden || _cinematic) return;
+            _mapExtra.Clear();
+            MapExtraSolids?.Invoke(_mapExtra);
+            _minimap.SetMap(map, MapLayout?.Invoke((string)map["level"]), MapSolidOff, _mapExtra);
+        }
+
+        /// <summary>Heading in degrees clockwise from north; null hides the strip.</summary>
+        public void SetCompass(double? yaw)
+        {
+            _compassWanted = yaw.HasValue;
+            if (yaw.HasValue && !_hidden && !_cinematic) _compass.SetHeading(yaw.Value);
+        }
 
         /// <summary>Black over the whole screen (0..1) over seconds.</summary>
         public async Task FadeTo(double black, double seconds)
@@ -340,6 +474,17 @@ namespace AiOn.UI
             _vignette.color = new Color(0.3f, 0.02f, 0.02f, _tension * 0.45f);
             bool smoke = AiOn.Levels.EnvironmentController.SmokeActive && !_hidden;
             if (_smokeHint.activeSelf != smoke) _smokeHint.SetActive(smoke);
+
+            bool up = !_hidden && !_cinematic;
+            SetActive(_compass.gameObject, up && _compassWanted);
+            bool map = up && _mapWanted;
+            if (map != _mapRoot.gameObject.activeSelf)
+            {
+                _mapRoot.gameObject.SetActive(map);
+                _toasts.anchoredPosition = new Vector2(-28, -(map ? MapTop + MapSize + 18 : ToastTop)); // toasts go under the map
+            }
+            SetActive(_stamina, up && _staminaWanted);
+            SetActive(_keys, up && _compassWanted && !InputGate.Blocked); // free roam only: a dialog or menu has its own keys
         }
 
         static async Task Wait(float seconds)

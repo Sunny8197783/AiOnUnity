@@ -94,8 +94,19 @@ namespace AiOn.Story
             return rig.Crater(at, (float)crater);
         }
 
-        public override void Debris(string kind, double x, double y, double z, double vx, double vy, double vz) =>
-            Rig().Debris(kind, LevelLayout.ToUnity((float)x, (float)y, (float)z), DangerFxMath.ToUnityVelocity(vx, vy, vz), PlayerT);
+        /// <summary>actions.spawn: the hands take blast debris and the looter's can as loose things (they fly, strike
+        /// people, can be picked up). Returns false when they cannot; the visual-only rigidbody debris stands in then.</summary>
+        public Func<string, Vector3, Vector3, bool> SpawnLoose;
+
+        public override void Debris(string kind, double x, double y, double z, double vx, double vy, double vz)
+        {
+            var at = LevelLayout.ToUnity((float)x, (float)y, (float)z);
+            var v = DangerFxMath.ToUnityVelocity(vx, vy, vz);
+            bool taken = false;
+            try { taken = SpawnLoose != null && SpawnLoose(kind, at, v); }
+            catch (Exception e) { Debug.LogException(e); }
+            if (!taken) Rig().Debris(kind, at, v, PlayerT);
+        }
 
         public override object Ignite(double x, double y, double z, double seconds) => Rig().Ignite(LevelLayout.ToUnity((float)x, (float)y, (float)z));
 
@@ -290,9 +301,13 @@ namespace AiOn.Story
         static readonly System.Random Rng = new();
         static float Rnd(float a, float b) => a + (float)Rng.NextDouble() * (b - a);
 
+        /// <summary>The current level's rig (the minimap reads its rubble), or null before the first blast.</summary>
+        public static DangerFxRig Current { get; private set; }
+
         public void Build(UnityStoryHost host)
         {
             _host = host;
+            Current = this;
             // One flash light, kept in the scene (off) so it is never created mid-fight.
             _flash = new GameObject("Flash").AddComponent<Light>();
             _flash.transform.SetParent(transform, false);
@@ -442,6 +457,25 @@ namespace AiOn.Story
 
         // ---------- rubble ----------
 
+        readonly List<LevelLayout.SolidBox> _rubbleBoxes = new();
+
+        /// <summary>The live rubble heaps' solid boxes in the original frame (for the minimap); the boxes are reused.</summary>
+        public void RubbleBoxes(List<LevelLayout.SolidBox> into)
+        {
+            int n = 0;
+            foreach (var go in _rubble)
+            {
+                if (!go) continue;
+                var mc = go.GetComponent<MeshCollider>();
+                if (!mc) continue;
+                var b = mc.bounds;
+                if (n == _rubbleBoxes.Count) _rubbleBoxes.Add(new LevelLayout.SolidBox { id = "rubble" });
+                var s = _rubbleBoxes[n++];
+                s.x0 = b.min.x; s.x1 = b.max.x; s.y0 = b.min.y; s.y1 = b.max.y; s.z0 = -b.max.z; s.z1 = -b.min.z; s.off = false;
+                into.Add(s);
+            }
+        }
+
         public GameObject Rubble(Vector3 center, float w, float d, float h)
         {
             Trim(_rubble, MaxRubble);
@@ -586,6 +620,7 @@ namespace AiOn.Story
 
         void OnDestroy()
         {
+            if (Current == this) Current = null;
             foreach (var o in _owned) if (o) Destroy(o);
             _owned.Clear();
         }

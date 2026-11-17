@@ -83,6 +83,16 @@ namespace AiOn.Levels.Crowd
         public void SetOff(string id, bool off)
         {
             foreach (var s in _all) if (s.Id == id) s.Off = off;
+            if (id != null) _setOff[id] = off;
+        }
+
+        readonly Dictionary<string, bool> _setOff = new();
+
+        /// <summary>The state SetOff last gave this id (the story's live switch), or false when it was never switched.</summary>
+        public bool TryGetSwitched(string id, out bool off)
+        {
+            off = false;
+            return id != null && _setOff.TryGetValue(id, out off);
         }
 
         /// <summary>geom.js collide: pushes a circle out of every solid overlapping [feetY, feetY + h] (3 passes).</summary>

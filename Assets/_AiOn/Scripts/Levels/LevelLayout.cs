@@ -87,6 +87,19 @@ namespace AiOn.Levels
             public float auto;
         }
 
+        /// <summary>A solid that is part of a table door: its leaf boxes (by id) or a thin box in its swing area at its floor.</summary>
+        public static bool IsDoorSolid(LevelLayout.DoorDef d, LevelLayout.SolidBox s)
+        {
+            if (!string.IsNullOrEmpty(s.id)) return s.id == d.id;
+            if (Mathf.Abs(s.y0 - d.y) > 0.06f) return false;
+            float w = d.b - d.a;
+            float thin = Mathf.Min(s.x1 - s.x0, s.z1 - s.z0);
+            if (thin > 0.22f) return false;
+            return d.axis == "z"
+                ? s.x0 >= d.a - 0.05f && s.x1 <= d.b + 0.05f && s.z0 >= d.c - w - 0.1f && s.z1 <= d.c + w + 0.1f
+                : s.z0 >= d.a - 0.05f && s.z1 <= d.b + 0.05f && s.x0 >= d.c - w - 0.1f && s.x1 <= d.c + w + 0.1f;
+        }
+
         /// <summary>Where a named character stands when the level opens.</summary>
         [Serializable]
         public class Npc

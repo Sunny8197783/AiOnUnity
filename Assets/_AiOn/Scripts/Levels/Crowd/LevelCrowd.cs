@@ -1,4 +1,5 @@
 using System.Linq;
+using AiOn.Levels.Town;
 using AiOn.Story;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -23,9 +24,12 @@ namespace AiOn.Levels.Crowd
         string _managerAnim;
         readonly string[] _guideAnim = new string[2];
         double _nt;
+        TownStreet _street;
 
         public ICrowdLogic Logic => _logic;
         public CrowdView View => _view;
+        /// <summary>The town's traffic, signals, closures, state solids and street lights (null elsewhere).</summary>
+        public TownStreet Street => _street;
 
         /// <summary>The crowd of a level, or null for levels without one (apartment, office, store).</summary>
         public static LevelCrowd Create(string levelId, LevelLayout layout, UnityStoryHost host)
@@ -56,6 +60,7 @@ namespace AiOn.Levels.Crowd
             if (levelId == "town")
             {
                 c._clerkOutside = host.Npc("clerkOutside"); c._guideC = host.Npc("guideC"); c._guideEast = host.Npc("guideEast");
+                c._street = TownStreet.Create(go, host, layout, (TownCrowd)logic);
             }
             else if (levelId == "shelter") c._manager = host.Npc("shelterManager");
             c.SyncNpcs();
@@ -80,6 +85,7 @@ namespace AiOn.Levels.Crowd
         {
             if (_logic == null || !_logic.Apply(key, value)) return false;
             SyncNpcs();
+            if (_street) _street.OnState();
             return true;
         }
 
@@ -106,11 +112,16 @@ namespace AiOn.Levels.Crowd
             Vector3 cp = cam ? cam.transform.position : player ? player.transform.position : Vector3.zero;
             Vector3 cf = cam ? cam.transform.forward : Vector3.forward;
             var env = EnvironmentController.Instance;
-            var f = new CrowdFrame(Time.time - _t0, player, player ? player.transform.position.x : 0, player ? -player.transform.position.z : 0,
-                cam, cp.x, -cp.z, cf.x, -cf.z, env == null || env.power, _host ? _host.Env : "day");
+            double t = Time.time - _t0;
+            // One env name for the crowd's holds and the street's signals (town.js passes one ctx to both): the preset the
+            // level shows, the host's name before the environment has one.
+            string envName = env != null && env.Current != null ? env.Current.Name : _host ? _host.Env : "day";
+            var f = new CrowdFrame(t, player, player ? player.transform.position.x : 0, player ? -player.transform.position.z : 0,
+                cam, cp.x, -cp.z, cf.x, -cf.z, env == null || env.power, envName);
             _logic.Update(Time.deltaTime, f);
             _view.Sync(_logic.Bodies, cp, (float)CrowdTier.Current.ShadowM);
             if (_logic is TownCrowd) DriveGuides(Time.deltaTime, player);
+            if (_street) _street.Tick(Time.deltaTime, t, player, envName); // cars give way to people on the road; signals on the crowd's clock
         }
 
         // town.js update: localNpcs = [guideEast, guideC, clerkOutside]; the guides (k 0, 1) talk to a player within 7 m,

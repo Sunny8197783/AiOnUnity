@@ -27,23 +27,39 @@ namespace AiOn.Story
             StoryScreens.Register(host, session);
 
             // The host-side visuals the story drives: blasts, fires, rubble, debris (danger layer) and cutscene letterbox, titles, missiles.
-            var parts = DirectorParts.Default(dangerFx: new UnityDangerFx(host), cineFx: new UnityCineFx(host));
+            var dangerFx = new UnityDangerFx(host);
+            var parts = DirectorParts.Default(dangerFx: dangerFx, cineFx: new UnityCineFx(host));
             Director = new StoryDirector(session.Rules, facts, host, host.overlay, host, host, new FileStoryStore(), parts: parts, reduceMotion: host.settings.ReduceMotion);
             Director.NowMs = () => Time.realtimeSinceStartupAsDouble * 1000.0;
             var rng = new System.Random();
             Director.Random = () => rng.NextDouble();
             host.getState = () => Director.G;
-            host.Key += code => Run(Director.OnKey(code), "key " + code);
-            host.Blocked += b => Run(Director.OnBlocked(b), "blocked");
+            // The Director itself listens to host.Key / host.Blocked (its engine is this host); subscribing here as well ran every key twice.
+            Director.Log = (what, e) => Debug.LogError($"[StoryRunner] {what}: {e}");
+            // The hands (engine/actions.js): fists, picking up and throwing; the director counts the violence and the damage.
+            if (!TryGetComponent(out PlayerHands hands)) hands = gameObject.AddComponent<PlayerHands>(); // not ??: a missing component is a fake null in the Editor
+            hands.host = host; hands.dangerFx = dangerFx;
+            hands.OnHit = Director.OnHit; hands.OnHurt = Director.Hurt;
+            hands.Random = () => rng.NextDouble();
+            Director.DropHeld = hands.Drop;
+            dangerFx.SpawnLoose = hands.Spawn; // blast bricks / rocks and the looter's can become loose things (actions.spawn)
+
+            // The settings the host owns (app.js applySettings): sound, sensitivity, graphics tier and its governor, text
+            // scale, reduced motion, the experience profile's body and senses; and the pause menu's way back to the title.
+            host.settings = Director.StorySettings; // one settings object: the camera shake and the menus read what the Director wrote
+            if (!TryGetComponent(out AiOn.Settings.HostSettings hostSettings)) hostSettings = gameObject.AddComponent<AiOn.Settings.HostSettings>();
+            var savedQ = AiOn.Settings.QualityTiers.Saved(Director.Settings["quality"]?.Type == Newtonsoft.Json.Linq.JTokenType.String ? (string)Director.Settings["quality"] : null,
+                Director.Settings["qualityAuto"]?.Type == Newtonsoft.Json.Linq.JTokenType.Boolean && (bool)Director.Settings["qualityAuto"]);
+            Director.Settings["quality"] = savedQ.quality ?? AiOn.Settings.HostSettings.DetectTier(); // 'auto': detected once and remembered
+            Director.Settings["qualityAuto"] = savedQ.auto;
+            Director.ApplyHostSettings = hostSettings.Apply;
+            Director.Speak = hostSettings.Speak;
+            hostSettings.Stepped = (q, label) => Director.OnQualityChange(q, label, true);
+            Director.MenuRequested = AiOn.Settings.TitleReturn.ToTitle;
+            Director.ApplySettings();
 
             try { await Director.Boot(); }
             catch (Exception e) { Debug.LogException(e); }
-        }
-
-        static async void Run(System.Threading.Tasks.Task t, string what)
-        {
-            try { await t; }
-            catch (Exception e) { Debug.LogError($"[StoryRunner] {what}: {e}"); }
         }
     }
 

@@ -15,6 +15,10 @@ namespace AiOn.Player
         public GameObject body;
 
         public bool thirdPerson;
+        [Tooltip("움직임 줄이기: no head bob, no run FOV kick, no shake (controls.js RM).")]
+        public bool reduceMotion;
+        [Tooltip("The story host owns V (it saves the view setting); off, V toggles here (a level scene's test player).")]
+        public bool hostOwnsView;
 
         [Header("Story control")]
         [Tooltip("Cutscene camera: when set, the camera sits here looking at overrideTarget (Unity space).")]
@@ -55,7 +59,8 @@ namespace AiOn.Player
         void LateUpdate()
         {
             float dt = Time.deltaTime;
-            if (!InputGate.Blocked && _in.ViewPressed) { thirdPerson = !thirdPerson; ApplyView(); }
+            if (!hostOwnsView && !InputGate.Blocked && _in.ViewPressed) { thirdPerson = !thirdPerson; ApplyView(); }
+            player.ThirdPerson = thirdPerson; // the body turns on its own only in third person
 
             if (overrideActive)
             {
@@ -70,9 +75,9 @@ namespace AiOn.Player
 
             float hs = player.HorizontalSpeed;
             _phase += hs * dt * 2.2f;
-            float wantBob = player.Grounded ? Mathf.Min(1f, hs / player.walkSpeed) * (player.Running ? 1.3f : 1f) : 0f;
+            float wantBob = reduceMotion ? 0f : player.Grounded ? Mathf.Min(1f, hs / player.walkSpeed) * (player.Running ? 1.3f : 1f) : 0f;
             _bob += (wantBob - _bob) * (1f - Mathf.Exp(-6f * dt));
-            _fov = Mathf.Lerp(_fov, fov + (player.Running ? runFovBoost : 0f), 1f - Mathf.Exp(-5f * dt));
+            _fov = Mathf.Lerp(_fov, fov + (player.Running && !reduceMotion ? runFovBoost : 0f), 1f - Mathf.Exp(-5f * dt));
             cam.fieldOfView = _fov;
 
             if (!thirdPerson)
@@ -127,6 +132,7 @@ namespace AiOn.Player
         void ApplyShake()
         {
             if (shakeStrength <= 0) return;
+            if (reduceMotion) { shakeStrength = 0; return; }
             float left = shakeUntil - Time.time;
             if (left <= 0) { shakeStrength = 0; return; }
             float k = shakeStrength * Mathf.Clamp01(left / 0.5f), t = Time.time * 31f;
