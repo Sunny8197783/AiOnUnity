@@ -7170,9 +7170,9 @@ MonoBehaviour:
   shakeUntil: 0
   fov: 70
   runFovBoost: 4
-  distance: 3.4
-  height: 1.7
-  shoulder: 0.45
+  distance: 3.2
+  height: 1.95
+  shoulder: 0.7
   probeRadius: 0.2
   obstacles:
     serializedVersion: 2

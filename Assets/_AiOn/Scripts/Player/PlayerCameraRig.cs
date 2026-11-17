@@ -30,7 +30,8 @@ namespace AiOn.Player
         public float fov = 70f, runFovBoost = 4f;
 
         [Header("Third person")]
-        public float distance = 3.4f, height = 1.7f, shoulder = 0.45f, probeRadius = 0.2f;
+        // Over the shoulder, a little above the head (the original 3.4 / 1.7 / 0.45 put the head in the middle of the view).
+        public float distance = 3.2f, height = 1.95f, shoulder = 0.7f, probeRadius = 0.2f;
         public LayerMask obstacles = Physics.DefaultRaycastLayers; // not Ignore Raycast (thrown debris)
 
         float _phase, _bob, _fov, _camDist;

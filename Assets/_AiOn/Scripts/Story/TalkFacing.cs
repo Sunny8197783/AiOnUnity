@@ -25,6 +25,7 @@ namespace AiOn.Story
         };
 
         const float Reach = 7f, HeadHeight = 1.55f, TurnSeconds = 0.6f;
+        // (Talk shot: see StartShot.)
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Install()
@@ -38,8 +39,65 @@ namespace AiOn.Story
         Quaternion _npcFrom, _npcTo;
         float _npcT = 1;
 
-        void OnEnable() => StoryOverlay.TalkStarted += OnTalk;
-        void OnDisable() => StoryOverlay.TalkStarted -= OnTalk;
+        void OnEnable() { StoryOverlay.TalkStarted += OnTalk; StoryOverlay.TalkEnded += OnTalkEnd; }
+        void OnDisable() { StoryOverlay.TalkStarted -= OnTalk; StoryOverlay.TalkEnded -= OnTalkEnd; }
+
+        // ---------- the conversation shot ----------
+        // Over the player's right shoulder onto the speaker, their face above the dialog box (which covers the lower
+        // ~40% of the screen). Eases in; hands the camera back when the dialog closes. Never takes the camera from a
+        // cutscene that already holds it.
+        const float ShotFov = 42f, EaseIn = 0.5f;
+        PlayerCameraRig _rig;
+        bool _shot;
+        float _shotT;
+        Vector3 _fromPos, _fromTarget, _toPos, _toTarget;
+        float _fromFov;
+        Vector3 _applied;
+
+        void StartShot(PlayerController player, Transform npc)
+        {
+            _rig = FindFirstObjectByType<PlayerCameraRig>();
+            if (!_rig || !_rig.cam || _rig.overrideActive) return;
+            var p = player.transform.position; var n = npc.position;
+            var dir = n - p; dir.y = 0;
+            float d = dir.magnitude;
+            if (d < 0.3f) return;
+            dir /= d;
+            var right = Vector3.Cross(Vector3.up, dir);
+            var playerHead = p + Vector3.up * 1.62f;
+            var npcHead = n + Vector3.up * HeadHeight;
+            var want = playerHead - dir * 0.95f + right * 0.55f + Vector3.up * 0.08f;
+            // Not through a wall: pull in along the line from the player's head.
+            var off = want - playerHead;
+            if (Physics.SphereCast(playerHead, 0.15f, off.normalized, out var hit, off.magnitude, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
+                && !hit.collider.transform.IsChildOf(player.transform))
+                want = playerHead + off.normalized * Mathf.Max(0.2f, hit.distance - 0.05f);
+            // Aim a little below the face so it sits in the upper part of the frame, above the dialog.
+            var target = npcHead - Vector3.up * (0.12f + 0.06f * Mathf.Min(d, 4f));
+            var camT = _rig.cam.transform;
+            _fromPos = camT.position; _fromTarget = camT.position + camT.forward * Mathf.Max(1f, Vector3.Distance(camT.position, npcHead));
+            _fromFov = _rig.cam.fieldOfView;
+            _toPos = want; _toTarget = target;
+            _shotT = 0; _shot = true;
+            _rig.overrideActive = true;
+            ApplyShot(0);
+        }
+
+        void ApplyShot(float k)
+        {
+            float e = k * k * (3 - 2 * k);
+            _rig.overridePosition = _applied = Vector3.Lerp(_fromPos, _toPos, e);
+            _rig.overrideTarget = Vector3.Lerp(_fromTarget, _toTarget, e);
+            _rig.overrideFov = Mathf.Lerp(_fromFov, ShotFov, e);
+        }
+
+        void OnTalkEnd()
+        {
+            if (!_shot) return;
+            _shot = false;
+            // Only hand back what is still ours (a cutscene that started meanwhile moved the override elsewhere).
+            if (_rig && _rig.overrideActive && (_rig.overridePosition - _applied).sqrMagnitude < 0.0001f) _rig.overrideActive = false;
+        }
 
         void OnTalk(string speaker, string role)
         {
@@ -53,6 +111,7 @@ namespace AiOn.Story
             var d = player.transform.position - npc.position; d.y = 0;
             if (d.sqrMagnitude < 0.04f) return;
             _npc = npc; _npcFrom = npc.rotation; _npcTo = Quaternion.LookRotation(d.normalized, Vector3.up); _npcT = 0;
+            StartShot(player, npc);
         }
 
         static Transform Nearest(string id, Vector3 from)
@@ -73,6 +132,11 @@ namespace AiOn.Story
 
         void Update()
         {
+            if (_shot && _rig && _shotT < 1 && (_rig.overridePosition - _applied).sqrMagnitude < 0.0001f)
+            {
+                _shotT = Mathf.Min(1, _shotT + Time.unscaledDeltaTime / EaseIn);
+                ApplyShot(_shotT);
+            }
             if (_npcT >= 1 || !_npc) return;
             _npcT = Mathf.Min(1, _npcT + Time.unscaledDeltaTime / TurnSeconds);
             float k = _npcT * _npcT * (3 - 2 * _npcT);

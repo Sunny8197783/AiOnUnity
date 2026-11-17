@@ -263,7 +263,8 @@ namespace AiOn.Levels
             _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, e.Exposure), 2f) + e.GradeExposure + exposureOffset);
             _color.saturation.Override((e.Saturation - 1f) * 100f);
             _color.contrast.Override((e.Contrast - 1f) * 100f);
-            _color.colorFilter.Override(Color.Lerp(Color.white, e.Tint, Mathf.Clamp01(e.TintAmount * 1.5f)));
+            // The original mixes the tint in at tintAmount (post.js); 1.5x washed afternoon orange and dusk lavender.
+            _color.colorFilter.Override(Color.Lerp(Color.white, e.Tint, Mathf.Clamp01(e.TintAmount)));
             _bloom.intensity.Override(e.BloomStrength * 1.6f);
             _bloom.threshold.Override(Mathf.Max(0.6f, e.BloomThreshold));
             _bloom.scatter.Override(Mathf.Clamp01(0.45f + e.BloomRadius * 0.5f));

@@ -353,10 +353,18 @@ namespace AiOn.UI
         /// <summary>Lines one at a time (Enter / Space / E / click), then the choices (click or 1-9). Returns the choice id.</summary>
         /// <summary>Raised when a dialog opens: speaker and role (TalkFacing turns the player toward that person).</summary>
         public static event System.Action<string, string> TalkStarted;
+        /// <summary>Raised when that dialog closes (TalkFacing hands the camera back).</summary>
+        public static event System.Action TalkEnded;
 
         public async Task<string> Talk(TalkOptions o)
         {
             try { TalkStarted?.Invoke(o.Speaker, o.Role); } catch (System.Exception e) { Debug.LogException(e); }
+            try { return await TalkBody(o); }
+            finally { try { TalkEnded?.Invoke(); } catch (System.Exception e) { Debug.LogException(e); } }
+        }
+
+        async Task<string> TalkBody(TalkOptions o)
+        {
             var lines = new List<string>();
             foreach (var l in o.Lines ?? new List<string>()) if (!string.IsNullOrEmpty(l)) lines.Add(l);
             if (lines.Count == 0) lines.Add("…");
@@ -432,21 +440,29 @@ namespace AiOn.UI
             if (!string.IsNullOrEmpty(o.Meta)) UiKit.Label("Meta", box, o.Meta, 20, UiKit.Dim);
             foreach (var p in o.Body ?? new List<string>()) if (!string.IsNullOrEmpty(p)) UiKit.Label("Body", box, p, 23, UiKit.Ink);
             // Action buttons in rows that wrap inside the card (six experience modes do not fit on one line).
+            // One line right-aligned when they fit; otherwise an even grid (six modes: 3 + 3 of equal width, centred) so a
+            // short last row does not hang off one side.
             const float rowWidth = 820, gap = 12;
-            RectTransform row = null; float used = 0;
+            float Natural(CardAction a) => Mathf.Min(rowWidth, Mathf.Max(150, 40 + a.Label.Length * 26));
+            float total = -gap; foreach (var a in actions) total += gap + Natural(a);
+            bool grid = total > rowWidth;
+            int perRow = actions.Count;
+            if (grid) { int rows = Mathf.CeilToInt(total / rowWidth); perRow = Mathf.CeilToInt(actions.Count / (float)rows); }
+            float cellW = grid ? (rowWidth - gap * (perRow - 1)) / perRow : 0;
+            RectTransform row = null; int inRow = 0;
             var tcs = new TaskCompletionSource<string>();
             foreach (var a in actions)
             {
-                float w = Mathf.Min(rowWidth, Mathf.Max(150, 40 + a.Label.Length * 26));
-                if (row == null || used + gap + w > rowWidth)
+                float w = grid ? cellW : Natural(a);
+                if (row == null || inRow >= perRow)
                 {
                     row = UiKit.Rect("Actions", box);
                     var h = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-                    h.spacing = gap; h.childAlignment = TextAnchor.MiddleRight; h.childControlWidth = false; h.childControlHeight = false;
+                    h.spacing = gap; h.childAlignment = grid ? TextAnchor.MiddleCenter : TextAnchor.MiddleRight; h.childControlWidth = false; h.childControlHeight = false;
                     UiKit.Height(row, 64);
-                    used = -gap;
+                    inRow = 0;
                 }
-                used += gap + w;
+                inRow++;
                 var b = UiKit.Button("Action", row, a.Label, 24, a.Primary ? UiKit.Teal : new Color(1, 1, 1, 0.08f), a.Primary ? new Color(0.04f, 0.08f, 0.08f) : UiKit.Ink);
                 ((RectTransform)b.transform).sizeDelta = new Vector2(w, 58);
                 var id = a.Id;
