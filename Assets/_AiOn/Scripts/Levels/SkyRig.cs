@@ -356,8 +356,9 @@ namespace AiOn.Levels
             RenderSettings.skybox = _sky;
 
             Color hills = e.Hills.linear;
-            if (_hillsNearMat) _hillsNearMat.SetVector(IdColor, (Vector4)hills);
-            if (_hillsFarMat) _hillsFarMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, 0.45f));
+            // Hazed toward the fog (horizon) colour with distance: the ridges read as soft silhouettes, not cut-outs.
+            if (_hillsNearMat) _hillsNearMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, 0.3f));
+            if (_hillsFarMat) _hillsFarMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, 0.62f));
 
             float windows = !power ? 0f : (e.Lit.TryGetValue("windows", out var wl) ? wl : e.NightAmount);
             float glow = windowEmission * Mathf.Max(0f, windows);

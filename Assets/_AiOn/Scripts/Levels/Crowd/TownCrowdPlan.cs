@@ -11,8 +11,50 @@ namespace AiOn.Levels.Crowd
     /// </summary>
     public static class TownCrowdPlan
     {
-        public static readonly IReadOnlyDictionary<string, int> Sizes = new Dictionary<string, int> { ["main"] = 26, ["extra"] = 14, ["few"] = 8, ["line"] = 14 };
-        public static readonly string[] Modes = { "none", "normal", "busy", "evacuating", "sparse", "queue", "assembly" };
+        public static readonly IReadOnlyDictionary<string, int> Sizes = new Dictionary<string, int>
+        {
+            ["main"] = 26, ["extra"] = 14, ["few"] = 8, ["line"] = 14,
+            // port additions (fixed seeds, so the original groups keep theirs): the evacuees still coming out of the
+            // complex, phone torches at the shelter entrances A and B, and the assembly's second line
+            ["trickle"] = 6, ["torchA"] = 3, ["torchB"] = 3, ["line2"] = 12,
+        };
+        /// <summary>Seeds of the port's own groups (the original's are 900 + 17 per original group made before).</summary>
+        public static readonly IReadOnlyDictionary<string, int> PortSeeds = new Dictionary<string, int> { ["trickle"] = 1301, ["torchA"] = 1319, ["torchB"] = 1327, ["line2"] = 1361 };
+        public static readonly string[] Modes = { "none", "normal", "busy", "evacuating", "sparse", "queue", "assembly", "boarded" };
+
+        /// <summary>The 한빛아파트 complex gate (townmap NODES.gate): the evacuee trickle walks out from around here.</summary>
+        public static readonly Pt ComplexGate = new(57, 20);
+        public const double TrickleReach = 45;
+
+        /// <summary>Seconds (plus up to as much again) before a trickle walker comes out of the complex again: a thin stream, not a crowd.</summary>
+        public const double TrickleDelay = 9;
+
+        static bool NearGate(Pt p) => Math.Sqrt((p.X - ComplexGate.X) * (p.X - ComplexGate.X) + (p.Z - ComplexGate.Z) * (p.Z - ComplexGate.Z)) <= TrickleReach;
+
+        /// <summary>
+        /// The trickle's paths: tonight's evacuation paths (open gates, cut by closures) that start within reach of the
+        /// complex gate, and only the pieces that still start there (a closure cuts the rest off). Targets: their gates.
+        /// </summary>
+        public static (List<Pt[]> paths, List<Pt> targets) TricklePaths(IReadOnlyDictionary<string, string> gates, IEnumerable<string> closures)
+        {
+            var open = Evac.Where(e => gates != null && gates.TryGetValue(e.gate, out var v) && v == "open").ToList();
+            var use = (open.Count > 0 ? open : Evac.Where(e => e.gate == "stairs").ToList()).Where(e => NearGate(e.path[0])).ToList();
+            var paths = CrowdGeom.ClipPaths(use.Select(e => e.path).ToList(), Rects(closures)).Where(p => p.Length > 1 && NearGate(p[0])).ToList();
+            var targets = use.Select(e => e.gate).Distinct().Select(g => Entry[g]).ToList();
+            return (paths, targets);
+        }
+
+        /// <summary>Where a few people stand with phone torches, beside entrances A (stairs) and B (ramp), clear of the way in.</summary>
+        public static readonly IReadOnlyDictionary<string, Box2> TorchAreas = new Dictionary<string, Box2>
+        {
+            ["torchA"] = new Box2(-92.5, -89.5, 8.2, 10.8), ["torchB"] = new Box2(-74.2, -71.2, 48.0, 51.0),
+        };
+
+        /// <summary>The assembly's second single-file line, beside the first (1.1 m east of it).</summary>
+        public static readonly Pt AssemblyQueue2 = new(-61.75, -44.6);
+        /// <summary>Where the waiting group stands while the two lines form (the original area minus the lines' strip).</summary>
+        public static readonly Box2 AssemblyWaitArea = new(-61.0, -58.6, -49, -40);
+        public const double AssemblySpacing = 0.7;
 
         static Pt[] P(params double[] xz)
         {
@@ -94,6 +136,12 @@ namespace AiOn.Levels.Crowd
         public static readonly Pt WaterQueue = new(-78.6, -18.4);
         public static readonly Pt AssemblyQueue = new(-62.6, -44.6);
         public static readonly Box2 AssemblyArea = new(-61.8, -58.6, -49, -40);
+
+        /// <summary>
+        /// Where the few left behind see the buses off (port, crowd 'boarded'): by the reception tent (x -59.8, z -33),
+        /// clear of the bus doors and of the buses' way out east (z -45 .. -53).
+        /// </summary>
+        public static readonly Box2 BoardedArea = new(-61.4, -57.9, -39.4, -35.8);
 
         /// <summary>Signal cycle (s): EW green, EW amber, all red, NS green, NS amber, all red.</summary>
         public static readonly (string g, string c, double d)[] Cycle =

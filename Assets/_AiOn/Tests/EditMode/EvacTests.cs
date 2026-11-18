@@ -368,7 +368,7 @@ namespace AiOn.Tests
             Assert.That(desk.Lines, Is.EqualTo(new[] { "이름, 연락처, 복용약을 적어 주세요. 신분증 있으세요?", "(지갑에서 신분증을 꺼내 보여 주었다.)", "(가방 앞주머니의 연락처 카드와 서류 사본도 함께 건넸다.)" }));
             Assert.That(host.Captions.Last(), Is.EqualTo("버스 창밖으로 연무동이 멀어진다."));
             var town = host.Level("town").State;
-            Assert.That((string)town["buses"], Is.EqualTo("on"));
+            Assert.That((string)town["buses"], Is.EqualTo("departed")); // polish: they left (the departure scene, or its caption)
             Assert.That(town["closures"].Select(t => (string)t), Is.EqualTo(g.Cond.Closures.Evac));
             Assert.That(host.Warnings.Where(w => w.StartsWith("town")), Is.Empty);
         }

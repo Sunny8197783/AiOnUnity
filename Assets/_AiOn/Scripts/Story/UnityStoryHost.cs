@@ -186,6 +186,9 @@ namespace AiOn.Story
         /// <summary>True from the start of Enter until the new level stands (the frame governor does not judge load stalls).</summary>
         public bool Loading { get; private set; }
 
+        /// <summary>Raised once a new level stands (after the spawn and the prepare states), before the fade back in.</summary>
+        public event Action<string> LevelEntered;
+
         public async Task Enter(string levelId, string spawn, Action prepare = null)
         {
             Loading = true;
@@ -207,6 +210,7 @@ namespace AiOn.Story
             _levelId = levelId;
             _landReset = true;
             _levelState.Clear(); _undrawn.Clear(); _persons.Clear(); _slabLevel = null; _slabDoor.Clear();
+            _lift = null; _liftElder = null; // died with the old level
             _spawns = FindFirstObjectByType<LevelSpawnPoints>();
             _goods = FindFirstObjectByType<ShopGoods>();
             _points.Clear(); _byIp.Clear(); _ipBy.Clear();
@@ -235,6 +239,7 @@ namespace AiOn.Story
             prepare?.Invoke();
             _crowd?.Prewarm(); // the bodies of the states prepare set, made behind the opaque fade
             if (interactor) interactor.Refresh();
+            try { LevelEntered?.Invoke(levelId); } catch (Exception e) { Debug.LogException(e); }
             if (overlay) await overlay.FadeTo(0, 0.35);
         }
 
@@ -257,8 +262,12 @@ namespace AiOn.Story
                 handled = true;
             }
             if (_dressing && _dressing.Apply(key, value)) handled = true;
+            if (_levelId == "store" && (key == "power" || key == "clerk")) StoreStock();
             switch (key)
             {
+                case "buses" when _levelId == "town":
+                    Buses(value?.Type == JTokenType.String ? (string)value : null, variants);
+                    return;
                 case "power":
                     EnvironmentController.Instance?.SetPower((string)value != "off");
                     return;
@@ -310,6 +319,104 @@ namespace AiOn.Story
                     return;
             }
             if (!handled && _undrawn.Add(key)) Debug.Log($"[Story] {_levelId}: state '{key}' = {value?.ToString(Newtonsoft.Json.Formatting.None)} is kept but not drawn yet");
+        }
+
+        // ---------- level dressing the story's states ask for (port additions) ----------
+
+        /// <summary>
+        /// The assembly's buses: on = parked with the wheelchair lift down at the second bus's door and an elder waiting at
+        /// it; departing = the reception stays drawn (the variant knows only on/off) while the buses drive out onto 문화로
+        /// (BusDepartFx, BusRoute); departed = the reception with an empty bay; off = gone.
+        /// </summary>
+        void Buses(string v, LevelStateVariants variants)
+        {
+            if ((v == "departing" || v == "departed") && variants != null) variants.Apply("buses", "on");
+            var root = variants != null ? variants.variants.Find(x => x.target && x.rules.Exists(r => r.key == "buses"))?.target : null;
+            var mover = root ? root.GetComponent<BusDepartFx>() : null;
+            if (root && !mover) mover = root.AddComponent<BusDepartFx>();
+            if (mover) mover.SetState(v);
+            bool parked = v == "on";
+            if (parked && !_lift) _lift = BuildLift();
+            if (_lift) _lift.SetActive(parked);
+            if (parked && _liftElder == null)
+                _liftElder = SpawnPerson("elder", -63.05, 0.12, -45.7, Math.PI / 2); // facing west, toward the lift and the door
+            else if (!parked && _liftElder != null) { RemovePerson(_liftElder); _liftElder = null; }
+        }
+        GameObject _lift;
+        IStoryPerson _liftElder;
+
+        /// <summary>A wheelchair lift lowered at the second bus's door (bus x -65, door x -63.75, z -44.8 in the original frame).</summary>
+        static GameObject BuildLift()
+        {
+            var root = new GameObject("BusLift");
+            root.transform.position = LevelLayout.ToUnity(-63.05f, 0.12f, -44.8f);
+            var grey = new Color(0.46f, 0.48f, 0.5f);
+            void Part(string n, Vector3 local, Vector3 size, Color c)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                go.name = n;
+                Destroy(go.GetComponent<Collider>());
+                go.transform.SetParent(root.transform, false);
+                go.transform.localPosition = local; go.transform.localScale = size;
+                var r = go.GetComponent<MeshRenderer>();
+                r.sharedMaterial = AiOn.Levels.Interiors.InteriorMeshes.LitMat(c, 0.35f);
+            }
+            Part("Platform", new Vector3(0, 0.05f, 0), new Vector3(1.05f, 0.06f, 1.25f), grey);
+            Part("Lip", new Vector3(0.52f, 0.12f, 0), new Vector3(0.04f, 0.14f, 1.25f), new Color(0.85f, 0.7f, 0.15f));
+            foreach (var z in new[] { -0.6f, 0.6f })
+            {
+                Part("Post", new Vector3(-0.45f, 0.5f, z), new Vector3(0.05f, 1.0f, 0.05f), grey);
+                Part("Rail", new Vector3(0, 0.95f, z), new Vector3(0.95f, 0.04f, 0.04f), grey);
+            }
+            return root;
+        }
+
+        /// <summary>Store, power off and nobody behind the counter: most of the shelves are bare; batteries and water stay.</summary>
+        void StoreStock()
+        {
+            if (!_goods) return;
+            bool off = _levelState.TryGetValue("power", out var p) && p?.Type == JTokenType.String && (string)p == "off";
+            bool gone = _levelState.TryGetValue("clerk", out var c) && c?.Type == JTokenType.String && (string)c == "out";
+            _goods.SetSparse(off && gone, ShopGoods.SparseKeep);
+        }
+
+        // The pack on the player's back while it is on (G.know.bagOn), as the original's people.js prop; never on 서연.
+        string _packPreset = "jeongmin";
+        bool _packOn;
+        GameObject _packBody;
+        Transform _packProp;
+        float _packT;
+
+        /// <summary>Inside 302 (the apartment's 3F unit, original frame x -7.6..0.3, z 0..9.4): the pack comes off at home.</summary>
+        public static bool AtHome(string level, double x, double y, double z) =>
+            level == "apartment" && x > -7.7 && x < 0.4 && z > 0.05 && z < 9.5 && y > 5.2 && y < 7.5;
+
+        static Transform FindNamed(Transform t, string name)
+        {
+            if (t.name == name) return t;
+            for (int i = 0; i < t.childCount; i++) { var r = FindNamed(t.GetChild(i), name); if (r) return r; }
+            return null;
+        }
+
+        void PackFrame()
+        {
+            if ((_packT -= Time.deltaTime) > 0) return;
+            _packT = 0.25f;
+            var body = player ? player.transform.Find("Body") : null;
+            var g = getState?.Invoke();
+            if (!body) return;
+            // PlayerBody shows the pack while carrying "bag" and drops it when the carry changes: re-assert it every tick on
+            // the cached prop (no lookup, no allocation); off at home in 302.
+            bool want = _packPreset == "jeongmin" && (Carrying == "bag" || (g != null && g.Knows("bagOn") && !AtHome(_levelId, PlayerX, PlayerY, PlayerZ)));
+            if (body.gameObject != _packBody) { _packBody = body.gameObject; _packProp = null; _packOn = !want; }
+            if (!_packProp && want)
+            {
+                PersonProps.Set(body.gameObject, "backpack", true); // builds Prop_backpack once
+                _packProp = FindNamed(body, "Prop_backpack");
+            }
+            if (_packProp) { if (_packProp.gameObject.activeSelf != want) _packProp.gameObject.SetActive(want); }
+            else if (want != _packOn) PersonProps.Set(body.gameObject, "backpack", want); // a model's own baked pack
+            _packOn = want;
         }
 
         AiOn.Levels.Interiors.InteriorDressing _dressing;
@@ -433,7 +540,7 @@ namespace AiOn.Story
         public IReadOnlyDictionary<string, JToken> LevelStateNow => _levelState;
 
         // ---------- environment ----------
-        public void SetEnv(string preset, double seconds = 0) { _env = preset; EnvironmentController.Instance?.Apply(preset); }
+        public void SetEnv(string preset, double seconds = 0) { _env = preset; EnvironmentController.Instance?.BlendTo(preset, (float)seconds); }
         public string Env => _env;
         public void SetPower(bool on) => EnvironmentController.Instance?.SetPower(on);
 
@@ -468,33 +575,30 @@ namespace AiOn.Story
 
         public void SetFlashlight(bool on)
         {
-            if (!_flashlight && cameraRig && cameraRig.cam)
+            // In the hand (third person) or below the eyes (first), aimed along the gaze, dimmed close to walls: PlayerFlashlight.
+            if (!_torch && player && cameraRig && cameraRig.cam)
             {
-                var go = new GameObject("Flashlight");
-                go.transform.SetParent(cameraRig.cam.transform, false);
-                go.transform.localPosition = new Vector3(0.15f, -0.2f, 0.1f);
-                go.transform.localRotation = Quaternion.Euler(10, 0, 0); // held about 10° below the gaze, like the original
-                _flashlight = go.AddComponent<Light>();
-                _flashlight.type = LightType.Spot; _flashlight.spotAngle = 48; _flashlight.innerSpotAngle = 22;
-                _flashlight.range = 16; _flashlight.intensity = 6; _flashlight.color = new Color(1f, 0.93f, 0.82f);
-                _flashlight.shadows = _flashShadows ? LightShadows.Soft : LightShadows.None;
+                _torch = PlayerFlashlight.Create(player, cameraRig, _flashShadows);
+                _flashlight = _torch.Light;
             }
-            if (_flashlight) _flashlight.enabled = on;
+            if (_torch) _torch.SetOn(on);
         }
 
+        PlayerFlashlight _torch;
         bool _flashShadows = true;
 
         /// <summary>The graphics tier: whether the flashlight casts shadows (quality.js flash).</summary>
         public bool FlashShadows
         {
             get => _flashShadows;
-            set { _flashShadows = value; if (_flashlight) _flashlight.shadows = value ? LightShadows.Soft : LightShadows.None; }
+            set { _flashShadows = value; if (_torch) _torch.Shadows = value; }
         }
 
         public void SetPlayerPreset(string preset)
         {
             var prefab = peoplePrefabs.FirstOrDefault(p => p && p.name == preset);
             if (!prefab || !player) return;
+            _packPreset = preset; _packBody = null; _packT = 0;
             var old = player.transform.Find("Body");
             bool active = old ? old.gameObject.activeSelf : cameraRig && cameraRig.thirdPerson;
             if (old) Destroy(old.gameObject);
@@ -608,6 +712,7 @@ namespace AiOn.Story
                 if (ip) { ip.interactable = sp.Enabled; ip.label = sp.Label; }
 
             if (_levelId != null) Frame?.Invoke(Time.deltaTime);
+            if (_levelId != null) PackFrame();
             // app.js onFrame: hud.setStamina(p.stamina, p.winded) every frame.
             if (overlay && player && _levelId != null) overlay.SetStamina(player.Stamina, player.Winded);
 

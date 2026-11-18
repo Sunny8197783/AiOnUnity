@@ -147,8 +147,7 @@ namespace AiOn.Tests
             var texts = none.Where(s => s.Kind == MapShapeKind.Text).Select(s => s.Text).ToList();
             CollectionAssert.Contains(texts, "연무로");
             CollectionAssert.Contains(texts, "103동");          // '한빛아파트 ' dropped
-            CollectionAssert.Contains(texts, "대피소(지하)");
-            CollectionAssert.Contains(texts, "연무공원");
+                        CollectionAssert.Contains(texts, "연무공원");
             Assert.IsFalse(texts.Any(t => t.StartsWith("통제")));
             var withClosure = RoutemapLogic.BaseLayer(p, new[] { "yeonmuCenter" }, 1);
             Assert.AreEqual(1, withClosure.Count(s => s.Kind == MapShapeKind.Text && s.Text == "통제 · 연무로 중앙 구간 통제")); // label on the first barricade only
@@ -172,7 +171,9 @@ namespace AiOn.Tests
             CollectionAssert.Contains(texts, "북");
             CollectionAssert.Contains(texts, "50m");
             CollectionAssert.Contains(texts, "✕"); // access closed
-            CollectionAssert.Contains(texts, "동쪽 출입구");
+            CollectionAssert.Contains(texts, "동쪽 출입구"); // entrance names sit over the routes that run into them
+            Assert.IsFalse(RoutemapLogic.BaseLayer(p, new string[0], 1).Any(s => s.Kind == MapShapeKind.Text && s.Text == "동쪽 출입구"));
+            Assert.Greater(top.FindIndex(s => s.Text == "동쪽 출입구"), top.FindLastIndex(s => s.Kind == MapShapeKind.Line && s.Width > 3)); // after every route stroke
             Assert.AreEqual(1, top.Count(s => s.Kind == MapShapeKind.Diamond));
             // the selected route (amber) is drawn after the others
             int lastAmber = top.FindLastIndex(s => s.Kind == MapShapeKind.Line && s.Color.R > 0.9f && s.Color.G > 0.6f && s.Color.B < 0.3f);

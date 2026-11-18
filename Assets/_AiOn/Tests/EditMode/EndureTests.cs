@@ -21,6 +21,11 @@ namespace AiOn.Tests
     public class EndureTests
     {
         static JObject _golden;
+        // Polish pass (port upgrades the original did not have): the wait in the water queue, the knock before 서연's
+        // doorway talk, and the afternoon / night shown as time passing. The golden comparison leaves them out.
+        static readonly HashSet<string> PortCaptions = new() { "줄을 서서 기다렸다.", "똑똑— 현관문을 두드리는 소리." };
+        static readonly HashSet<string> PortSkips = new() { "D+1 토 오후", "D+2 밤" };
+
         static JObject Golden => _golden ??= JObject.Parse(TestSupport.Fixture("story-endure-golden.json"));
 
         sealed class Script
@@ -186,9 +191,9 @@ namespace AiOn.Tests
                 Is.EqualTo(w["talks"].Select(t => new[] { (string)t[0], (string)t[1], (string)t[2] }).ToList()), "talks (speaker, role, first line)");
             Assert.That(host.Cards.Select(c => c.Title).ToList(), Is.EqualTo(w["cards"].Select(x => (string)x).ToList()), "cards");
             Assert.That(host.Opens.Select(o => o.screen).ToList(), Is.EqualTo(w["opens"].Select(x => (string)x).ToList()), "screens");
-            Assert.That(host.Captions, Is.EqualTo(w["captions"].Select(x => (string)x).ToList()), "captions");
+            Assert.That(host.Captions.Where(c => !PortCaptions.Contains(c)).ToList(), Is.EqualTo(w["captions"].Select(x => (string)x).ToList()), "captions");
             Assert.That(host.Checkpoints, Is.EqualTo(w["checkpoints"].Select(x => (string)x).ToList()), "checkpoints");
-            Assert.That(host.TimeSkips.Select(t => new[] { t.from, t.to }).ToList(), Is.EqualTo(w["timeSkips"].Select(x => new[] { (string)x[0], (string)x[1] }).ToList()), "time skips");
+            Assert.That(host.TimeSkips.Where(t => !PortSkips.Contains(t.from)).Select(t => new[] { t.from, t.to }).ToList(), Is.EqualTo(w["timeSkips"].Select(x => new[] { (string)x[0], (string)x[1] }).ToList()), "time skips");
         }
 
         // ------------------------------------------------------------------ key state per branch
@@ -254,7 +259,7 @@ namespace AiOn.Tests
             var p = Play("fireRetreat");
             var g = p.G; var host = p.Host;
             Assert.That(p.Fail, Is.Null);
-            Assert.That(host.TimeSkips, Is.Empty, "resumed at the fire");
+            Assert.That(host.TimeSkips.Where(t => !PortSkips.Contains(t.from)), Is.Empty, "resumed at the fire");
             Assert.That(host.Captions[0], Does.StartWith("쾅쾅— "));
             Assert.That((bool)g.Events.Single(e => e.Type == "smoke_escape").Details["towel"], Is.True);
             Assert.That(g.Day, Is.EqualTo(3)); Assert.That(g.Minute, Is.EqualTo(10 * 60));

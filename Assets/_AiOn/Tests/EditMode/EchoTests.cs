@@ -85,6 +85,41 @@ namespace AiOn.Tests
             Assert.That(host2.Toasts, Has.Some.Contains("이전 회차의 내가 남긴 흔적"));
         }
 
+        // Polish fix (story/echo.js:65 shown.told): the 'traces' toast is shown once per run, not on every level entry.
+        [Test]
+        public void TracesToast_OncePerRun_NotOnEveryLevelEntry()
+        {
+            string stored = null;
+            var host = new FakeStoryHost();
+            var ctx = host.CreateContext(TestSupport.Rules);
+            var echo = Echo.Create(ctx, k => stored, (k, v) => stored = v);
+            echo.Begin();
+            host.Run(async () =>
+            {
+                await ctx.Goto("town", "home");
+                var roam = ctx.Roam(new RoamOptions { Tick = _ => host.FrameCount > 40 ? "done" : null });
+                for (int i = 0; i < 10; i++) { host.MoveTo(host.PlayerX + 2, host.PlayerZ); host.RunFrame(); }
+                await roam;
+                echo.Death("blast");
+            });
+            var host2 = new FakeStoryHost();
+            var ctx2 = host2.CreateContext(TestSupport.Rules);
+            var echo2 = Echo.Create(ctx2, k => stored, (k, v) => stored = v);
+            echo2.Begin();
+            host2.Run(async () =>
+            {
+                await ctx2.Goto("town", "home"); host2.RunFrame();
+                await ctx2.Goto("apartment", "home"); host2.RunFrame();
+                await ctx2.Goto("town", "home"); host2.RunFrame();
+                await host2.Settle();
+            });
+            Assert.That(host2.Toasts.Count(t => t.Contains("이전 회차의 내가 남긴 흔적")), Is.EqualTo(1));
+            // a new run tells it again
+            echo2.Begin();
+            host2.Run(async () => { await ctx2.Goto("apartment", "home"); host2.RunFrame(); await ctx2.Goto("town", "home"); host2.RunFrame(); await host2.Settle(); });
+            Assert.That(host2.Toasts.Count(t => t.Contains("이전 회차의 내가 남긴 흔적")), Is.EqualTo(2));
+        }
+
         // Review fix: without a host hook the marks never reached the world. By default the recorder now publishes them as
         // level data (Engine.ApplyLevelState("echo", ...)), and SaveAll() is the pagehide save for the host's pause / quit.
         [Test]

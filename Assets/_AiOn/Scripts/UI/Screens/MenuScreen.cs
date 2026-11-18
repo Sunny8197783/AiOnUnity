@@ -31,6 +31,7 @@ namespace AiOn.UI
     public class LandingScreen : UiScreen
     {
         bool _hasSave; int _endings, _challenges;
+        const int ArtOrder = 221; // the screen canvas is 220: its window fill, then the skyline (221), then the front (222)
         readonly MenuFocusRing _ring = new();
 
         // skyline
@@ -57,9 +58,25 @@ namespace AiOn.UI
             _still = host && host.ReduceMotion;
             BuildSkyline();
 
-            // shade for legibility (original .landing-shade)
-            var shade = UiKit.Box("Shade", Window, new Color(0.02f, 0.03f, 0.05f, 0.55f)).rectTransform;
-            UiKit.At(shade, 0, 0, 1180, 1080);
+            // Everything in front of the skyline sits on its own canvas after the skyline's: a nested canvas draws over
+            // its parent's graphics, so without this the lit windows would draw across the text, buttons and panel.
+            var front = UiKit.Rect("Front", Window); UiKit.Fill(front);
+            var fc = front.gameObject.AddComponent<Canvas>();
+            fc.overrideSorting = true; fc.sortingOrder = ArtOrder + 1; // explicitly after the skyline canvas (equal orders draw in no fixed order)
+            front.gameObject.AddComponent<GraphicRaycaster>();
+
+            // shade for legibility (original .landing-shade): a soft left-to-right gradient over the whole screen and
+            // a fade up from the bottom, so the hero copy reads and nothing ends on a hard edge
+            var tint = new Color(0.02f, 0.03f, 0.05f, 1);
+            UiKit.Fill(ScreenDecor.Raw("Shade", front, ScreenDecor.LandingShade, tint).rectTransform);
+            var foot = ScreenDecor.Raw("ShadeBottom", front, ScreenDecor.FadeUp, new Color(tint.r, tint.g, tint.b, ScreenDecor.A(0.9f))).rectTransform;
+            foot.anchorMin = Vector2.zero; foot.anchorMax = new Vector2(1, 0); foot.pivot = new Vector2(0.5f, 0);
+            foot.offsetMin = Vector2.zero; foot.offsetMax = new Vector2(0, 1080 * 0.3f);
+            BuildFront(front);
+        }
+
+        void BuildFront(RectTransform Window)
+        {
 
             // hero
             MenuBits.Label(Window, "Eyebrow", $"<color=#3cc6b5>●</color>  {MenuLogic.LandingEyebrow}", 22, UiKit.Dim, 120, 132, 1000, 32);
@@ -69,7 +86,7 @@ namespace AiOn.UI
             MenuBits.Label(Window, "Sub", MenuLogic.LandingSub, 24, UiKit.Dim, 120, 418, 960, 70);
             for (int i = 0; i < MenuLogic.LandingLoop.Length; i++)
             {
-                var chip = UiKit.Box("Loop" + i, Window, new Color(1, 1, 1, 0.06f)).rectTransform;
+                var chip = ScreenDecor.Rounded("Loop" + i, Window, new Color(0.05f, 0.08f, 0.1f, ScreenDecor.A(0.8f))).rectTransform;
                 UiKit.At(chip, 120 + i * 170, 488, 150, 44);
                 UiKit.Fill(UiKit.Label("Text", chip, $"<color=#3cc6b5><b>{i + 1}</b></color>  {MenuLogic.LandingLoop[i]}", 22, UiKit.Ink, TextAnchor.MiddleCenter).rectTransform);
             }
@@ -83,6 +100,7 @@ namespace AiOn.UI
                 var id = mb.Id;
                 var b = MenuBits.Btn(Window, mb.Label, mb.Primary, mb.Ghost, () => { MenuBits.Cue(); Finish(id); }, mb.Ghost ? 22 : 28);
                 var rt = (RectTransform)b.transform;
+                if (!mb.Primary) b.GetComponent<Image>().color = new Color(0.03f, 0.05f, 0.07f, ScreenDecor.A(mb.Ghost ? 0.75f : 0.85f)); // dark fill: the skyline never reads through
                 if (mb.Ghost) { UiKit.At(rt, 120 + (ghost % 3) * 300, 664 + (ghost / 3) * 70, 284, 58); ghost++; }
                 else { UiKit.At(rt, 120 + big * 320, 568, 300, 76); big++; }
                 _ring.Add(b);
@@ -90,7 +108,7 @@ namespace AiOn.UI
             }
 
             // chapters (original .landing-chapters)
-            var ch = UiKit.Box("Chapters", Window, MenuBits.Translucent).rectTransform;
+            var ch = UiKit.Box("Chapters", Window, new Color(0.047f, 0.07f, 0.082f, ScreenDecor.A(0.93f))).rectTransform;
             UiKit.At(ch, 1250, 132, 560, 760);
             MenuBits.Label(ch, "Head", MenuLogic.LandingChaptersHead, 26, UiKit.Ink, 28, 22, 500, 36, style: FontStyle.Bold);
             for (int i = 0; i < MenuLogic.Chapters.Length; i++)
@@ -115,7 +133,8 @@ namespace AiOn.UI
         {
             var art = UiKit.Rect("Art", Window);
             UiKit.Fill(art);
-            art.gameObject.AddComponent<Canvas>(); // its own canvas: the per-frame window changes do not rebuild the menu
+            var ac = art.gameObject.AddComponent<Canvas>(); // its own canvas: the per-frame window changes do not rebuild the menu
+            ac.overrideSorting = true; ac.sortingOrder = ArtOrder;
             _sky = new Skyline(1920, 1080);
             float ground = (float)_sky.Ground;
 
@@ -131,9 +150,12 @@ namespace AiOn.UI
             _stars = starRoot.gameObject.AddComponent<CanvasGroup>();
             foreach (var s in _sky.Stars)
                 UiKit.At(UiKit.Box("Star", starRoot, MenuBits.Hex("#e8eefc")).rectTransform, (float)s.X, (float)s.Y, (float)Math.Max(1, s.R), (float)Math.Max(1, s.R));
-            // moon (a soft square stands in for the round moon and halo)
-            UiKit.At(UiKit.Box("Halo", art, new Color(0.94f, 0.93f, 0.86f, 0.06f)).rectTransform, 1536 - 60, 184 - 60, 120, 120);
-            UiKit.At(UiKit.Box("Moon", art, MenuBits.Hex("#f1ecdd")).rectTransform, 1536 - 13, 184 - 13, 26, 26);
+            // moon and halo: soft round sprites, top right above the chapter panel (panel top is y 132; halo ends at y 122)
+            const float moonX = 1690, moonY = 66;
+            var halo = UiKit.Box("Halo", art, new Color(0.94f, 0.93f, 0.86f, 0.16f)); halo.sprite = ScreenDecor.Glow;
+            UiKit.At(halo.rectTransform, moonX - 56, moonY - 56, 112, 112);
+            var moon = UiKit.Box("Moon", art, MenuBits.Hex("#f1ecdd")); moon.sprite = ScreenDecor.Moon;
+            UiKit.At(moon.rectTransform, moonX - 14, moonY - 14, 28, 28);
             _glow = UiKit.Box("Glow", art, new Color(1, 0.67f, 0.35f, 0.2f));
             UiKit.At(_glow.rectTransform, 0, ground - 1080 * 0.12f, 1920, 1080 * 0.12f);
 
@@ -196,7 +218,18 @@ namespace AiOn.UI
             _stars.alpha = (float)(0.15 + dark * 0.85) * 0.8f;
             _glow.color = new Color(1, 0.67f, 0.35f, (float)(0.22 * (1 - dark)) * 0.6f);
             _exits.alpha = dark > 0.2 ? (float)dark : 0;
-            foreach (var t in _numbers) t.color = new Color(0.86f, 0.89f, 0.93f, (float)(0.55 - dark * 0.35));
+            // building numbers: quieter on the left half, where they would sit under the hero copy and buttons
+            for (int i = 0; i < _numbers.Count; i++)
+            {
+                var t = _numbers[i];
+                float a = (float)(0.55 - dark * 0.35);
+                var rt = t.rectTransform;
+                float cx = rt.anchoredPosition.x + rt.sizeDelta.x / 2, ty = -rt.anchoredPosition.y;
+                // none behind the hero copy and buttons (light text at a low alpha still reads about .4 in linear blending)
+                if (cx < 1000 && ty > 100 && ty < 820) a = 0;
+                else if (cx < 960) a = Mathf.Min(a, 0.25f) * 0.6f;
+                t.color = new Color(0.86f, 0.89f, 0.93f, a);
+            }
             for (int i = 0; i < _wins.Count; i++)
             {
                 var (w, img, li) = _wins[i];
@@ -268,11 +301,15 @@ namespace AiOn.UI
             // key list (original dl.key-list)
             var keys = UiKit.Box("Keys", Window, new Color(0, 0, 0, 0.18f)).rectTransform;
             UiKit.At(keys, 500, 140, 600, 600);
-            for (int i = 0; i < MenuLogic.PauseKeys.Length; i++)
+            // the whole key table (UiKeys), Q/G/C/X/B included: rows shrink so every key fits the 600 px box
+            int nk = MenuLogic.PauseKeys.Length;
+            float rowH = Mathf.Min(44, (600 - 24) / (float)nk);
+            int ks = rowH >= 40 ? 20 : 18;
+            for (int i = 0; i < nk; i++)
             {
                 var k = MenuLogic.PauseKeys[i];
-                MenuBits.Label(keys, "Key", k[0], 20, UiKit.Ink, 24, 18 + i * 44, 300, 40, style: FontStyle.Bold);
-                MenuBits.Label(keys, "What", k[1], 20, UiKit.Dim, 330, 18 + i * 44, 260, 40);
+                MenuBits.Label(keys, "Key", k[0], ks, UiKit.Ink, 24, 12 + i * rowH, 300, rowH, TextAnchor.MiddleLeft, FontStyle.Bold);
+                MenuBits.Label(keys, "What", k[1], ks, UiKit.Dim, 330, 12 + i * rowH, 260, rowH, TextAnchor.MiddleLeft);
             }
             Ring();
             _ring.Focus(0);
@@ -323,13 +360,15 @@ namespace AiOn.UI
     public class SettingsScreen : UiScreen
     {
         SettingsForm _form;
+        const float WinH = 1000; // with the compact rows below, both columns fit their 770 px views at the default text size
         readonly MenuFocusRing _ring = new() { ArrowsMove = false };
+        static readonly Color ListBg = new(0.057f, 0.082f, 0.09f);
         readonly Dictionary<string, Action> _refresh = new();
 
         public static async Task<JToken> Open(JObject current)
         {
             var form = new SettingsForm(current);
-            var r = await Show<SettingsScreen>(s => s._form = form);
+            var r = await Show<SettingsScreen>(s => s._form = form, 1720, WinH);
             return r as JObject ?? form.Cancel();
         }
 
@@ -346,17 +385,25 @@ namespace AiOn.UI
         protected override void Build()
         {
             Title(SettingsForm.Eyebrow, SettingsForm.Title);
-            var leftView = UiKit.Rect("Left", Window); UiKit.At(leftView, 40, 130, 800, 700);
-            var rightView = UiKit.Rect("Right", Window); UiKit.At(rightView, 880, 130, 800, 700);
-            var left = UiKit.ScrollList("List", leftView, 10);
-            var right = UiKit.ScrollList("List", rightView, 10);
+            // the two columns run down to 20 px above the 취소 / 적용 row; a column longer than its view gets a thin
+            // scrollbar and a fade at the bottom so it is clear that more follows
+            const float top = 122, btnY = WinH - 88, viewH = btnY - 20 - top;
+            var leftView = UiKit.Rect("Left", Window); UiKit.At(leftView, 40, top, 800, viewH);
+            var rightView = UiKit.Rect("Right", Window); UiKit.At(rightView, 880, top, 800, viewH);
+            var left = UiKit.ScrollList("List", leftView, 6);
+            var right = UiKit.ScrollList("List", rightView, 6);
+            ScrollCue.Attach(left.parent.GetComponent<ScrollRect>(), ListBg, 64, -12);  // the bar just outside each column
+            ScrollCue.Attach(right.parent.GetComponent<ScrollRect>(), ListBg, 64, -12);
             const float W = 788;
 
+            // Left: the four choices (그래픽 품질, 시점, 글자 크기, 체험 모드). Right: 조작 (one slider and one switch), 소리,
+            // 접근성. Measured at the default text size: left about 645 px, right about 730 px, both inside the 770 px views,
+            // so nothing starts cut off under the fade; a larger text size still scrolls with the cue.
             foreach (var g in _form.LeftRadios) RadioGroupUi(left, g, W);
-            Legend(left, SettingsForm.ControlsLegend);
-            RangeUi(left, _form.Sensitivity, W);
-            ToggleUi(left, _form.Minimap, W);
 
+            Legend(right, SettingsForm.ControlsLegend);
+            RangeUi(right, _form.Sensitivity, W);
+            ToggleUi(right, _form.Minimap, W);
             Legend(right, SettingsForm.SoundLegend);
             RangeUi(right, _form.Volume, W);
             foreach (var r in _form.BusRanges) RangeUi(right, r, W);
@@ -365,9 +412,9 @@ namespace AiOn.UI
             foreach (var t in _form.AccessToggles) ToggleUi(right, t, W);
 
             var cancel = MenuBits.Btn(Window, "취소", false, true, () => Finish(_form.Cancel()));
-            UiKit.At((RectTransform)cancel.transform, 1180, 852, 240, 60);
+            UiKit.At((RectTransform)cancel.transform, 1180, btnY, 240, 60);
             var apply = MenuBits.Btn(Window, "✓ 적용", true, false, Submit);
-            UiKit.At((RectTransform)apply.transform, 1440, 852, 240, 60);
+            UiKit.At((RectTransform)apply.transform, 1440, btnY, 240, 60);
             _ring.Add(cancel);
             _ring.Add(apply);
 
@@ -386,7 +433,7 @@ namespace AiOn.UI
         static void Legend(RectTransform col, string text)
         {
             MenuBits.Gap(col, 6);
-            UiKit.Height(UiKit.Label("Legend", col, text, 24, UiKit.Ink, style: FontStyle.Bold), 36);
+            UiKit.Height(UiKit.Label("Legend", col, text, 24, UiKit.Ink, style: FontStyle.Bold), 32);
         }
 
         void RadioGroupUi(RectTransform col, RadioGroup g, float width)
@@ -395,7 +442,7 @@ namespace AiOn.UI
             int n = g.Options.Length;
             int cols = g.Cols > 0 ? g.Cols : n > 4 ? 3 : n;
             bool subs = g.Options.Any(o => o.Sub != null);
-            float h = subs ? 76 : 52, gap = 6, cw = (width - (cols - 1) * gap) / cols;
+            float h = subs ? 60 : 46, gap = 6, cw = (width - (cols - 1) * gap) / cols;
             int rows = (n + cols - 1) / cols;
             var box = UiKit.Rect("Seg_" + g.Name, col);
             UiKit.Height(box, rows * h + (rows - 1) * gap);
@@ -434,13 +481,15 @@ namespace AiOn.UI
 
         void RangeUi(RectTransform col, RangeDef r, float width)
         {
+            // one line: label, slider, value (the label-over-slider rows made both columns too tall to fit)
             var row = UiKit.Rect("Range_" + r.Name, col);
-            UiKit.Height(row, 78);
-            MenuBits.Label(row, "Label", r.Label, 21, UiKit.Ink, 0, 4, width - 160, 30);
-            var output = MenuBits.Label(row, "Out", _form.RangeText(r.Name), 21, UiKit.Teal, width - 160, 4, 160, 30, TextAnchor.UpperRight, FontStyle.Bold);
+            UiKit.Height(row, 46);
+            const float labelW = 300, outW = 96;
+            MenuBits.Label(row, "Label", r.Label, 21, UiKit.Ink, 0, 9, labelW, 30, TextAnchor.UpperLeft);
+            var output = MenuBits.Label(row, "Out", _form.RangeText(r.Name), 21, UiKit.Teal, width - outW, 9, outW, 30, TextAnchor.UpperRight, FontStyle.Bold);
 
-            var bg = UiKit.Box("Slider", row, new Color(1, 1, 1, 0.08f), raycast: true);
-            UiKit.At(bg.rectTransform, 0, 42, width, 26);
+            var bg = UiKit.Box("Slider", row, ScreenDecor.Over(ListBg, Color.white, 0.08f), raycast: true);
+            UiKit.At(bg.rectTransform, labelW + 12, 12, width - labelW - outW - 32, 22);
             var slider = bg.gameObject.AddComponent<Slider>();
             var fillArea = UiKit.Rect("Fill Area", bg.transform); UiKit.Fill(fillArea);
             var fill = UiKit.Box("Fill", fillArea, UiKit.Teal);
@@ -471,9 +520,9 @@ namespace AiOn.UI
 
         void ToggleUi(RectTransform col, ToggleDef t, float width)
         {
-            var b = UiKit.Button("Toggle_" + t.Name, col, "", 22, new Color(1, 1, 1, 0.04f), UiKit.Ink);
+            var b = UiKit.Button("Toggle_" + t.Name, col, "", 22, ScreenDecor.Over(ListBg, Color.white, 0.04f), UiKit.Ink);
             var nav = b.navigation; nav.mode = Navigation.Mode.None; b.navigation = nav;
-            UiKit.Height(b, 76);
+            UiKit.Height(b, 60);
             var rt = (RectTransform)b.transform;
             var label = b.GetComponentInChildren<Text>();
             label.alignment = TextAnchor.MiddleLeft;
@@ -488,7 +537,7 @@ namespace AiOn.UI
             void Draw()
             {
                 bool on = _form.Toggle[t.Name];
-                track.GetComponent<Image>().color = on ? UiKit.Teal : new Color(1, 1, 1, 0.16f);
+                track.GetComponent<Image>().color = on ? UiKit.Teal : ScreenDecor.Over(ListBg, Color.white, 0.16f);
                 knob.anchoredPosition = new Vector2(on ? 33 : 3, 0);
             }
             Draw();
@@ -520,6 +569,7 @@ namespace AiOn.UI
     {
         JToken _sources;
         readonly MenuFocusRing _ring = new() { ArrowsMove = false };
+        static readonly Color ListBg = new(0.057f, 0.082f, 0.09f);
         RectTransform _list;
 
         public static async Task<JToken> Open(JObject o)

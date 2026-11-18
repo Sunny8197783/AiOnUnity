@@ -39,6 +39,8 @@ namespace AiOn.Story
         public string Id, Label;
         public bool Disabled;
         public string Why;
+        /// <summary>Port-only: a disabled choice the player already took (drawn "✓", not locked "⊘").</summary>
+        public bool Taken;
         public TalkChoice() { }
         public TalkChoice(string id, string label, bool disabled = false, string why = null) { Id = id; Label = label; Disabled = disabled; Why = why; }
     }
@@ -49,17 +51,27 @@ namespace AiOn.Story
         public string Speaker = "", Role = "", Portrait;
         public List<string> Lines = new();
         public List<TalkChoice> Choices;
+        /// <summary>Port-only: "normal", or "miss" (the explanation after a wrong pick: the name in amber with a △).</summary>
+        public string Tone = "normal";
+        /// <summary>Port-only: where this talk sits in a run of them ("신호 2/5"), shown top right; the role stays verbatim.</summary>
+        public string Progress;
     }
 
     public sealed class CardAction
     {
         public string Id, Label;
         public bool Primary;
+        /// <summary>Port-only: a short second line under the label (a decision's consequence, an experience mode's subtitle).</summary>
+        public string Hint;
         public CardAction() { }
         public CardAction(string id, string label, bool primary = false) { Id = id; Label = label; Primary = primary; }
     }
 
-    /// <summary>ui.card({ kind, title, meta, body, actions, ... }): a full-screen story or notice card.</summary>
+    /// <summary>
+    /// ui.card({ kind, title, meta, body, actions, ... }): a full-screen story or notice card. Kind is the original's
+    /// alert / news / notice / info / sms, plus the port's "decision": a two-way choice drawn with a larger title, a
+    /// clear gap before the actions and equal-width buttons (each with its Hint under the label).
+    /// </summary>
     public sealed class CardOptions
     {
         public string Kind = "story", Title = "", Meta = "";
@@ -74,6 +86,8 @@ namespace AiOn.Story
     {
         public string Text;
         public bool Done;
+        /// <summary>Port-only: one of several exclusive options (drawn ◇ under "다음 중 하나를 고르세요"), not a to-do.</summary>
+        public bool Choice;
         public ObjectiveStep() { }
         public ObjectiveStep(string text, bool done = false) { Text = text; Done = done; }
     }

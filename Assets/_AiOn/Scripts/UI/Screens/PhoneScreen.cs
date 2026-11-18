@@ -19,7 +19,7 @@ namespace AiOn.UI
     /// </summary>
     public class PhoneScreen : UiScreen
     {
-        const float W = 460, H = 920;
+        const float W = 440, H = 760; // a phone, not a tower: at most 760 tall on the 1080 reference
 
         static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out var c) ? c : Color.magenta;
 
@@ -55,8 +55,8 @@ namespace AiOn.UI
             UiKit.Fill(frame, 12, 12);
             const float fw = W - 24, fh = H - 24;
 
-            var notch = UiKit.Box("Notch", frame, Color.black).rectTransform;
-            UiKit.At(notch, fw / 2 - 62, 10, 124, 32);
+            var notch = ScreenDecor.Rounded("Notch", frame, Color.black).rectTransform; // a rounded pill, not a box
+            UiKit.At(notch, fw / 2 - 48, 12, 96, 26);
 
             StatusBar(frame, fw);
 
@@ -95,7 +95,9 @@ namespace AiOn.UI
             if (_v.MapApp != null) MapApp(_content, fw - 32, _v.MapApp);
 
             Heading(_content, "메시지");
-            if (_v.Messages.Count == 0) UiKit.Height(UiKit.Label("Empty", _content, "새 메시지가 없습니다.", 19, UiKit.Dim), 34);
+            bool alone = _v.Messages.Count == 0 && _v.Posts.Count == 0 && _v.MapApp == null && !PhoneLogic.LowBattery(_v.Battery);
+            if (alone) EmptyState(screen);
+            else if (_v.Messages.Count == 0) UiKit.Height(UiKit.Label("Empty", _content, "새 메시지가 없습니다.", 19, UiKit.Dim), 34);
             else foreach (var m in _v.Messages) _lastMessage = Message(_content, m);
 
             if (_v.Posts.Count > 0)
@@ -106,10 +108,35 @@ namespace AiOn.UI
             SetFocus(0);
         }
 
+        /// <summary>Nothing on the phone: the line centred on the screen under a small speech-bubble mark.</summary>
+        static void EmptyState(RectTransform screen)
+        {
+            var box = UiKit.Rect("EmptyState", screen);
+            box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, 0.5f); box.sizeDelta = new Vector2(300, 110);
+            var bubble = ScreenDecor.Rounded("Mark", box, new Color(1, 1, 1, 0.1f)).rectTransform;
+            bubble.anchorMin = bubble.anchorMax = bubble.pivot = new Vector2(0.5f, 1); bubble.anchoredPosition = Vector2.zero; bubble.sizeDelta = new Vector2(56, 40);
+            for (int i = 0; i < 3; i++)
+            {
+                var dot = MapPainter.Disc("Dot", bubble, new Color(1, 1, 1, 0.45f)).rectTransform;
+                dot.anchorMin = dot.anchorMax = dot.pivot = new Vector2(0.5f, 0.5f); dot.anchoredPosition = new Vector2((i - 1) * 12, 0); dot.sizeDelta = new Vector2(7, 7);
+            }
+            var t = UiKit.Label("Empty", box, "새 메시지가 없습니다.", 19, UiKit.Dim, TextAnchor.LowerCenter);
+            UiKit.Fill(t.rectTransform);
+        }
+
+        /// <summary>The status-bar clock: the game's time of day, or the last message's time outside a run.</summary>
+        static string ClockText(IReadOnlyList<PhoneMessage> messages)
+        {
+            var host = UnityStoryHost.Instance;
+            AiOn.Game.GameState g = null;
+            try { g = host && host.getState != null ? host.getState() : null; } catch (Exception) { g = null; } // no run yet
+            return g != null ? AiOn.Game.GameRules.Hhmm(g.Minute) : PhoneLogic.StatusTime(messages);
+        }
+
         void StatusBar(RectTransform frame, float fw)
         {
             var (sigText, bars) = PhoneLogic.Signal(_v.Signal);
-            UiKit.At(UiKit.Label("Time", frame, $"<b>{PhoneLogic.StatusTime(_v.Messages)}</b>", 19, UiKit.Ink).rectTransform, 30, 16, 120, 28);
+            UiKit.At(UiKit.Label("Time", frame, $"<b>{ClockText(_v.Messages)}</b>", 19, UiKit.Ink).rectTransform, 30, 16, 120, 28);
 
             bool low = PhoneLogic.BatteryLowColour(_v.Battery);
             var battCol = low ? Hex("#ff8f92") : UiKit.Ink;

@@ -70,6 +70,9 @@ namespace AiOn.Levels
             [NonSerialized] public Texture defaultMap, defaultEmissiveMap;
             [NonSerialized] public Dictionary<string, List<Rule>> byKey;
             [NonSerialized] public Dictionary<string, List<string>> valuesByKey;
+            /// <summary>A light pool on the ground (transparent, black base, emissive): drawn additively, see IsGlowPool.</summary>
+            [NonSerialized] public bool glow;
+            [NonSerialized] public List<Renderer> glowRenderers;
             [NonSerialized] Dictionary<string, Rule> _active;
             /// <summary>The rule in force per state key (none: the default for that key).</summary>
             public Dictionary<string, Rule> Active => _active ??= new Dictionary<string, Rule>();
@@ -97,6 +100,8 @@ namespace AiOn.Levels
             public static readonly int UrpBaseMap = Shader.PropertyToID("_BaseMap");
             public static readonly int UrpEmissionColor = Shader.PropertyToID("_EmissionColor");
             public static readonly int UrpEmissionMap = Shader.PropertyToID("_EmissionMap");
+            public static readonly int RoughnessFactor = Shader.PropertyToID("roughnessFactor");
+            public static readonly int UrpSmoothness = Shader.PropertyToID("_Smoothness");
         }
 
         public List<Entry> entries = new();
@@ -104,6 +109,10 @@ namespace AiOn.Levels
         public float emissionGain = 1f;
 
         public static LevelMaterials Instance { get; private set; }
+
+        /// <summary>How dark the sky is (the env's night amount, 0..1): ground light pools glow fully only at night.</summary>
+        public float nightAmount = 1f;
+        readonly List<Material> _extra = new();
 
         readonly Dictionary<string, float> _levels = new();
         readonly List<string> _order = new();
@@ -122,6 +131,8 @@ namespace AiOn.Levels
         {
             if (Instance == this) Instance = null;
             foreach (var e in entries) if (e.instance) Destroy(e.instance);
+            foreach (var m in _extra) if (m) Destroy(m);
+            _extra.Clear();
         }
 
         void Init()
@@ -142,26 +153,112 @@ namespace AiOn.Levels
                     list.Add(r);
                     e.valuesByKey[r.key].Add(CanonicalJson(r.value));
                 }
+                e.glow = !string.IsNullOrEmpty(e.group) && IsGlowPool(e.source.renderQueue, e.importedColor, e.importedEmission);
                 if (map.TryGetValue(e.source, out var shared)) { e.instance = shared; }
                 else
                 {
-                    e.instance = new Material(e.source) { name = e.source.name + " (state)" };
+                    e.instance = e.glow ? GlowPoolMaterial(e.source.name) : null;
+                    if (!e.instance) { e.glow = false; e.instance = new Material(e.source) { name = e.source.name + " (state)" }; }
                     map[e.source] = e.instance;
                 }
                 e.defaultMap = GetTex(e.source, Prop.BaseColorTexture, Prop.UrpBaseMap);
                 e.defaultEmissiveMap = GetTex(e.source, Prop.EmissiveTexture, Prop.UrpEmissionMap);
             }
-            // Swap the copies into every renderer of this scene that uses a listed material.
+            // Swap the copies into every renderer of this scene that uses a listed material; window glass gets a rougher
+            // copy (a flashlight or lamp left a hot specular orb on the smooth glTF glass).
+            var glowOf = new Dictionary<Material, Entry>();
+            foreach (var e in entries) if (e.glow && e.instance && !glowOf.ContainsKey(e.instance)) { e.glowRenderers = new List<Renderer>(); glowOf[e.instance] = e; }
+            var copies = new HashSet<Material>(map.Values);
+            var glass = new Dictionary<Material, Material>();
             foreach (var r in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (r.gameObject.scene != gameObject.scene) continue;
                 var mats = r.sharedMaterials;
                 bool changed = false;
                 for (int i = 0; i < mats.Length; i++)
-                    if (mats[i] && map.TryGetValue(mats[i], out var inst)) { mats[i] = inst; changed = true; }
+                {
+                    if (!mats[i]) continue;
+                    if (map.TryGetValue(mats[i], out var inst)) { mats[i] = inst; changed = true; }
+                    if (glowOf.TryGetValue(mats[i], out var ge))
+                    {
+                        ge.glowRenderers.Add(r);
+                        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+                        continue;
+                    }
+                    if (IsGlass(mats[i]))
+                    {
+                        if (copies.Contains(mats[i])) { Roughen(mats[i]); continue; } // a state copy: ours to change
+                        if (!glass.TryGetValue(mats[i], out var g)) { g = new Material(mats[i]) { name = mats[i].name + " (glass)" }; Roughen(g); glass[mats[i]] = g; _extra.Add(g); }
+                        mats[i] = g; changed = true;
+                    }
+                }
                 if (changed) r.sharedMaterials = mats;
             }
+            GlassCount = glass.Count;
             foreach (var e in entries) if (e.instance) Write(e);
+        }
+
+        // ---------------------------------------------------------------- light pools and glass
+
+        /// <summary>How many glass materials were roughened (for checks).</summary>
+        public int GlassCount { get; private set; }
+
+        /// <summary>The exported light pools (town-props.js poolMat: black, emissive, transparent, additive in three.js).</summary>
+        public static bool IsGlowPool(int renderQueue, Color baseColor, Color emission) =>
+            renderQueue >= 2500 && baseColor.maxColorComponent < 0.02f && emission.maxColorComponent > 0.01f;
+
+        /// <summary>A pool's strength: the lit level, at full only once the sky is dark (about half at dusk).</summary>
+        public static float PoolGlow(float level, float night) => EffectiveLevel(level) * Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(night));
+
+        static Texture2D _poolTex;
+        static Shader _glowShader;
+
+        /// <summary>A soft radial falloff (town-props.js glowTex: a gaussian in linear light, no rim) in the alpha.</summary>
+        public static Texture2D PoolTexture()
+        {
+            if (_poolTex) return _poolTex;
+            const int W = 128;
+            var px = new Color32[W * W];
+            for (int y = 0; y < W; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float u = (x + 0.5f) / W * 2 - 1, v = (y + 0.5f) / W * 2 - 1;
+                    px[y * W + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255 * PoolFalloff(u * u + v * v)));
+                }
+            _poolTex = new Texture2D(W, W, TextureFormat.RGBA32, true, true) { name = "PoolGlow", wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            _poolTex.SetPixels32(px);
+            _poolTex.Apply(true, true);
+            return _poolTex;
+        }
+
+        /// <summary>The pool's falloff at squared radius r2 (0 centre, 1 edge): exp(-r2 / 0.18) (1 - r2), 0 outside.</summary>
+        public static float PoolFalloff(float r2) => r2 < 1f ? Mathf.Exp(-r2 / 0.18f) * (1f - r2) : 0f;
+
+        static Material GlowPoolMaterial(string name)
+        {
+            if (!_glowShader) _glowShader = SkyRig.LoadShader("AiOnAdditiveGlow", "AiOn/AdditiveGlow");
+            if (!_glowShader) return null;
+            var m = new Material(_glowShader) { name = name + " (pool)", renderQueue = 3000 };
+            m.SetTexture(Prop.UrpBaseMap, PoolTexture());
+            m.SetColor(Prop.UrpBaseColor, Color.black);
+            return m;
+        }
+
+        /// <summary>See-through glass (transparent, mostly clear) that is shinier than a matte pane.</summary>
+        static bool IsGlass(Material m)
+        {
+            if (m.renderQueue < 2500 || !m.HasProperty(Prop.BaseColorFactor) || !m.HasProperty(Prop.RoughnessFactor)) return false;
+            var c = m.GetColor(Prop.BaseColorFactor);
+            return c.a < 0.9f && c.maxColorComponent > 0.02f && m.GetFloat(Prop.RoughnessFactor) < GlassRoughness;
+        }
+
+        /// <summary>Window glass roughness (smoothness 0.3): a soft sheen instead of a hot specular orb.</summary>
+        public const float GlassRoughness = 0.7f;
+
+        static void Roughen(Material m)
+        {
+            if (m.HasProperty(Prop.RoughnessFactor)) m.SetFloat(Prop.RoughnessFactor, GlassRoughness);
+            if (m.HasProperty(Prop.UrpSmoothness)) m.SetFloat(Prop.UrpSmoothness, 1f - GlassRoughness);
         }
 
         static Texture GetTex(Material m, int gltf, int urp) =>
@@ -175,8 +272,15 @@ namespace AiOn.Levels
         }
 
         /// <summary>A level state changed: each material with rules for the key takes the matching rule (or its default).</summary>
+        readonly Dictionary<string, string> _state = new();
+
+        /// <summary>The last value a state key was set to here (JSON text without quotes for a plain string; null if never).</summary>
+        public string StateOf(string key) => _state.TryGetValue(key, out var v) ? v : null;
+
         public void Apply(string key, JToken value)
         {
+            _state[key] = value == null ? null : value.Type == JTokenType.String ? (string)value : CanonicalJson(value);
+            if (key == "windowView") EnvironmentController.Instance?.OutsideChanged();
             if (!Handles(key)) return;
             _order.Remove(key);
             _order.Add(key);
@@ -193,17 +297,54 @@ namespace AiOn.Levels
         public void SetLit(IReadOnlyDictionary<string, float> levels)
         {
             if (levels == null) return;
-            foreach (var kv in levels) _levels[kv.Key] = kv.Value;
-            if (!_ready) return;
-            foreach (var e in entries) if (e.instance && !string.IsNullOrEmpty(e.group)) Write(e);
+            _changed.Clear();
+            foreach (var kv in levels) Put(kv.Key, kv.Value);
+            WriteChanged();
+        }
+
+        /// <summary>SetLit without boxing an enumerator (an env blend calls it every frame); only groups whose level moved are rewritten.</summary>
+        public void SetLit(Dictionary<string, float> levels)
+        {
+            if (levels == null) return;
+            _changed.Clear();
+            foreach (var kv in levels) Put(kv.Key, kv.Value);
+            WriteChanged();
+        }
+
+        readonly HashSet<string> _changed = new();
+
+        void Put(string group, float level)
+        {
+            if (_levels.TryGetValue(group, out var was) && Mathf.Abs(was - level) < 1e-5f) return;
+            _levels[group] = level;
+            _changed.Add(group);
+        }
+
+        void WriteChanged()
+        {
+            if (!_ready || _changed.Count == 0) return;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var e = entries[i];
+                if (e.instance && !string.IsNullOrEmpty(e.group) && _changed.Contains(e.group)) Write(e);
+            }
         }
 
         public float LevelOf(string group) =>
             string.IsNullOrEmpty(group) ? 1f : _levels.TryGetValue(group, out var v) ? v : 1f;
 
+        /// <summary>The env's night amount changed: the ground pools follow.</summary>
+        public void SetNight(float night)
+        {
+            if (Mathf.Abs(night - nightAmount) < 1e-4f) return;
+            nightAmount = night;
+            if (_ready) for (int i = 0; i < entries.Count; i++) { var e = entries[i]; if (e.glow && e.instance) Write(e); }
+        }
+
         void Write(Entry e)
         {
             var s = Compose(e, Defaults(e), _order, e.Active);
+            if (e.glow) { WriteGlow(e, s); return; }
             var (color, emission) = Finish(s.Color, s.Emission, string.IsNullOrEmpty(e.group) ? 1f : LevelOf(e.group), string.IsNullOrEmpty(e.group) ? -1f : e.dim);
             emission *= emissionGain;
             var m = e.instance;
@@ -222,6 +363,19 @@ namespace AiOn.Levels
             else if (m.HasProperty(Prop.UrpBaseMap) && m.GetTexture(Prop.UrpBaseMap) != s.Map) m.SetTexture(Prop.UrpBaseMap, s.Map);
             if (m.HasProperty(Prop.EmissiveTexture)) { if (m.GetTexture(Prop.EmissiveTexture) != s.EmissiveMap) m.SetTexture(Prop.EmissiveTexture, s.EmissiveMap); }
             else if (m.HasProperty(Prop.UrpEmissionMap) && m.GetTexture(Prop.UrpEmissionMap) != s.EmissiveMap) m.SetTexture(Prop.UrpEmissionMap, s.EmissiveMap);
+        }
+
+        /// <summary>Tuning: the pool colour is the exported emission (emissive x its intensity) times this.</summary>
+        public float poolGain = 1f;
+
+        void WriteGlow(Entry e, MatState s)
+        {
+            float k = PoolGlow(LevelOf(e.group), nightAmount) * poolGain;
+            var c = s.Emission * k;
+            c.a = 1;
+            e.instance.SetColor(Prop.UrpBaseColor, c.gamma); // linearised on upload
+            bool on = k > LitEpsilon;
+            if (e.glowRenderers != null) foreach (var r in e.glowRenderers) if (r && r.enabled != on) r.enabled = on;
         }
 
         static MatState Defaults(Entry e) => new MatState
@@ -300,10 +454,24 @@ namespace AiOn.Levels
         {
             var next = new Dictionary<string, float>();
             if (previous != null) foreach (var kv in previous) next[kv.Key] = kv.Value;
-            if (preset != null)
-                foreach (var kv in preset)
-                    next[kv.Key] = !power && Array.IndexOf(GridGroups, kv.Key) >= 0 ? 0f : kv.Value;
+            MergeLitInto(next, preset, power);
             return next;
+        }
+
+        /// <summary>MergeLit in place (no allocation once the groups are known): the preset's groups over levels.</summary>
+        public static void MergeLitInto(Dictionary<string, float> levels, IReadOnlyDictionary<string, float> preset, bool power)
+        {
+            if (preset == null) return;
+            foreach (var kv in preset)
+                levels[kv.Key] = !power && Array.IndexOf(GridGroups, kv.Key) >= 0 ? 0f : kv.Value;
+        }
+
+        /// <summary>MergeLitInto over a concrete dictionary (its struct enumerator: no allocation per env-blend frame).</summary>
+        public static void MergeLitInto(Dictionary<string, float> levels, Dictionary<string, float> preset, bool power)
+        {
+            if (preset == null) return;
+            foreach (var kv in preset)
+                levels[kv.Key] = !power && Array.IndexOf(GridGroups, kv.Key) >= 0 ? 0f : kv.Value;
         }
 
         /// <summary>kit.js put(): a group at or below 0.0005 is off (0).</summary>
@@ -357,8 +525,8 @@ namespace AiOn.Levels
         {
             var s = defaults;
             if (order == null || active == null) return s;
-            foreach (var key in order)
-                if (active.TryGetValue(key, out var r) && r != null) s = Overlay(s, e, r);
+            for (int i = 0; i < order.Count; i++) // by index: no boxed enumerator per write
+                if (active.TryGetValue(order[i], out var r) && r != null) s = Overlay(s, e, r);
             return s;
         }
 

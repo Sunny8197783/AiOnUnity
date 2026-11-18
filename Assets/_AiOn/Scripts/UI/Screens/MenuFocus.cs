@@ -166,7 +166,7 @@ namespace AiOn.UI
         public static readonly Color Blue = Hex("#5aa6ff");
         public static readonly Color Ghost = new(1, 1, 1, 0.08f);
         public static readonly Color DarkInk = new(0.04f, 0.08f, 0.08f);
-        public static readonly Color Translucent = new(12 / 255f, 18 / 255f, 21 / 255f, 0.9f);
+        public static readonly Color Translucent = new(12 / 255f, 18 / 255f, 21 / 255f, 0.97f); // opaque enough that the HUD and scene do not read through
 
         public static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out var c) ? c : Color.magenta;
         public static Color Rgb((int r, int g, int b) c, float a = 1) => new(c.r / 255f, c.g / 255f, c.b / 255f, a);
@@ -180,7 +180,8 @@ namespace AiOn.UI
         /// <summary>A button in the original's three looks: primary (teal), plain, ghost.</summary>
         public static Button Btn(RectTransform parent, string label, bool primary, bool ghost, Action onClick, int size = 24)
         {
-            var bg = primary ? UiKit.Teal : ghost ? new Color(1, 1, 1, 0.04f) : Ghost;
+            // faint light fills pre-mixed over the panel (translucent ones read two to three times as strong in linear blending)
+            var bg = primary ? UiKit.Teal : ScreenDecor.Over(UiKit.Panel, Color.white, ghost ? 0.04f : 0.08f);
             var b = UiKit.Button(label, parent, label, size, bg, primary ? DarkInk : UiKit.Ink);
             if (onClick != null) b.onClick.AddListener(() => onClick());
             var nav = b.navigation; nav.mode = Navigation.Mode.None; b.navigation = nav;

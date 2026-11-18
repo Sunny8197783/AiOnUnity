@@ -245,6 +245,47 @@ namespace AiOn.Story
         readonly Random _rng = new();
 
         public bool FlashOn => _flashOn;
+        /// <summary>Whose eyes the player sees through (SetPlayer): 정민's bag and phone chips are not shown for 서연.</summary>
+        public string Pov { get; private set; } = "jeongmin";
+        bool OtherPov => Pov != null && Pov != "jeongmin";
+        readonly IStoryHud _rawHud;
+        string _lightLevel;
+        bool _lightLit;
+
+        /// <summary>The light in hand on / off: the engine's torch and the HUD's torch glyph (phone light only).</summary>
+        void SetLight(bool on)
+        {
+            _flashOn = on; Engine.SetFlashlight(on);
+            if (_rawHud is AiOn.UI.StoryOverlay so) so.SetTorch(on && Ctx.LightSource == "phone");
+        }
+
+        /// <summary>
+        /// The lights a level has, as the engine draws them (StoryContext.Goto): the level's 'power' state when the story
+        /// set one, else the grid (the shelter has its own: 'grid' by default). No allocation: a JValue's string is returned
+        /// as stored.
+        /// </summary>
+        public static string PowerOf(IReadOnlyDictionary<string, Dictionary<string, JToken>> states, string level, bool grid)
+        {
+            if (level == null) return null;
+            JToken p = null;
+            if (states != null && states.TryGetValue(level, out var st) && st != null) st.TryGetValue("power", out p);
+            if (p != null && p.Type == JTokenType.String) return (string)p;
+            return level == "shelter" ? "grid" : grid ? "on" : "off";
+        }
+
+        /// <summary>
+        /// An indoor level with its lights on (power on, the shelter's grid or emergency lights) needs no light in hand.
+        /// The town never counts: street lights do not light the way.
+        /// </summary>
+        public static bool LitLevel(IReadOnlyDictionary<string, Dictionary<string, JToken>> states, string level, bool grid = false)
+        {
+            if (level == null || level == "town") return false;
+            var p = PowerOf(states, level, grid);
+            return p == "on" || p == "grid" || p == "emergency";
+        }
+
+        /// <summary>The light in hand runs down only while the player is free to walk: not under a talk, a card, a menu or a cutscene.</summary>
+        bool LightPaused => !Engine.ControlsEnabled || AiOn.UI.UiScreen.OpenCount > 0 || (Ctx.Cine?.Busy ?? false);
 
         public StoryDirector(GameRules rules, Facts facts, IStoryEngine engine, IStoryHud hud, IStoryUi ui, IStoryAudio audio, IStoryStore store,
             DirectorParts parts = null, IStoryPersist hostPersist = null, bool reduceMotion = false)
@@ -253,6 +294,7 @@ namespace AiOn.Story
             Facts = facts ?? Facts.Empty;
             Engine = engine ?? throw new ArgumentNullException(nameof(engine));
             Hud = new DirectorHud(hud ?? throw new ArgumentNullException(nameof(hud)), this);
+            _rawHud = hud;
             Ui = ui ?? throw new ArgumentNullException(nameof(ui));
             Audio = new DirectorAudio(audio ?? throw new ArgumentNullException(nameof(audio)), this);
             Store = store ?? new MemoryStoryStore();
@@ -274,7 +316,7 @@ namespace AiOn.Story
             var ctxEngine = Engine is ICineFx ? new DirectorEngineFx(Engine, this) : new DirectorEngine(Engine, this);
             Ctx = new StoryContext(Rules, () => G, g => G = g, Facts, ctxEngine, Hud, Ui, Audio, this, StorySettings);
             // The 서연 interlude swaps who you are; the engine keeps one controller, so swap the model it drives.
-            Ctx.SetPlayer = preset => Engine.SetPlayerPreset(preset);
+            Ctx.SetPlayer = preset => { Pov = preset; Engine.SetPlayerPreset(preset); };
 
             _danger = parts.MakeDanger?.Invoke(Ctx, Hurt);
             _echo = parts.MakeEcho?.Invoke(Ctx, Store);
@@ -440,7 +482,7 @@ namespace AiOn.Story
             if (!_flashOn) Relight();
             bool lit = Ctx.LightSource == "flashlight" ? Rules.Usable(G, "flashlight") : Ctx.LightSource == "phone" && G.Phone.Battery > 0;
             if (!_flashOn && !lit) { Ctx.Toast("켤 수 있는 불빛이 없다."); return; }
-            _flashOn = !_flashOn; Engine.SetFlashlight(_flashOn);
+            SetLight(!_flashOn);
         }
 
         public void ToggleView()
@@ -574,13 +616,27 @@ namespace AiOn.Story
         // The light in hand runs down: the flashlight 1 % of its charge per real minute lit (design M3), the phone 1 % per 20 s.
         void LightFrame(double dt)
         {
+            // Port upgrade: walking into a lit level (power on, or the shelter's emergency lights) puts the light away.
+            // Checked when the level changes and when its power does (the shelter's lights come on after the arrival).
+            var lv = Engine.LevelId;
+            bool lit = LitLevel(Ctx.LevelStates, lv, Ctx.Power);
+            if (lv != _lightLevel || lit != _lightLit)
+            {
+                _lightLevel = lv; _lightLit = lit;
+                if (_flashOn && G != null && lit)
+                {
+                    SetLight(false);
+                    Ctx.Toast(Ctx.LightSource == "phone" ? "휴대폰 손전등을 껐다" : "손전등을 껐다", "self", 2400);
+                }
+            }
             if (!_flashOn || G == null) return;
+            if (LightPaused) return;
             if (Ctx.LightSource == "flashlight")
             {
-                if (!Engine.ControlsEnabled || (_litT += dt) < 60) return;
+                if ((_litT += dt) < 60) return;
                 _litT -= 60;
                 if (!G.Items.TryGetValue("flashlight", out var fl) || !fl.Checked || Rules.DrainCharge(G, "flashlight", 1) > 0) return;
-                _flashOn = false; Engine.SetFlashlight(false);
+                SetLight(false);
                 bool spare = new[] { "batteries_aa", "batteries_old" }.Any(id => G.Items.TryGetValue(id, out var e) && e.Home + e.Bag > 0);
                 Ctx.Toast($"손전등 불빛이 점점 흐려지더니 꺼졌다. 건전지가 다 닳았다.{(spare ? " 남은 건전지가 있으니 F를 누르면 갈아 끼운다." : "")}", "self", 5600);
                 return;
@@ -589,7 +645,7 @@ namespace AiOn.Story
             if ((_flashT += dt) > 20)
             {
                 _flashT = 0; G.Phone.Battery = Math.Max(0, G.Phone.Battery - 1); Hud.SetBattery(G.Phone.Battery);
-                if (G.Phone.Battery <= 0) { _flashOn = false; Engine.SetFlashlight(false); Ctx.Toast("휴대폰이 꺼졌다."); }
+                if (G.Phone.Battery <= 0) { SetLight(false); Ctx.Toast("휴대폰이 꺼졌다."); }
             }
         }
 
@@ -819,7 +875,7 @@ namespace AiOn.Story
         public void ResetTransient()
         {
             Ctx.SpeedOverride = null; Ctx.Calm = false; Engine.Carrying = null;
-            _flashOn = false; _litT = 0; Engine.SetFlashlight(false);
+            _litT = 0; SetLight(false);
             Ctx.SetPlayer?.Invoke("jeongmin"); Hud.SetCinematic(false); Engine.SetControls(true);
             DropHeld?.Invoke(); _danger?.Reset(); Ctx.DeathCause = null; ApplySettings();
         }
@@ -922,18 +978,13 @@ namespace AiOn.Story
             var pick = await Ui.Card(new CardOptions
             {
                 Kind = "info", Title = "체험 모드", Meta = "설정(Esc)에서 언제든 바꿀 수 있습니다",
-                Body = new List<string>
-                {
-                    "같은 재난도 몸과 감각에 따라 전혀 다른 길이 됩니다. 정민의 조건을 골라 보세요.",
-                    "보행 장애: 달릴 수 없고 걸음이 느립니다. · 휠체어: 앉은 눈높이, 계단은 도움 없이 못 지나고 경사로만 씁니다.",
-                    "저시력: 앞이 흐릿하게 보이고, 눈앞의 대상과 자막을 소리로 읽어 줍니다. · 청각 장애: 소리가 들리지 않고 자막과 화면 신호로만 알 수 있습니다.",
-                    "지체 장애(보호자 동반): 보호자가 곁에서 함께 걷습니다. 달릴 수 없습니다.",
-                },
+                // the original's opening paragraph only; each mode's own line rides on its chip (the settings subtitles)
+                Body = new List<string> { "같은 재난도 몸과 감각에 따라 전혀 다른 길이 됩니다. 정민의 조건을 골라 보세요." },
                 Actions = new List<CardAction>
                 {
                     new("none", "기본", true), new("mobility", "보행 장애"), new("wheelchair", "휠체어"),
                     new("lowvision", "저시력"), new("deaf", "청각 장애"), new("guardian", "보호자 동반"),
-                },
+                }.Select(a => { a.Hint = AiOn.UI.SettingsForm.ProfileSub(a.Id); return a; }).ToList(),
             });
             if (pick != null && Profiles.ContainsKey(pick))
             {
@@ -1107,6 +1158,7 @@ namespace AiOn.Story
             public void Title(IReadOnlyList<string> lines) => Fx.Title(lines);
             public void TitleOut() => Fx.TitleOut();
             public void Fill(double x, double y, double z, double intensity, string color) => Fx.Fill(x, y, z, intensity, color);
+            public void FillRange(double metres) => Fx.FillRange(metres);
             public IDisposable Missile(double[] from, double[] to, double seconds) => Fx.Missile(from, to, seconds);
         }
 
@@ -1126,8 +1178,12 @@ namespace AiOn.Story
             public DirectorHud(IStoryHud h, StoryDirector d) { _h = h; _d = d; }
             public void SetClock(string text) => _h.SetClock(text);
             public void SetStats(Stats stats) => _h.SetStats(stats);
-            public void SetBattery(double percent) => _h.SetBattery(percent);
-            public void SetBag(double? weightKg, double limitKg) => _h.SetBag(weightKg, limitKg);
+            public void SetBattery(double percent)
+            {
+                if (_d.OtherPov) { if (_h is AiOn.UI.StoryOverlay so) so.HideBattery(); return; }
+                _h.SetBattery(percent);
+            }
+            public void SetBag(double? weightKg, double limitKg) => _h.SetBag(_d.OtherPov ? null : weightKg, limitKg);
             public void SetTension(double amount01) => _h.SetTension(amount01);
             public void SetStamina(double amount01) => _h.SetStamina(amount01);
             public void Prompt(string label) => _h.Prompt(label);

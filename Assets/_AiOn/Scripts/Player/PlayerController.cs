@@ -124,7 +124,7 @@ namespace AiOn.Player
             var points = LevelSpawnPoints.Current;
             if (points == null || !points.TryGet(spawnName, out var p))
             {
-                Debug.LogWarning($"[Player] no spawn '{spawnName}' in this scene");
+                if (points != null) Debug.LogWarning($"[Player] no spawn '{spawnName}' in level '{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}' ({points.points.Count} spawns)"); // no LevelSpawnPoints (Boot): the story host places the player
                 return false;
             }
             Teleport(p.position, p.yaw);

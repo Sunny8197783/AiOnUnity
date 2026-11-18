@@ -61,6 +61,16 @@ namespace AiOn.Story
             ["town:shelterNotice"] = Lines("연무 생활문화센터 지하주차장 · 민방위 대피소 안내판."),
         };
 
+        /// <summary>Shows or hides a point of the current level (no allocation; the host syncs Enabled to the scene). False when absent.</summary>
+        public static bool SetPointEnabled(IStoryEngine engine, string id, bool on)
+        {
+            var pts = engine?.Points;
+            if (pts == null) return false;
+            for (int i = 0; i < pts.Count; i++)
+                if (pts[i].Id == id) { pts[i].Enabled = on; return true; }
+            return false;
+        }
+
         public static bool IsCommon(StoryContext ctx, StoryPoint point)
         {
             var lv = ctx.Engine.LevelId;

@@ -205,6 +205,7 @@ namespace AiOn.Story
             await PrepActions.GoOut(ctx, "비상급수시설로", "행정복지센터 마당의 비상급수시설로 갑니다.");
             ctx.Objective("물 받기", "행정복지센터 마당 급수대에서 줄을 섭니다.", Array.Empty<ObjectiveStep>());
             await ctx.Roam(new RoamOptions { Rate = 2, Tick = Tick(BodyCheck(ctx)), On = { ["water"] = _ => Task.FromResult<JToken>("queue") } });
+            await JoinQueue(ctx);
             await StoryCommon.FactCard(ctx, "비상급수시설", new[] { "water_point", "water_sphere", "water_hands" });
             ctx.Pass(25);
             var elder = await ctx.Say("급수대", new[] { "304호 어르신이 물통을 들기 힘들어 보인다." },
@@ -219,6 +220,7 @@ namespace AiOn.Story
             else { carry = 4; ctx.Toast("물통이 없어 빈 생수병 두 개에 4리터만 받았다.", "site"); }
             if (forSeoyeon) carry += 10;
             GameRules.RecordEvent(g, "water_fetched", new JObject { ["litres"] = carry, ["forSeoyeon"] = forSeoyeon });
+            World.SetPointEnabled(ctx.Engine, "water", false); // filled: the tap is someone else's turn now
             ctx.SpeedOverride = carry > 12 ? 0.62 : 0.78;
             ctx.Engine.Carrying = "water";
             // never past the warning at pick-up
@@ -267,9 +269,41 @@ namespace AiOn.Story
             ctx.Refresh();
         }
 
+        /// <summary>
+        /// Where the water queue ends (town-events.js WATER: 14 people at 0.9 m from the tap, toward +x), and where one is
+        /// served: at the taps (x -81.2 .. -78.8 along z -19.8), west of the line's head (x -78.6), facing them (north), so
+        /// after the wait the player is at the front and not beside the people still in line.
+        /// </summary>
+        public static readonly (double x, double z) QueueEnd = (-66.0, -18.4), TapSide = (-80.0, -19.05);
+
+        /// <summary>
+        /// E at the tap no longer cuts the line (port fix): a short fade to the end of the queue, the wait, then the turn
+        /// at the tap.
+        /// </summary>
+        static async Task JoinQueue(StoryContext ctx)
+        {
+            var e = ctx.Engine;
+            if (e.LevelId != "town") return;
+            e.SetControls(false);
+            try
+            {
+                await e.FadeTo(1, 0.3);
+                e.TeleportTo(QueueEnd.x, e.PlayerY, QueueEnd.z, Math.PI / 2); // facing the tap (west)
+                await e.FadeTo(0, 0.35);
+                await ctx.Caption("줄을 서서 기다렸다.", null, 2400);
+                await e.FadeTo(1, 0.3);
+                e.TeleportTo(TapSide.x, e.PlayerY, TapSide.z, 0); // facing the taps (north)
+                await e.FadeTo(0, 0.35);
+            }
+            finally { e.SetControls(true); }
+        }
+
         static async Task Evening(StoryContext ctx)
         {
             var g = ctx.G;
+            // Port: the afternoon passes on screen (it used to jump from the 3F landing at ~09:50 to 17:30).
+            await ctx.Skip("D+1 토 오후", "D+1 토 17:30", new[] { "물을 아껴 쓰며 오후를 보냈다. 해가 기울자 집 안이 금세 어두워졌다." });
+            g = ctx.G;
             g.Minute = 17 * 60 + 30;
             ctx.OutdoorEnv = "dusk";
             ctx.SetLevelState("town", "waterPoint", "off"); // closed at 17:00: tank, table and E all go
@@ -439,7 +473,7 @@ namespace AiOn.Story
                         {
                             Speaker = "복도", Role = size == "small" ? "택배 상자에 붙은 작은 불" : "천장까지 닿는 불길",
                             Lines = { size == "small" ? "304호 앞 택배 상자 위로 촛불이 넘어져 있다. 불길은 아직 작다." : "불길이 천장에 닿았다. 연기가 복도를 채운다." },
-                            Choices = new List<TalkChoice> { new("shout", "\"불이야!\" 외친다", shouted), new("water", "물을 끼얹는다"), new("retreat", "대피하며 알린다 (계단 · 119)") },
+                            Choices = new List<TalkChoice> { new("shout", "\"불이야!\" 외친다", shouted) { Taken = shouted }, new("water", "물을 끼얹는다"), new("retreat", "대피하며 알린다 (계단 · 119)") },
                         });
                         if (pick == "shout")
                         {
@@ -467,12 +501,26 @@ namespace AiOn.Story
         static async Task DayThree(StoryContext ctx)
         {
             var g = ctx.G;
+            // Port: the night after the fire passes on screen (it cut from the 21:40 lobby straight to D+3 10:00).
+            // 서연 speaks from her own doorway (she was a voice from nowhere): the night passes, a knock ends it, and the
+            // morning opens on the 3F corridor with 303 open. One level load: in the black before the skip the player is
+            // put at 302's door, so the skip's way back lands there (it used to land in the lobby, then load 302, then the corridor).
+            var en = ctx.Engine;
+            if (en.LevelId == "apartment" && en.TryGetSpawn("corridor3F", out var cx, out var cy, out var cz, out var cyaw))
+            {
+                await en.FadeTo(1, 0.4);
+                en.TeleportTo(cx, cy, cz, cyaw);
+            }
+            ctx.SetLevelState("apartment", "windowView", "day");
+            ctx.SetLevelState("apartment", "smoke", 0);
+            ctx.SetLevelState("apartment", "seoyeonDoor", "open");
+            ctx.Objective(null);
+            await ctx.Skip("D+2 밤", "D+3 일 10:00", new[] { "소방대가 돌아간 뒤에도 복도의 탄내는 밤새 빠지지 않았다. 아침이 되자 이웃들이 하나둘 문을 열었다.", "똑똑— 현관문을 두드리는 소리." });
+            g = ctx.G;
             g.Day = 3; g.Minute = 10 * 60;
             ctx.OutdoorEnv = "day";
-            ctx.SetLevelState("apartment", "windowView", "day");
-            ctx.Objective(null);
-            ctx.SetLevelState("apartment", "smoke", 0);
-            await ctx.Goto("apartment", "home", "interiorDark");
+            if (en.LevelId != "apartment") await ctx.Goto("apartment", "corridor3F", "interiorDark");
+            _ = en.FadeTo(0, 0.4); // the card skip (no time-lapse) leaves the black in place
             ctx.Refresh();
             if (g.Stats.Tension > 55) await StoryCommon.FactCard(ctx, "긴장이 높을 때", new[] { "mind_breath", "mind_call" });
             var pick = await ctx.Say("오서연", new[] { "어젯밤 괜찮으셨어요? 저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요.", "앞으로 저녁마다 들은 걸 정리해서 문 앞에 붙여 둘게요. 필요하면 보세요." },
@@ -486,6 +534,7 @@ namespace AiOn.Story
             var visit = await ctx.Say("304호 어르신", new[] { g.Events.Any(e => e.Type == "fire_shout") ? "어젯밤엔 고마웠어요. 그 소리 듣고 바로 나왔지." : "어젯밤엔 다들 놀랐지요. 나는 괜찮아요." },
                 new List<TalkChoice> { new("visit", "들러서 안부를 묻는다"), new("later", "다음에 들른다") }, "304호 앞");
             if (visit == "visit") { ctx.Pass(10); ctx.Remember("elder_visit"); }
+            ctx.SetLevelState("apartment", "seoyeonDoor", "closed");
             GameRules.Adjust(g, "fatigue", -20); GameRules.Adjust(g, "tension", -10);
             ctx.Refresh();
         }

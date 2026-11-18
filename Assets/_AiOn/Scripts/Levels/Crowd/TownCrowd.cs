@@ -22,7 +22,7 @@ namespace AiOn.Levels.Crowd
         string _mode = "none", _traffic = "normal";
         List<string> _closures = new();
         readonly Dictionary<string, string> _gates = new(TownCrowdPlan.DefaultGates);
-        bool _waterPoint, _buses;
+        bool _waterPoint, _buses, _trickle = true;
 
         public TownCrowd(WalkHeight walk, SolidGrid solids)
         {
@@ -60,11 +60,14 @@ namespace AiOn.Levels.Crowd
         {
             var g = Group(name);
             if (g != null) return g;
-            g = new CrowdGroup(TownCrowdPlan.Sizes[name], 900 + _groups.Count * 17, _height, _solids, _holds, _peers);
+            int seed = TownCrowdPlan.PortSeeds.TryGetValue(name, out var ps) ? ps : 900 + OriginalCount() * 17;
+            g = new CrowdGroup(TownCrowdPlan.Sizes[name], seed, _height, _solids, _holds, _peers);
             _groups.Add((name, g));
             _bodies.AddRange(g.Bodies);
             return g;
         }
+
+        int OriginalCount() { int n = 0; foreach (var (name, _) in _groups) if (!TownCrowdPlan.PortSeeds.ContainsKey(name)) n++; return n; }
 
         void Run(string name, Action<CrowdGroup> fn) { var c = Get(name); c.Visible = true; fn(c); }
 
@@ -84,6 +87,20 @@ namespace AiOn.Levels.Crowd
                     {
                         var (paths, targets) = TownCrowdPlan.EvacFor(_gates, _closures);
                         foreach (var n in new[] { "main", "extra" }) Run(n, c => { c.SetPaths(paths); c.SetMode("brisk", new CrowdGroup.ModeOpts { Targets = targets, Then = "despawn" }); });
+                        // Port: the first wave leaves for good, but for a quarter of an hour a thin stream keeps coming out of
+                        // the complex (state trickle on), some with phone torches and bags; then it stops too.
+                        RunTrickle();
+                        foreach (var kv in TownCrowdPlan.TorchAreas)
+                        {
+                            var area = kv.Value;
+                            Run(kv.Key, c => c.SetMode("idle", new CrowdGroup.ModeOpts { Area = area, Paths = new List<Pt[]>(), Instant = true, Props = new List<(PropMask, double)> { (PropMask.Flashlight, 1.0) } }));
+                        }
+                        return;
+                    }
+                case "boarded":
+                    {
+                        // The buses are leaving: most of the assembly has boarded; a handful stay at the bay to see them off.
+                        Run("main", c => c.SetMode("idle", new CrowdGroup.ModeOpts { Count = 5, Area = TownCrowdPlan.BoardedArea, Paths = new List<Pt[]>(), Instant = true }));
                         return;
                     }
                 case "queue":
@@ -96,11 +113,28 @@ namespace AiOn.Levels.Crowd
                     Run("few", c => { c.SetPaths(walkers); c.SetMode("stroll"); });
                     return;
                 case "assembly":
-                    Run("main", c => c.SetMode("idle", new CrowdGroup.ModeOpts { Area = TownCrowdPlan.AssemblyArea, Paths = new List<Pt[]>(), Instant = true }));
+                    Run("main", c => c.SetMode("idle", new CrowdGroup.ModeOpts { Area = TownCrowdPlan.AssemblyWaitArea, Paths = new List<Pt[]>(), Instant = true }));
                     // served leave east toward 문화로, clear of the buses
-                    Run("line", c => c.SetMode("queue", new CrowdGroup.ModeOpts { At = TownCrowdPlan.AssemblyQueue, Dir = new Pt(0, 1), Spacing = 0.85, Leave = new Pt(1, 0) }));
+                    // Port: two single-file lines at 0.7 m, side by side (the original had one at 0.85 m).
+                    Run("line", c => c.SetMode("queue", new CrowdGroup.ModeOpts { At = TownCrowdPlan.AssemblyQueue, Dir = new Pt(0, 1), Spacing = TownCrowdPlan.AssemblySpacing, Leave = new Pt(1, 0) }));
+                    Run("line2", c => c.SetMode("queue", new CrowdGroup.ModeOpts { At = TownCrowdPlan.AssemblyQueue2, Dir = new Pt(0, 1), Spacing = TownCrowdPlan.AssemblySpacing, Leave = new Pt(1, 0), Serve = 13 }));
                     return;
             }
+        }
+
+        void RunTrickle()
+        {
+            var (tp, tt) = TownCrowdPlan.TricklePaths(_gates, _closures);
+            if (tp.Count == 0) return;
+            Run("trickle", c =>
+            {
+                c.SetPaths(tp);
+                c.SetMode("brisk", new CrowdGroup.ModeOpts
+                                {
+                                    Targets = tt, Then = _trickle ? "respawn" : "despawn", RespawnDelay = TownCrowdPlan.TrickleDelay,
+                                    Props = new List<(PropMask, double)> { (PropMask.Flashlight, 0.5), (PropMask.Backpack, 0.45) },
+                                });
+            });
         }
 
         /// <summary>town-crowd setMode: false (mode unchanged, an error) for an unknown mode.</summary>
@@ -171,8 +205,17 @@ namespace AiOn.Levels.Crowd
                     _waterPoint = v?.ToString() == "on"; SyncSolids();
                     return true;
                 case "buses":
-                    _buses = v?.ToString() == "on"; SyncSolids();
+                    _buses = v?.ToString() == "on"; SyncSolids(); // departing: the bay is clear (the host moves the buses out)
                     return true;
+                case "trickle":
+                    {
+                        bool on = v?.ToString() != "off";
+                        if (on == _trickle) return true;
+                        _trickle = on;
+                        var g = Group("trickle");
+                        if (g != null && g.Visible && _mode == "evacuating") RunTrickle();
+                        return true;
+                    }
             }
             return false;
         }

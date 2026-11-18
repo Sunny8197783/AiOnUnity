@@ -136,11 +136,7 @@ namespace AiOn.Game
             g.Events.LastOrDefault(e => e.Type == "encounter" && JsSem.Is(Deeds.Det(e)["tool"], tool));
 
         /// <summary>HUD value words; health is better high, the other stats are better low.</summary>
-        static string Word(string stat, double v)
-        {
-            double good = stat == "health" ? v : 100 - v;
-            return good >= 60 ? "좋음" : good >= 30 ? "보통" : "나쁨";
-        }
+        static string Word(string stat, double v) => GameRules.StatWord(stat, v); // the HUD's word, so the card and the HUD agree
 
         static double StatOf(GameState g, string stat) => stat switch
         {

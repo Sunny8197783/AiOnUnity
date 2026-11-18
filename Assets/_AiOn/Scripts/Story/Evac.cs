@@ -89,10 +89,10 @@ namespace AiOn.Story
                     : G.Events.Any(e => e.Type == "rumor_checked" && (string)e.Details?["id"] == "camp_food") ? "확인한 것: 임시 거처는 급수·급식을 지원한다 (공식 안내)" : null;
                 var stayMove = await ctx.Card(new CardOptions
                 {
-                    Kind = "info", Title = "지금 내 상황", Meta = "판단 재료",
+                    Kind = "decision", Title = "지금 내 상황", Meta = "판단 재료",
                     Body = new[]
                     {
-                        $"마실 물 약 {N(water)}L · 먹을 것 {food}개", $"휴대폰 {N(G.Phone.Battery)}% · 몸 상태: 피로 {N(G.Stats.Fatigue)} · 긴장 {N(G.Stats.Tension)}", heardLine,
+                        $"마실 물 약 {N(water)}L · 먹을 것 {food}개", $"휴대폰 {N(G.Phone.Battery)}% · 몸 상태: 피로 {GameRules.StatWord("fatigue", G.Stats.Fatigue)} · 긴장 {GameRules.StatWord("tension", G.Stats.Tension)}", heardLine,
                         "박 소장: \"저는 남아서 건물 봐야죠.\" · 서연: \"저는 주민센터에 이동 지원을 신청해 뒀어요.\"",
                         G.Knows("clerkLeft") ? "바로편의점 문에 쪽지: \"본가에 다녀옵니다 — 이수아\"" : "바로편의점은 문을 닫았다.",
                         "어느 쪽도 정답이 정해져 있지 않습니다. 지금의 조건으로 고르세요.",
@@ -159,7 +159,7 @@ namespace AiOn.Story
             {
                 var pick = await ctx.Say("판단", new[] { "우리 집 안으로 연기나 불길이 들어오지는 않았다. 어떻게 할까?" }, new List<TalkChoice>
                 {
-                    new("handle", "현관 문손잡이를 손등으로 만져 본다", felt),
+                    new("handle", "현관 문손잡이를 손등으로 만져 본다", felt) { Taken = felt },
                     new("fight", "복도로 나가 소화기로 끄러 간다"),
                     new("run", "바로 복도로 뛰어나가 계단으로 내려간다"),
                     new("stay", "창문을 닫고 119에 신고한 뒤 안내방송에 따른다"),
@@ -203,25 +203,31 @@ namespace AiOn.Story
             ctx.SetLevelState("shelter", "power", "emergency");
             ctx.SetLevelState("shelter", "fire", "large");
             await ctx.Goto("shelter", "spot");
-            // face the burning corner
-            if (ctx.Engine.TryGetSpawn("fire", out var fx, out _, out var fz, out _))
+            ctx.Refresh(); // the clock and battery right on the shelter's first frame
+            // face the burning corner (gap story/evac.js:138; the boxes where the fire is drawn)
+            double fx = Cutscenes.ShelterFire.x, fz = Cutscenes.ShelterFire.z;
             {
                 var e = ctx.Engine;
                 e.TeleportTo(e.PlayerX, e.PlayerY, e.PlayerZ, Math.Atan2(-(fx - e.PlayerX), -(fz - e.PlayerZ)));
             }
-            ctx.Refresh();
             if (Rumors.Misled(G) == "camp_food") // the claim met what is really here
             {
                 G.SetKnow("misled", null); GameRules.RecordEvent(G, "rumor_corrected", new JObject { ["id"] = "camp_food" });
                 await ctx.Caption("점심과 저녁에 배식 줄이 섰다. 급식이 끊겼다던 SNS 글과는 달랐다.", null, 3800);
             }
-            await ctx.Caption("저녁. 주차장 구석에서 누군가 휴대용 버너로 라면을 끓이다 쌓아 둔 상자에 불이 옮겨 붙었다. 불길이 천장 배관에 닿는다.", null, 4200);
+            // People get to their feet; the fire is shown before the drill asks what to do about it.
+            const string fireLine = "저녁. 주차장 구석에서 누군가 휴대용 버너로 라면을 끓이다 쌓아 둔 상자에 불이 옮겨 붙었다. 불길이 천장 배관에 닿는다.";
+            ctx.SetLevelState("shelter", "phase", "alert");
+            string shot = null;
+            try { if (ctx.Cine != null) shot = await Cutscenes.ShelterFireShot(ctx, fx, fz, fireLine); } catch (Exception) { shot = null; }
+            if (shot == null) await ctx.Caption(fireLine, null, 4200);
             await StoryCommon.FactCard(ctx, "대피소에서는", new[] { "shelter_rules" });
             var res = await ctx.Modal(() => ctx.Ui.Open("extinguisher", new JObject { ["mode"] = Drills.LadderStage(G, "extinguisher"), ["fire"] = "large" }));
             var seq = (res as JObject)?["sequence"] is JArray a ? a.Select(x => (string)x).ToList() : new List<string>();
             var ev = Drills.EvalExtinguisher(seq, "large");
             Drills.RecordEncounter(G, "extinguisher", ev.Result);
             ctx.SetLevelState("shelter", "fire", "none");
+            ctx.SetLevelState("shelter", "phase", "calm");
             if (ev.Result == "escalated") ctx.Fail("fire", new JObject { ["scene"] = "shelter" });
             await StoryCommon.FactCard(ctx, "물러서는 것도 성공입니다", new[] { "fire_big", "fire_shout", "fire_119" });
             ctx.Payoff("judgement", "천장까지 닿은 불 앞에서 물러나 알리고 대피했다");
@@ -370,11 +376,11 @@ namespace AiOn.Story
                 var steps = new List<ObjectiveStep>();
                 if (checking) steps.Add(new ObjectiveStep("한 번 더 확인하기: 단지 게시판 · 행정복지센터 게시판 · 관리사무소", @checked));
                 steps.Add(new ObjectiveStep("문에 쪽지 남기기 (선택)", noted));
-                steps.Add(new ObjectiveStep("버스 타기: 14:00까지 집결지"));
-                steps.Add(new ObjectiveStep("남기: 관리사무소 박 소장에게"));
-                steps.Add(new ObjectiveStep("서연과 함께: 303호"));
-                steps.Add(new ObjectiveStep("돕기: 행정복지센터 자원봉사"));
-                steps.Add(new ObjectiveStep("걸어서 떠나기: 큰길 끝까지"));
+                steps.Add(new ObjectiveStep("버스 타기: 14:00까지 집결지") { Choice = true });
+                steps.Add(new ObjectiveStep("남기: 관리사무소 박 소장에게") { Choice = true });
+                steps.Add(new ObjectiveStep("서연과 함께: 303호") { Choice = true });
+                steps.Add(new ObjectiveStep("돕기: 행정복지센터 자원봉사") { Choice = true });
+                steps.Add(new ObjectiveStep("걸어서 떠나기: 큰길 끝까지") { Choice = true });
                 ctx.Objective("오늘 어떻게 할까", string.Join(" ", body), steps);
             }
             Show();
@@ -554,7 +560,14 @@ namespace AiOn.Story
             if (!idCard) { ctx.Pass(15); ctx.Toast(ctx.Facts.Text("docs_take"), "official", 5000); }
             // The docs payoff credits the D-1 card/papers (Ripples Causes.docs); the 신분증 is not a D-1 prep.
             if (card) ctx.Payoff("docs", $"가방에 챙긴 연락처 카드와 서류 사본으로 접수를 {(deep ? "조금 늦게나마 " : "바로 ")}마쳤다");
-            await ctx.Caption("버스 창밖으로 연무동이 멀어진다.", null, 3500);
+            // The climax as a scene, not a caption over the roam: no controls, no HUD or prompt, the buses drive out of the
+            // bay and up 문화로 with the camera turning after them, and the shot itself fades to black. The cutscene holds
+            // that black (StoryCine.HoldOnExit): the ending's montage fades in from it, with no gameplay frame between.
+            string dep = null;
+            try { if (ctx.Cine != null) dep = await Cutscenes.BusDeparture(ctx); } catch (Exception) { dep = null; }
+            if (dep == null) await ctx.Caption("버스 창밖으로 연무동이 멀어진다.", null, 3500);
+            await ctx.Engine.FadeTo(1, dep == "done" ? 0.2 : 1.0); // already black after the full shot; a skip fades from where it was
+            ctx.SetLevelState("town", "buses", "departed"); // the bay stays empty from here on (no replay of the pull-out)
         }
 
         /// <summary>'missed' happens wherever the clock passes 14:00: only at the assembly point is it an empty bay (F11).</summary>
@@ -576,12 +589,16 @@ namespace AiOn.Story
             // C2: what the early choices led to, over the town at dusk, then where 정민 is now. Never blocks the ending.
             try { await Cutscenes.RippleMontage(ctx, Ripples.Of(G), KnowString(G, "path")); }
             catch (Exception) { /* the original logs '[cine] ripple montage failed; the story goes on' */ }
+            ctx.Cine?.Release(); // a departure held in black that no montage shot took over
+            await ctx.Engine.FadeTo(1, 1.0); // a second of black between the last shot and the ending sheet
             if (ctx.RecordRun != null) await ctx.RecordRun(); // the ending gallery (and the records) count the run once its closing scene has played
             var record = Debrief.EndingRecord(ctx.Rules, G, id => ctx.Facts.Text(id), id => ctx.Facts.SourceId(id));
-            return await ctx.Modal(() => ctx.Ui.Open("ending", new JObject
+            var picked = await ctx.Modal(() => ctx.Ui.Open("ending", new JObject
             {
                 ["record"] = JObject.FromObject(record), ["sources"] = JArray.FromObject(ctx.Facts.Sources),
             }));
+            _ = ctx.Engine.FadeTo(0, 0.4);
+            return picked;
         }
     }
 }

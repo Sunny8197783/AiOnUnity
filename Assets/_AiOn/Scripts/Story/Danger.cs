@@ -44,6 +44,8 @@ namespace AiOn.Story
         public virtual void ResetPuffs() { }
         /// <summary>A player reaction (engine.act): 'hurt' for seconds.</summary>
         public virtual void PlayerAct(string act, double seconds) { }
+        /// <summary>The spawned body still stands in the scene (a level switch destroys it with the level).</summary>
+        public virtual bool Alive(IStoryPerson p) => p != null;
         /// <summary>The danger layer these effects serve (set by Danger.Create): the hands ask it about the looter.</summary>
         public DangerLayer Layer { get; internal set; }
     }
@@ -90,6 +92,9 @@ namespace AiOn.Story
             double r = close ? Rnd(r0, 5, 8) : Rnd(r0, 9, 32);
             return (x - Math.Sin(a) * r, z - Math.Cos(a) * r);
         }
+
+        /// <summary>The bearing (original-frame yaw) the looter walks in from: ahead or to the side of the facing, never behind (r 0..1).</summary>
+        public static double LooterBearing(double yaw, double r) => yaw + (r - 0.5) * 2 * 0.7;
 
         /// <summary>createDanger({ ctx, actions, hurt }): hurt(n, why) takes health off (the director's hurt).</summary>
         public static DangerLayer Create(StoryContext ctx, Action<int, string> hurt, DangerFx fx = null) => new DangerLayer(ctx, hurt, fx ?? new DangerFx());
@@ -236,10 +241,12 @@ namespace AiOn.Story
         // ---- a looter: walks up, asks; give, refuse (a fight) or run ----
         void SpawnLooter()
         {
-            double a = Engine.PlayerYaw + Math.PI + Rnd(-0.8, 0.8), x = Engine.PlayerX - Math.Sin(a) * 14, z = Engine.PlayerZ - Math.Cos(a) * 14;
+            // Port upgrade: the original came from behind (yaw + pi); here it walks in from ahead or the side, in view, so
+            // the approach is seen before the talk opens.
+            double a = Danger.LooterBearing(Engine.PlayerYaw, R()), x = Engine.PlayerX - Math.Sin(a) * 14, z = Engine.PlayerZ - Math.Cos(a) * 14;
             var gy = _fx.GroundAt(x, z);
             if (gy == null) return;
-            var p = Engine.SpawnPerson("crowd", x, gy.Value, z, a);
+            var p = Engine.SpawnPerson("crowd", x, gy.Value, z, a + Math.PI); // facing the player
             if (p == null) return;
             _hostile.Add(p);
             _looter = new Looter { P = p, Level = Engine.LevelId, Talk = (int)Math.Floor(R() * Danger.LooterLines.Length), X = x, Y = gy.Value, Z = z };
@@ -345,6 +352,9 @@ namespace AiOn.Story
                 }
             }
             if (_ctx.Calm) { _pending.Clear(); if (_looter != null) DropLooter(); }
+            // The looter's body dies with its level: drop it even while the player is indoors (Active() is town-only), or
+            // a bodiless '낯선 사람' would walk back in and fight on the player's return.
+            if (_looter != null && (Engine.LevelId != _looter.Level || !_fx.Alive(_looter.P))) DropLooter();
             if (!Active()) return;
             for (int i = _pending.Count - 1; i >= 0; i--)
                 if (i < _pending.Count && (_pending[i].T -= dt) <= 0) { var p = _pending[i]; _pending.RemoveAt(i); p.Run(); }
@@ -354,6 +364,13 @@ namespace AiOn.Story
             if (I.Shell > 0 && (_shellT -= dt * I.Shell) <= 0) { _shellT = Rnd(25, 60); Shell(I); }
             if (I.Collapse > 0 && (_collapseT -= dt * I.Collapse) <= 0) { _collapseT = Rnd(70, 140); Collapse(); }
             if (I.Looter > 0 && _looter == null && (_looterT -= dt * I.Looter) <= 0) { _looterT = Rnd(90, 180); SpawnLooter(); }
+        }
+
+        /// <summary>The host switched levels (its level-change path): whatever the old level held is gone.</summary>
+        public void LevelChanged()
+        {
+            if (_looter != null && Engine.LevelId != _looter.Level) DropLooter();
+            _hostile.RemoveWhere(p => !_fx.Alive(p));
         }
 
         /// <summary>A looter or anyone else the layer made hostile: engine/actions hit them, the app does not count it as violence.</summary>

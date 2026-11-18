@@ -20,7 +20,43 @@ namespace AiOn.UI
         protected float OpenedAt { get; private set; }
 
         TaskCompletionSource<object> _done;
-        bool _wasLocked, _closed;
+        bool _wasLocked, _closed, _counted;
+
+        /// <summary>Modal windows open now: UiScreens plus the overlay's story cards and time skips (PushModal).</summary>
+        public static int OpenCount { get; private set; }
+        /// <summary>Raised when the first modal opens (true) and when the last one closes (false): the HUD fades under them.</summary>
+        public static event Action<bool> ModalChanged;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { OpenCount = 0; ModalChanged = null; }
+
+        /// <summary>Counts a modal that is not a UiScreen (a story card, a time skip); pair with PopModal.</summary>
+        public static void PushModal()
+        {
+            if (++OpenCount == 1) RaiseModal(true);
+        }
+
+        /// <summary>
+        /// A run let go of (TitleReturn): no modal counts survive into the next, whatever was open when it was torn down.
+        /// Screens destroyed afterwards find the count at 0 and leave it (PopModal does not go below 0).
+        /// </summary>
+        public static void ResetModals()
+        {
+            bool was = OpenCount > 0;
+            OpenCount = 0;
+            if (was) RaiseModal(false);
+        }
+
+        public static void PopModal()
+        {
+            if (OpenCount <= 0) return;
+            if (--OpenCount == 0) RaiseModal(false);
+        }
+
+        static void RaiseModal(bool any)
+        {
+            try { ModalChanged?.Invoke(any); } catch (Exception e) { Debug.LogException(e); }
+        }
 
         /// <summary>Creates screen T on its own canvas and returns when it finishes.</summary>
         public static async Task<object> Show<T>(Action<T> setup = null, float width = 1720, float height = 940) where T : UiScreen
@@ -29,12 +65,15 @@ namespace AiOn.UI
             var s = canvas.gameObject.AddComponent<T>();
             s._done = new TaskCompletionSource<object>();
             s.Root = (RectTransform)canvas.transform;
-            UiKit.Fill(UiKit.Box("Shade", s.Root, new Color(0, 0, 0, 0.6f), raycast: true).rectTransform);
+            UiKit.Fill(UiKit.Box("Shade", s.Root, UiKit.ModalShade, raycast: true).rectTransform);
             var win = UiKit.Box("Window", s.Root, UiKit.Panel).rectTransform;
             win.anchorMin = win.anchorMax = win.pivot = new Vector2(0.5f, 0.5f);
             win.sizeDelta = new Vector2(width, height);
             s.Window = win;
             InputGate.Hold();
+            s._counted = true;
+            PushModal();
+            UiSound.Play("open");
             s._wasLocked = Cursor.lockState == CursorLockMode.Locked;
             PlayerInputReader.SetCursorLocked(false);
             setup?.Invoke(s);
@@ -55,6 +94,8 @@ namespace AiOn.UI
             if (_closed) return;
             _closed = true;
             InputGate.Release();
+            Uncount();
+            UiSound.Play("close");
             if (_wasLocked) PlayerInputReader.SetCursorLocked(true);
             Destroy(gameObject);
             _done.TrySetResult(result);
@@ -65,7 +106,15 @@ namespace AiOn.UI
             if (_closed) return;
             _closed = true;
             InputGate.Release();
+            Uncount();
             _done?.TrySetResult(EscapeResult());
+        }
+
+        void Uncount()
+        {
+            if (!_counted) return;
+            _counted = false;
+            PopModal();
         }
 
         protected virtual void Update()
@@ -91,7 +140,7 @@ namespace AiOn.UI
 
         protected Button Action(RectTransform parent, string label, bool primary, Action onClick, float x, float y, float w = 240, float h = 60)
         {
-            var b = UiKit.Button(label, parent, label, 24, primary ? UiKit.Teal : new Color(1, 1, 1, 0.08f), primary ? new Color(0.04f, 0.08f, 0.08f) : UiKit.Ink);
+            var b = UiKit.Button(label, parent, label, 24, primary ? UiKit.Teal : ScreenDecor.Over(UiKit.Panel, Color.white, 0.08f), primary ? new Color(0.04f, 0.08f, 0.08f) : UiKit.Ink);
             UiKit.At((RectTransform)b.transform, x, y, w, h);
             b.onClick.AddListener(() => onClick());
             return b;

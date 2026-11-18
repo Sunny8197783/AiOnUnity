@@ -22,7 +22,13 @@ namespace AiOn.Story
         readonly UnityStoryHost _host;
         DangerFxRig _rig;
 
-        public UnityDangerFx(UnityStoryHost host) { _host = host; }
+        public UnityDangerFx(UnityStoryHost host)
+        {
+            _host = host;
+            if (host) host.LevelEntered += _ => Layer?.LevelChanged(); // the looter's body died with the old level
+        }
+
+        public override bool Alive(IStoryPerson p) => p is UnityPerson up ? up.Root : p != null;
 
         /// <summary>The rig of the current level (built on first use, rebuilt after a level change).</summary>
         DangerFxRig Rig()

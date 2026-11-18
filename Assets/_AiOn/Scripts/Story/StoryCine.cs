@@ -50,6 +50,8 @@ namespace AiOn.Story
         public Func<double[]> At;
         public double? I;
         public string Color;
+        /// <summary>Reach in metres (the original's 14 m when null); a short one keeps a hand-held torch from lighting the street.</summary>
+        public double? Range;
     }
 
     /// <summary>One caption of a shot: [at, text, speaker?, ms?].</summary>
@@ -104,6 +106,8 @@ namespace AiOn.Story
         void TitleOut();
         /// <summary>The fill light: intensity 0 turns it off. Position in the original frame.</summary>
         void Fill(double x, double y, double z, double intensity, string color);
+        /// <summary>The fill light's reach for the next Fill calls (14 m by default).</summary>
+        void FillRange(double metres) { }
         /// <summary>A missile from -> to in seconds (white-hot head, long smoke trail); dispose removes it.</summary>
         IDisposable Missile(double[] from, double[] to, double seconds);
     }
@@ -264,7 +268,7 @@ namespace AiOn.Story
                 if (shot.Fill != null)
                 {
                     var at = shot.Fill.At?.Invoke();
-                    if (at != null) _fx?.Fill(at[0], at[1], at[2], shot.Fill.I ?? 6, shot.Fill.Color);
+                    if (at != null) { _fx?.FillRange(shot.Fill.Range ?? 14); _fx?.Fill(at[0], at[1], at[2], shot.Fill.I ?? 6, shot.Fill.Color); }
                 }
                 if (s >= shot.Dur || _skipped) Finish();
             };
@@ -282,7 +286,8 @@ namespace AiOn.Story
             _busy = true;
             _skipped = false;
             var E = Ctx.Engine;
-            bool wasOn = E.ControlsEnabled;
+            bool wasOn = _held ? _heldWasOn : E.ControlsEnabled;
+            _held = false;
             E.SetControls(false); Ctx.Hud.SetCinematic(true); _fx?.Overlay(true);
             E.SetModelHidden(true);
             Title(title);
@@ -291,17 +296,43 @@ namespace AiOn.Story
             finally
             {
                 skipped = _skipped;
-                E.SetCameraOverride(null); E.TimeScale = 1; _ = E.FadeTo(0, 0); E.SetGrade(new JObject { ["exposure"] = 0, ["seconds"] = 0.6 });
+                bool hold = HoldOnExit;
+                HoldOnExit = false;
+                E.TimeScale = 1;
+                if (!hold) { E.SetCameraOverride(null); _ = E.FadeTo(0, 0); E.SetGrade(new JObject { ["exposure"] = 0, ["seconds"] = 0.6 }); }
                 foreach (var o in _live) { try { o.Dispose(); } catch (Exception err) { Errors.Add(err); } }
                 _live.Clear();
                 _fx?.Overlay(false);
                 Title(null);
                 if (skipped) Ctx.Hud.ClearCaption();
-                Ctx.Hud.SetCinematic(false); E.SetModelHidden(false); E.SetControls(wasOn);
+                if (hold) { _held = true; _heldWasOn = wasOn; } // the last frame (or the black it faded to) stays until the next Play or Release
+                else { Ctx.Hud.SetCinematic(false); E.SetModelHidden(false); E.SetControls(wasOn); }
                 _busy = false;
                 _skipped = false;
             }
             return skipped ? "skipped" : "done";
+        }
+
+        bool _held, _heldWasOn;
+
+        /// <summary>
+        /// Port: set before Play to end on the cutscene's own last frame (its camera, the black it faded to, no HUD, no
+        /// controls) instead of handing back to gameplay. The next Play takes over from there; <see cref="Release"/> hands
+        /// back without one. Reset by every Play.
+        /// </summary>
+        public bool HoldOnExit { get; set; }
+
+        /// <summary>True between a held Play and the next Play or Release.</summary>
+        public bool Held => _held;
+
+        /// <summary>Hands a held ending back to gameplay (camera, HUD, model, controls as they were); the fade is the caller's.</summary>
+        public void Release()
+        {
+            if (!_held) return;
+            _held = false;
+            var E = Ctx.Engine;
+            E.SetCameraOverride(null); E.SetGrade(new JObject { ["exposure"] = 0, ["seconds"] = 0.6 });
+            Ctx.Hud.SetCinematic(false); E.SetModelHidden(false); E.SetControls(_heldWasOn);
         }
 
         // ------------------------------------------------------------------ actors and effects
@@ -420,6 +451,13 @@ namespace AiOn.Story
             E.Frame += onFrame;
             _live.Add(new Disposer(() => { E.Frame -= onFrame; E.RemovePerson(p); _actorY.Remove(p); }));
             return p;
+        }
+
+        /// <summary>The fill light outside a cutscene (a camera cut held during a talk); intensity 0 turns it off.</summary>
+        public void FillAt(double x, double y, double z, double intensity, string color = null, double range = 14)
+        {
+            _fx?.FillRange(range);
+            _fx?.Fill(x, y, z, intensity, color);
         }
 
         /// <summary>A missile coming down: from -> to in seconds (drawn by ICineFx; removed when the cutscene ends).</summary>

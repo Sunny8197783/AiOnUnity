@@ -3,8 +3,9 @@
 //                 which StoryCine.Play already turns on through the HUD).
 //   Title(lines)  typed-out place / time lines in the top-left corner under the top bar; TitleOut() fades them.
 //   Fill(...)     a soft point light that stays on the subject (intensity 0 = off), position in the original frame.
-//   Missile(...)  a white-hot head (unlit HDR, so bloom catches it) with a short fire trail and a long smoke trail,
-//                 from -> to over seconds along a slight arc; the smoke lingers after impact; Dispose removes it all.
+//   Missile(...)  a slim dark body (0.4 x 4 m) with a hot emissive tail, a short fire trail and a thin smoke trail,
+//                 from -> to over seconds along a slight arc; at impact it is gone and the trail thins out in a
+//                 second or two; Dispose removes it all at once.
 // The overlay canvas and the fill light live under the persistent host; a missile lives in the active (level) scene, so
 // it dies with the level even if nobody disposes it.
 using System;
@@ -123,6 +124,8 @@ namespace AiOn.Story
             _fill.intensity = i;
             if (!string.IsNullOrEmpty(color)) _fill.color = ParseColor(color, _fill.color);
         }
+
+        public void FillRange(double metres) { if (_fill) _fill.range = Mathf.Clamp((float)metres, 1f, 30f); }
 
         public IDisposable Missile(double[] from, double[] to, double seconds)
         {
@@ -247,12 +250,13 @@ namespace AiOn.Story
     /// <summary>One missile: head, fire trail, smoke trail and smoke puffs. Destroying the GameObject removes all of it.</summary>
     public class CineMissile : MonoBehaviour
     {
-        const float Linger = 7f; // seconds the smoke stays after impact before the missile cleans itself up
+        const float Linger = 2.2f; // seconds the thin trail takes to thin out after impact before the missile cleans itself up
 
         double[] _from, _to;
         float _seconds, _t, _after = -1;
-        Transform _head;
+        Transform _head, _tail;
         TrailRenderer _fire, _smoke;
+        Material _smokeMat;
         ParticleSystem _puffs;
         Light _glow;
         readonly List<Material> _mats = new();
@@ -261,45 +265,85 @@ namespace AiOn.Story
         {
             _from = (double[])from.Clone(); _to = (double[])to.Clone(); _seconds = (float)seconds;
             transform.position = Pos(0);
+            // Face along the flight before the trails exist, so their first vertices lie on the flight line (no kink).
+            var first = Pos(0.02) - Pos(0);
+            if (first.sqrMagnitude > 1e-6f) transform.rotation = Quaternion.LookRotation(first.normalized);
 
-            // The white-hot head: unlit HDR so bloom blows it out (the original's colour (8, 6, 4)), unfogged (fog: false).
-            var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            head.name = "Head";
-            Object.Destroy(head.GetComponent<Collider>());
-            head.transform.SetParent(transform, false);
-            head.transform.localScale = Vector3.one * 1.2f;
-            var hr = head.GetComponent<MeshRenderer>();
-            hr.sharedMaterial = Track(NoFog(new Color(8, 6, 4)));
-            hr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            hr.receiveShadows = false;
-            _head = head.transform;
+            // The body: a slim dark casing along the flight line (the transform's forward), about 0.4 x 4 m. Lit, so the
+            // town's light and the tail's glow shape it; it reads as a dark streak against the dusk sky.
+            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            body.name = "Body";
+            Object.Destroy(body.GetComponent<Collider>());
+            body.transform.SetParent(transform, false);
+            body.transform.localRotation = Quaternion.Euler(90, 0, 0); // the capsule's long axis (y) along forward
+            body.transform.localScale = new Vector3(0.4f, 2f, 0.4f);
+            var br = body.GetComponent<MeshRenderer>();
+            br.sharedMaterial = Track(BodyMat());
+            br.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            br.receiveShadows = false;
+            _head = body.transform;
 
-            _glow = gameObject.AddComponent<Light>();
-            _glow.type = LightType.Point; _glow.range = 30; _glow.intensity = 6; _glow.shadows = LightShadows.None;
-            _glow.color = new Color(1f, 0.72f, 0.45f);
+            // The tail: a small hot core at the back (unlit HDR so bloom catches it, unfogged), the only bright part.
+            var tail = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            tail.name = "Tail";
+            Object.Destroy(tail.GetComponent<Collider>());
+            tail.transform.SetParent(transform, false);
+            tail.transform.localPosition = new Vector3(0, 0, -2.05f);
+            tail.transform.localScale = new Vector3(0.38f, 0.38f, 0.6f);
+            var tr = tail.GetComponent<MeshRenderer>();
+            tr.sharedMaterial = Track(NoFog(new Color(6f, 3.2f, 1.1f)));
+            tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            tr.receiveShadows = false;
+            _tail = tail.transform;
 
-            // Fire: a short, hot tail right behind the head (the original's 40 m cone, 0.25 m radius at the head widening to
-            // 0.9 m, opacity 0.55, fog: false).
-            _fire = gameObject.AddComponent<TrailRenderer>();
-            _fire.sharedMaterial = Track(NoFog(new Color(2.2f, 1.4f, 0.8f, 1f)));
-            _fire.time = Mathf.Clamp(_seconds * 0.16f, 0.15f, 0.5f);
-            _fire.minVertexDistance = 0.5f;
-            _fire.widthCurve = new AnimationCurve(new Keyframe(0, 0.5f), new Keyframe(1, 1.8f));
-            _fire.colorGradient = Grad(new Color(1, 0.95f, 0.85f), new Color(1, 0.55f, 0.2f), 0.55f, 0f);
+            _glow = new GameObject("Glow").AddComponent<Light>();
+            _glow.transform.SetParent(transform, false);
+            _glow.transform.localPosition = new Vector3(0, 0, -2.4f);
+            _glow.type = LightType.Point; _glow.range = 14; _glow.intensity = 3; _glow.shadows = LightShadows.None;
+            _glow.color = new Color(1f, 0.62f, 0.32f);
+
+            // Fire: a short, narrow tongue right behind the tail.
+            var fgo = new GameObject("Fire");
+            fgo.transform.SetParent(transform, false);
+            fgo.transform.localPosition = new Vector3(0, 0, -2.1f);
+            _fire = fgo.AddComponent<TrailRenderer>();
+            _fire.sharedMaterial = Track(NoFog(new Color(2.0f, 1.2f, 0.55f, 1f)));
+            _fire.time = Mathf.Clamp(_seconds * 0.06f, 0.08f, 0.18f);
+            _fire.minVertexDistance = 0.3f;
+            _fire.widthCurve = new AnimationCurve(new Keyframe(0, 0.32f), new Keyframe(1, 0.05f));
+            _fire.colorGradient = Grad(new Color(1, 0.9f, 0.7f), new Color(1, 0.45f, 0.15f), 0.8f, 0f);
             Quiet(_fire);
 
-            // Smoke: a long grey ribbon that widens toward the tail and fades out over seconds after it passes.
+            // Smoke: a faint dark line that widens a little behind and thins out. Unlit, so it is kept dark and sparse: a
+            // light grey read as a white tracer against the night sky.
             var sgo = new GameObject("Smoke");
             sgo.transform.SetParent(transform, false);
+            sgo.transform.localPosition = new Vector3(0, 0, -2.2f);
             _smoke = sgo.AddComponent<TrailRenderer>();
-            _smoke.sharedMaterial = Track(TrailMat(false, Color.white));
-            _smoke.time = 5.5f;
-            _smoke.minVertexDistance = 1.2f;
-            _smoke.widthCurve = new AnimationCurve(new Keyframe(0, 0.8f), new Keyframe(0.15f, 2.4f), new Keyframe(1, 6f));
-            _smoke.colorGradient = Grad(new Color(0.62f, 0.6f, 0.58f), new Color(0.42f, 0.41f, 0.4f), 0.75f, 0f);
+            _smokeMat = Track(TrailMat(false, Color.white));
+            _smoke.sharedMaterial = _smokeMat;
+            _smoke.time = SmokeTime;
+            _smoke.minVertexDistance = 0.8f;
+            _smoke.widthCurve = new AnimationCurve(new Keyframe(0, 0.2f), new Keyframe(0.2f, 0.55f), new Keyframe(1, 1.5f));
+            _smoke.colorGradient = Grad(new Color(0.2f, 0.19f, 0.19f), new Color(0.13f, 0.13f, 0.13f), 0.26f, 0f);
             Quiet(_smoke);
 
             _puffs = BuildPuffs();
+        }
+
+        const float SmokeTime = 2.6f;
+        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+
+        static Material BodyMat()
+        {
+            var sh = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var m = new Material(sh);
+            var c = new Color(0.16f, 0.17f, 0.18f);
+            m.color = c;
+            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+            if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.55f);
+            if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", 0.6f);
+            return m;
         }
 
         Material Track(Material m) { _mats.Add(m); return m; }
@@ -365,15 +409,15 @@ namespace AiOn.Story
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.startLifetime = new ParticleSystem.MinMaxCurve(3.5f, 6f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.2f, 1.2f);
-            main.startSize = new ParticleSystem.MinMaxCurve(1.6f, 3.2f);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.55f, 0.54f, 0.52f, 0.55f), new Color(0.4f, 0.39f, 0.38f, 0.45f));
+            main.startSize = new ParticleSystem.MinMaxCurve(0.7f, 1.4f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.3f, 0.29f, 0.28f, 0.28f), new Color(0.22f, 0.21f, 0.21f, 0.24f));
             main.startRotation = new ParticleSystem.MinMaxCurve(0, Mathf.PI * 2);
             main.gravityModifier = -0.02f;
             main.maxParticles = 700;
             main.playOnAwake = false;
             var em = ps.emission;
             em.rateOverTime = 0;
-            em.rateOverDistance = 0.7f;
+            em.rateOverDistance = 0.18f;
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.4f;
             var size = ps.sizeOverLifetime;
@@ -405,6 +449,9 @@ namespace AiOn.Story
             if (_after >= 0)
             {
                 _after += Time.deltaTime;
+                float f = Mathf.Clamp01(_after / (Linger * 0.8f));
+                if (_smoke) _smoke.time = Mathf.Lerp(SmokeTime, 0.01f, f); // the trail shortens from its tail
+                if (_smokeMat) _smokeMat.SetColor(BaseColorId, new Color(1, 1, 1, 1 - f)); // and fades as it goes
                 if (_after >= Linger) Destroy(gameObject);
                 return;
             }
@@ -422,6 +469,7 @@ namespace AiOn.Story
         {
             _after = 0;
             if (_head) _head.gameObject.SetActive(false); // g.visible = k < 1
+            if (_tail) _tail.gameObject.SetActive(false);
             if (_glow) _glow.enabled = false;
             if (_fire) _fire.emitting = false;
             if (_smoke) _smoke.emitting = false;

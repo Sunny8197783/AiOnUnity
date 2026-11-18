@@ -27,6 +27,32 @@ namespace AiOn.Levels
 
         public static ShopGoods Current => FindFirstObjectByType<ShopGoods>();
 
+        /// <summary>Sections a bare store still shows in full (what 이수아's note leaves: batteries and water; levels/store.js:302-305).</summary>
+        public static readonly string[] SparseKeep = { "batteries", "water", "misc" };
+
+        /// <summary>True for the goods a bare shelf hides: about 7 in 10, the same ones every time (by index).</summary>
+        public static bool SparseHides(int index) => (index * 7 + 3) % 10 < 7;
+
+        bool _sparse;
+
+        /// <summary>
+        /// Power off with nobody minding the shop: about 70% of the goods on the shelves are gone, except in the kept
+        /// sections. Works on the full sets' direct children; off restores them.
+        /// </summary>
+        public void SetSparse(bool on, IReadOnlyCollection<string> keep = null)
+        {
+            if (on == _sparse) return;
+            _sparse = on;
+            foreach (var s in sections)
+            {
+                if (!s.full) continue;
+                bool kept = keep != null && System.Linq.Enumerable.Contains(keep, s.name);
+                var t = s.full.transform;
+                for (int i = 0; i < t.childCount; i++)
+                    t.GetChild(i).gameObject.SetActive(!(on && !kept && SparseHides(i)));
+            }
+        }
+
         public void SetSoldOut(IEnumerable<string> ids)
         {
             var list = new List<string>(ids ?? new string[0]);

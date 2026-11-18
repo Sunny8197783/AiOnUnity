@@ -54,6 +54,8 @@ namespace AiOn.UI
         public float Size;
         public int Weight;
         public Rgba Outline;
+        /// <summary>Text only: a pill drawn behind the label in this colour (alpha 0 = none).</summary>
+        public Rgba Bg;
 
         public override string ToString() => Kind == MapShapeKind.Text ? $"Text '{Text}' @({X:0.#},{Y:0.#})" : $"{Kind} @({X:0.#},{Y:0.#})";
     }
@@ -257,6 +259,53 @@ namespace AiOn.UI
         static MapShape Line(float x1, float y1, float x2, float y2, float w, Rgba c) => new MapShape { Kind = MapShapeKind.Line, X = x1, Y = y1, X2 = x2, Y2 = y2, Width = w, Color = c };
 
         static readonly Rgba LabelStroke = Rgba.Of(10, 14, 16, 0.85f);
+        static readonly Rgba PillBg = Rgba.Of(10, 14, 16, 0.85f);
+
+        /// <summary>A label's drawn width, estimated: Hangul and other wide glyphs about one em, the rest about half.</summary>
+        public static float TextWidth(string text, float size)
+        {
+            float w = 0;
+            foreach (var ch in text ?? "") w += ch >= 0x1100 ? size * 0.98f : ch == ' ' ? size * 0.3f : size * 0.56f;
+            return w;
+        }
+
+        /// <summary>A label box: centre (x, y), the text's estimated size plus the pill's padding.</summary>
+        public static (float x, float y, float w, float h) LabelBox(MapShape t) =>
+            (t.X, t.Y, TextWidth(t.Text, t.Size) + (t.Bg.A > 0 ? 10 : 2), t.Size * 1.3f);
+
+        /// <summary>
+        /// The label-overlap pass: boxes (centre x, centre y, w, h) that overlap are pushed apart along y, each by half
+        /// the overlap plus <paramref name="gap"/> (a pinned box does not move; the other takes all of it). Returns
+        /// the new centre y of each box. A few passes settle chains of three or more.
+        /// </summary>
+        public static float[] NudgeApart(IReadOnlyList<(float x, float y, float w, float h)> boxes, float gap = 2, IReadOnlyList<bool> pinned = null)
+        {
+            int n = boxes.Count;
+            var y = new float[n];
+            for (int i = 0; i < n; i++) y[i] = boxes[i].y;
+            for (int pass = 0; pass < 24; pass++)
+            {
+                bool moved = false;
+                for (int i = 0; i < n; i++)
+                    for (int j = i + 1; j < n; j++)
+                    {
+                        var a = boxes[i]; var b = boxes[j];
+                        if (Math.Abs(a.x - b.x) * 2 >= a.w + b.w) continue;             // apart in x
+                        float need = (a.h + b.h) / 2 + gap, d = y[j] - y[i];
+                        if (Math.Abs(d) >= need - 1e-3f) continue;                         // apart in y
+                        float push = need - Math.Abs(d);
+                        int up = d > 0 || (d == 0 && i < j) ? i : j, down = up == i ? j : i; // the higher one goes up
+                        bool pu = pinned != null && pinned[up], pd = pinned != null && pinned[down];
+                        if (pu && pd) continue;
+                        float su = pu ? 0 : pd ? push : push / 2, sd = push - su;
+                        y[up] -= su; y[down] += sd;
+                        moved = true;
+                    }
+                if (!moved) break;
+            }
+            return y;
+        }
+
         static MapShape Label(string text, float x, float y, float size, string color = "#e9eef0", int weight = 600) =>
             new MapShape { Kind = MapShapeKind.Text, Text = text, X = x, Y = y, Size = size, Weight = weight, Color = Rgba.Hex(color), Outline = LabelStroke };
 
@@ -356,24 +405,7 @@ namespace AiOn.UI
                 g.Add(new MapShape { Kind = MapShapeKind.Rect, X = edge.X - lw / 2, Y = edge.Y - lw / 2, W = edge.W + lw, H = edge.H + lw, Color = edge.Color });
                 g.Add(new MapShape { Kind = MapShapeKind.Rect, X = edge.X + lw / 2, Y = edge.Y + lw / 2, W = Math.Max(0, edge.W - lw), H = Math.Max(0, edge.H - lw), Color = Rgba.Hex(BuildingColor.TryGetValue(b.Kind, out var bc) ? bc : "#5a5a5a") });
             }
-            if (labels)
-            {
-                foreach (var r in TownMap.Roads)
-                {
-                    double lx = r.Id == "yeonmu" ? 30 : (r.Rect.X0 + r.Rect.X1) / 2;
-                    double lz = r.Id == "yeonmu" ? 0 : r.Id == "munhwa" || r.Id == "hanbit" ? -86 : (r.Rect.Z0 + r.Rect.Z1) / 2;
-                    var (x, y) = p.P(lx, lz); g.Add(Label(r.Name, x, y, 10 * px, "#aeb8bb", 500));
-                }
-                foreach (var b in TownMap.Buildings)
-                    if (!string.IsNullOrEmpty(b.Name))
-                    {
-                        var (x, y) = p.P((b.Rect.X0 + b.Rect.X1) / 2, (b.Rect.Z0 + b.Rect.Z1) / 2);
-                        g.Add(Label(b.Name.Replace("한빛아파트 ", ""), x, y - (b.Id == "culture" ? 8 * px : 0), 11 * px));
-                    }
-                { var (x, y) = p.P(-90, 31); g.Add(Label("대피소(지하)", x, y + 8 * px, 11 * px, "#7fe0d3", 700)); }
-                foreach (var a in TownMap.Areas)
-                    if (a.Kind == "park") { var (x, y) = p.P((a.Rect.X0 + a.Rect.X1) / 2, (a.Rect.Z0 + a.Rect.Z1) / 2); g.Add(Label(a.Name, x, y, 11 * px, "#bfe3c2")); }
-            }
+            if (labels) g.AddRange(LabelLayers(p, px).under);
             foreach (var id in closures ?? Array.Empty<string>())
             {
                 var cl = TownMap.Closures[id]; if (cl == null) continue;
@@ -391,6 +423,122 @@ namespace AiOn.UI
                 }
             }
             return g;
+        }
+
+        /// <summary>
+        /// The map's names, placed so they do not fight the lines under them: road names on a small dark pill, 14 px to
+        /// the side of the centre line (measured from the pill's edge); the culture centre's name with '대피소(지하)' under
+        /// it, beside the destination diamond; the shelter entrance names outside the block on a 1 px leader (hung under
+        /// the icon when the sideways spot would sit on a road); a building name wider than its building goes under it;
+        /// then the overlap pass. All of them, under and over the routes, in one list.
+        /// </summary>
+        public static List<MapShape> Labels(MapProjector p, float px)
+        {
+            var (under, over) = LabelLayers(p, px);
+            under.AddRange(over);
+            return under;
+        }
+
+        /// <summary>
+        /// <see cref="Labels"/> split by layer: road, park and plain building names go under the routes (base layer);
+        /// the shelter's names, the entrance names and their leaders go over them (top layer), because the routes run
+        /// into the entrances from exactly the side those labels sit on.
+        /// </summary>
+        public static (List<MapShape> under, List<MapShape> over) LabelLayers(MapProjector p, float px)
+        {
+            var lab = new List<MapShape>();
+            var pinned = new List<bool>();
+            var top = new List<bool>();
+            var avoid = new List<bool>(); // kept off the north-south roads after the overlap pass
+            void Add(MapShape m, bool pin = false, bool over = false, bool offRoad = false) { lab.Add(m); pinned.Add(pin); top.Add(over); avoid.Add(offRoad); }
+            const float side = 14;
+            var roads = TownMap.Roads.Select(r => Box(r.Rect, TownMap.Sidewalk, p, default(Rgba))).ToList();
+            bool Hits(MapShape r, float cx, float cy, float w, float h) =>
+                cx + w / 2 > r.X && cx - w / 2 < r.X + r.W && cy + h / 2 > r.Y && cy - h / 2 < r.Y + r.H;
+            foreach (var r in TownMap.Roads)
+            {
+                double lx = r.Id == "yeonmu" ? 30 : (r.Rect.X0 + r.Rect.X1) / 2;
+                double lz = r.Id == "yeonmu" ? 0 : r.Id == "munhwa" || r.Id == "hanbit" ? -86 : (r.Rect.Z0 + r.Rect.Z1) / 2;
+                var (x, y) = p.P(lx, lz);
+                var m = Label(r.Name, x, y, 10 * px, "#aeb8bb", 500);
+                m.Bg = PillBg;
+                var lb = LabelBox(m);
+                // the pill's near edge sits clear of the dashed centre line (east-west: the old 14 px from the centre
+                // already clears a 13 px tall pill; north-south: 14 px from the pill's edge, not its centre)
+                if (r.EastWest) m.Y = y + side; else m.X = x + side + lb.w / 2;
+                Add(m);
+            }
+            var (sx, sy) = p.P(-90, 31); // the shelter node: where the destination diamond sits
+            foreach (var b in TownMap.Buildings)
+                if (!string.IsNullOrEmpty(b.Name))
+                {
+                    var (x, y) = p.P((b.Rect.X0 + b.Rect.X1) / 2, (b.Rect.Z0 + b.Rect.Z1) / 2);
+                    bool culture = b.Id == "culture";
+                    var t = Label(b.Name.Replace("한빛아파트 ", ""), x, y, 11 * px);
+                    if (culture) { t.X = sx; t.Y = sy - 17 * px; } // name, then the diamond, then '대피소(지하)'
+                    else
+                    {
+                        var bb = Box(b.Rect, 0, p, default(Rgba)); var lb = LabelBox(t);
+                        if (lb.w > bb.W - 4) t.Y = bb.Y + bb.H + 3 + lb.h / 2; // too wide for its roof: set it just under the building
+                    }
+                    Add(t, culture, culture, !culture);
+                }
+            // '대피소(지하)' right under the diamond (R 9 px): the block is too narrow to set it beside the diamond without
+            // running into the east entrance, so the three stack: name, ◆, 대피소(지하)
+            Add(Label("대피소(지하)", sx, sy + 17 * px, 11 * px, "#7fe0d3", 700), true, true);
+            foreach (var a in TownMap.Areas)
+                if (a.Kind == "park") { var (x, y) = p.P((a.Rect.X0 + a.Rect.X1) / 2, (a.Rect.Z0 + a.Rect.Z1) / 2); Add(Label(a.Name, x, y, 11 * px, "#bfe3c2")); }
+
+            // shelter entrances: outward from the shelter, past the icon (r 8 px), on a pill
+            var leaders = new List<(int label, float ax, float ay, bool vertical, int dir)>();
+            foreach (var kv in TownMap.ShelterEntrances)
+            {
+                var e = kv.Value; var pl = TownMap.Places[e.Place]; if (pl == null) continue;
+                var (x, y) = p.P(pl.X, pl.Z);
+                var t = Label(e.Short ?? "동쪽 출입구", x, y, 10 * px, "#d8f3ef");
+                t.Bg = PillBg;
+                float dx = x - sx, dy = y - sy, w = TextWidth(t.Text, t.Size) + 10, h = t.Size * 1.3f, reach = 8 * px + 10;
+                bool vertical = Math.Abs(dy) >= Math.Abs(dx);
+                int dir = vertical ? (dy < 0 ? -1 : 1) : (dx < 0 ? -1 : 1);
+                // sideways would put the pill on the road beside the block: hang it under the icon instead
+                if (!vertical)
+                {
+                    float hx = x + dir * (reach + w / 2);
+                    if (roads.Any(r => r.H > r.W && Hits(r, hx, y, w, h))) { vertical = true; dir = 1; }
+                }
+                if (vertical) t.Y = y + dir * (reach + h / 2); else t.X = x + dir * (reach + w / 2);
+                leaders.Add((lab.Count, x, y, vertical, dir));
+                Add(t, false, true, vertical); // a hung label may still graze the road's sidewalk: slid off it below
+            }
+
+            var boxes = lab.Select(LabelBox).ToList();
+            var ny = NudgeApart(boxes, 3, pinned);
+            for (int i = 0; i < lab.Count; i++) lab[i].Y = ny[i];
+            // building and hung entrance names that ended up on a north-south road (too wide, or nudged) slide sideways off it
+            for (int i = 0; i < lab.Count; i++)
+            {
+                if (!avoid[i]) continue;
+                var (cx, cy, w, h) = LabelBox(lab[i]);
+                foreach (var r in roads)
+                {
+                    if (r.H <= r.W || !Hits(r, cx, cy, w, h)) continue;
+                    cx = cx < r.X + r.W / 2 ? r.X - w / 2 - 2 : r.X + r.W + w / 2 + 2;
+                }
+                lab[i].X = cx;
+            }
+
+            var under = new List<MapShape>();
+            var over = new List<MapShape>();
+            var leaderColor = Rgba.Of(216, 243, 239, 0.7f);
+            foreach (var (li, ax, ay, vertical, dir) in leaders)
+            {
+                var t = lab[li]; var lb = LabelBox(t);
+                float r = 8 * px + 1;
+                if (vertical) over.Add(Line(ax, ay + dir * r, ax, t.Y - dir * lb.h / 2, 1, leaderColor));
+                else over.Add(Line(ax + dir * r, ay, t.X - dir * lb.w / 2, t.Y, 1, leaderColor));
+            }
+            for (int i = 0; i < lab.Count; i++) (top[i] ? over : under).Add(lab[i]);
+            return (under, over);
         }
 
         /// <summary>Order the routes are drawn in: the selected one last (on top).</summary>
@@ -430,8 +578,8 @@ namespace AiOn.UI
                 }
                 else { g.Add(Disc(x, y, r + lw / 2, Rgba.Hex("#0c1214"))); g.Add(Disc(x, y, r - lw / 2, Rgba.Hex(col))); }
                 g.Add(Label(icon, x, y + 0.5f * px, 11 * px, "#0c1214", 900));
-                if (labels) g.Add(Label(e.Short ?? "동쪽 출입구", x, y + 17 * px, 10 * px, "#d8f3ef"));
             }
+            if (labels) g.AddRange(LabelLayers(p, px).over); // entrance and shelter names over the routes that run into them
             if (dest is TownPoint d) { var (x, y) = p.P(d.X, d.Z); g.Add(new MapShape { Kind = MapShapeKind.Diamond, X = x, Y = y, R = 9 * px, Color = Rgba.Hex("#3cc6b5") }); }
             if (player is TownPoint pp)
             {

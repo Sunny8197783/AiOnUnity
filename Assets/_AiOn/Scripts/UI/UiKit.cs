@@ -20,6 +20,8 @@ namespace AiOn.UI
         public static readonly Color Amber = new(0.95f, 0.7f, 0.24f);
         public static readonly Color Red = new(0.9f, 0.28f, 0.3f);
         public static readonly Color Panel = new(0.07f, 0.1f, 0.11f, 0.97f);
+        /// <summary>The dim behind every modal: UiScreen windows and the overlay's story cards alike.</summary>
+        public static readonly Color ModalShade = new(0, 0, 0, 0.72f);
         public static readonly Color Row = new(0.13f, 0.17f, 0.19f, 1f);
         public static readonly Color RowSelected = new(0.16f, 0.32f, 0.31f, 1f);
 
@@ -168,6 +170,148 @@ namespace AiOn.UI
         {
             if (!c.TryGetComponent(out LayoutElement le)) le = c.gameObject.AddComponent<LayoutElement>(); // not ??: Unity's fake null
             le.preferredHeight = h; le.minHeight = h;
+        }
+    }
+
+    /// <summary>
+    /// The one key table (original hud.js hud-keys, app.js controls card, menu.js key list). The bottom-right strip, the
+    /// pause menu's key list and the H card are all built from it, so a key added here shows in all three.
+    /// Strip: the short word on the HUD strip (null: not on the strip). Pause: the pause list's key and word. Card: the
+    /// H card's key and line (the original's wording, verbatim).
+    /// </summary>
+    public static class UiKeys
+    {
+        public readonly struct Entry
+        {
+            public readonly string StripKey, Strip, PauseKey, Pause, CardKey, Card;
+            public Entry(string stripKey, string strip, string pauseKey, string pause, string cardKey, string card)
+            { StripKey = stripKey; Strip = strip; PauseKey = pauseKey; Pause = pause; CardKey = cardKey; Card = card; }
+        }
+
+        public static readonly Entry[] All =
+        {
+            new("WASD", "이동", "WASD · 방향키", "이동", "W A S D · 방향키", "이동"),
+            new(null, null, "마우스 (클릭 후) · Alt+방향키", "둘러보기", "마우스", "둘러보기 — 화면을 한 번 클릭하면 마우스만 움직여도 시점이 돕니다 (Esc로 커서 되찾기)"),
+            new("Shift", "달리기", "Shift", "달리기 (기력)", "Shift", "달리기 (기력이 줄어듭니다. 가방이 무거우면 더 빨리 지칩니다)"),
+            new("Space", "점프·넘기", "Space", "점프", "Space", "점프 · 낮은 담/차/난간 앞에서 누르면 넘거나 올라감"),
+            new("E", "살피기", "E · Enter", "살피기 · 대화", "E · Enter", "살피기 · 대화 · 사용"),
+            new("Q", "주먹", "클릭 · Q", "주먹 · 던지기", "클릭 · Q", "주먹 (손에 든 게 있으면 던지기)"),
+            new("G", "줍기·던지기", "G", "줍기 · 던지기", "G", "바닥의 돌·병 줍기 / 던지기"),
+            new("C", "엎드리기", "C", "엎드리기 · 웅크리기", "C", "엎드리기/웅크리기 (폭발·파편 피해가 줄어듭니다. Space로 일어서기)"),
+            new("X", "구급함", "X", "구급함", "X", "구급함 쓰기"),
+            new("B", "분필", "B", "분필로 적기", "B", "분필로 바닥에 적기 — 다음 회차의 내가 보게 됩니다"),
+            new("F", "불빛", "F", "손전등 · 휴대폰 불빛", "F", "손전등 켜기/끄기 (정전 후)"),
+            new("V", "시점", "V", "1인칭 / 3인칭", "V", "1인칭 / 3인칭 전환"),
+            new("P", "휴대폰", "P", "휴대폰 · FM 라디오", "P", "휴대폰 (문자 · FM 라디오)"),
+            new("Tab", "수첩", "Tab", "수첩", "Tab", "수첩"),
+            new("I", "소지품", "I", "소지품", "I", "소지품"),
+            new("M", "지도", "M", "지도", "M", "지도"),
+            new("H", "조작법", "H", "조작법", "H", "이 조작법 다시 보기"),
+            new("Esc", "메뉴", "Esc", "이 메뉴", "Esc", "일시정지 · 설정"),
+        };
+
+        /// <summary>The pause menu's rows (key, word), in table order.</summary>
+        public static string[][] PauseRows()
+        {
+            var rows = new string[All.Length][];
+            for (int i = 0; i < All.Length; i++) rows[i] = new[] { All[i].PauseKey, All[i].Pause };
+            return rows;
+        }
+
+        /// <summary>The H card's body lines ("key — text").</summary>
+        public static System.Collections.Generic.List<string> CardLines()
+        {
+            var list = new System.Collections.Generic.List<string>(All.Length);
+            foreach (var e in All) list.Add(e.CardKey + " — " + e.Card);
+            return list;
+        }
+
+        /// <summary>The bottom-right strip as rich text, perRow keys a line.</summary>
+        public static string StripText(int perRow)
+        {
+            var sb = new System.Text.StringBuilder();
+            int n = 0;
+            foreach (var e in All)
+            {
+                if (e.StripKey == null) continue;
+                sb.Append(n == 0 ? "" : n % perRow == 0 ? "\n" : "    ").Append("<b><color=#e8eef0>").Append(e.StripKey).Append("</color></b> ").Append(e.Strip);
+                n++;
+            }
+            return sb.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Interface blips (original audio.js UI: open, close, click, tick, confirm), synthesized like the original's
+    /// oscillator tones and played on the UI bus ('UI 효과음'); the master volume, mute and the deaf setting are
+    /// AudioListener.volume, which every source follows.
+    /// </summary>
+    public static class UiSound
+    {
+        static AudioSource _src;
+        static readonly System.Collections.Generic.Dictionary<string, AudioClip> _clips = new();
+        static float _lastTick;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Reset() { _src = null; _lastTick = 0; }
+
+        public static void Play(string name)
+        {
+            if (!Application.isPlaying) return;
+            if (name == "tick") { if (Time.unscaledTime - _lastTick < 0.05f) return; _lastTick = Time.unscaledTime; }
+            var clip = Clip(name);
+            if (!clip) return;
+            if (!_src)
+            {
+                var go = new GameObject("UiSound");
+                Object.DontDestroyOnLoad(go);
+                _src = go.AddComponent<AudioSource>();
+                _src.playOnAwake = false; _src.spatialBlend = 0; _src.ignoreListenerPause = true;
+            }
+            _src.PlayOneShot(clip, AiOn.Settings.AudioBus.Ui);
+        }
+
+        static AudioClip Clip(string name)
+        {
+            if (_clips.TryGetValue(name, out var c)) return c;
+            c = name switch
+            {
+                "open" => Make(name, (660, 880, 0.09f, 0.035f, 0f)),
+                "close" => Make(name, (820, 600, 0.08f, 0.025f, 0f)),
+                "click" => Make(name, (1400, 1400, 0.035f, 0.03f, 0f)),
+                "tick" => Make(name, (1250, 1250, 0.03f, 0.022f, 0f)),
+                "confirm" => Make(name, (784, 784, 0.08f, 0.045f, 0f), (1175, 1175, 0.12f, 0.045f, 0.07f)),
+                _ => null,
+            };
+            _clips[name] = c;
+            return c;
+        }
+
+        // Each tone: frequency from -> to (exponential), duration, peak (the original's gain before its 0.45 UI bus), start.
+        static AudioClip Make(string name, params (float f0, float f1, float dur, float vol, float at)[] tones)
+        {
+            const int rate = 44100;
+            float len = 0;
+            foreach (var t in tones) len = Mathf.Max(len, t.at + t.dur + 0.02f);
+            int n = Mathf.CeilToInt(len * rate);
+            var data = new float[n];
+            foreach (var t in tones)
+            {
+                int s0 = Mathf.RoundToInt(t.at * rate), cnt = Mathf.CeilToInt(t.dur * rate);
+                double phase = 0;
+                for (int i = 0; i < cnt && s0 + i < n; i++)
+                {
+                    float u = i / (float)rate, k = u / t.dur;
+                    float f = t.f0 * Mathf.Pow(t.f1 / t.f0, k);
+                    phase += 2 * Mathf.PI * f / rate;
+                    // 8 ms attack, then an exponential decay to silence at dur (linearRamp + exponentialRamp in the original)
+                    float env = u < 0.008f ? u / 0.008f : Mathf.Pow(0.0001f, (u - 0.008f) / Mathf.Max(0.001f, t.dur - 0.008f));
+                    data[s0 + i] += (float)System.Math.Sin(phase) * env * t.vol * 2.5f;
+                }
+            }
+            var clip = AudioClip.Create("ui_" + name, n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
     }
 }

@@ -416,6 +416,21 @@ namespace AiOn.Tests
             GoldenRuns.AssertGolden(Debrief.Prep, Golden["prep"]);
         }
 
+        /// <summary>
+        /// Port deviation: the debrief's stat words use the HUD's bands (GameRules.StatWord, 67 / 34) instead of the
+        /// original debrief's 60 / 30, so a card never contradicts the HUD beside it. The goldens are compared with the
+        /// words masked; the words themselves are covered by MenuPolishTests.Stat_word_bands and the tests above.
+        /// </summary>
+        static JToken NoStatWords(JToken t)
+        {
+            var c = t.DeepClone();
+            foreach (var v in c.SelectTokens("$..*").OfType<JValue>().Where(v => v.Type == JTokenType.String).ToList())
+                v.Value = System.Text.RegularExpressions.Regex.Replace((string)v.Value, "(체력|갈증|피로|긴장)(은|는)? (좋음|보통|나쁨)", "$1$2 _");
+            if (c is JValue jv && jv.Type == JTokenType.String)
+                jv.Value = System.Text.RegularExpressions.Regex.Replace((string)jv.Value, "(체력|갈증|피로|긴장)(은|는)? (좋음|보통|나쁨)", "$1$2 _");
+            return c;
+        }
+
         [Test]
         public void Every_golden_run_gets_the_fail_cards_summaries_and_record_of_the_original()
         {
@@ -428,14 +443,14 @@ namespace AiOn.Tests
                 var g = GoldenRuns.Load(name);
                 foreach (var p in ((JObject)c["chapters"]).Properties())
                 {
-                    GoldenRuns.AssertGolden(Summary(g, p.Name), p.Value, $"{name}: summary of '{p.Name}'");
+                    GoldenRuns.AssertGolden(NoStatWords(GoldenRuns.Js(Summary(g, p.Name))), NoStatWords(p.Value), $"{name}: summary of '{p.Name}'");
                     summaries++;
                 }
                 foreach (var f in c["fails"] ?? new JArray())
                 {
                     var detail = f["detail"].Type == JTokenType.Null ? null : (JObject)f["detail"];
                     var card = Debrief.FailDebrief(R, g, (string)f["type"], detail, GoldenRuns.Fact, GoldenRuns.FactSource);
-                    GoldenRuns.AssertGolden(card, f["out"], $"{name}: fail card {f["type"]} {f["detail"].ToString(Formatting.None)}");
+                    GoldenRuns.AssertGolden(NoStatWords(GoldenRuns.Js(card)), NoStatWords(f["out"]), $"{name}: fail card {f["type"]} {f["detail"].ToString(Formatting.None)}");
                     cards++;
                 }
                 if (c["record"] is JObject exp)

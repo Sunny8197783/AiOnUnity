@@ -106,7 +106,7 @@ namespace AiOn.Tests
             t.Apply("crowd", "assembly");
             Assert.AreEqual("idle", t.Group("main").Mode); Assert.AreEqual(26, Shown(t.Group("main")));
             Assert.AreEqual(14, Shown(t.Group("line")));
-            foreach (var b in t.Group("main").Bodies) Assert.IsTrue(TownCrowdPlan.AssemblyArea.Contains(b.X, b.Z), $"{b.X},{b.Z}");
+            foreach (var b in t.Group("main").Bodies) Assert.IsTrue(TownCrowdPlan.AssemblyWaitArea.Contains(b.X, b.Z) && TownCrowdPlan.AssemblyArea.Contains(b.X, b.Z), $"{b.X},{b.Z}"); // polish: clear of the two lines
             t.Apply("crowd", "none");
             Assert.AreEqual(0, t.Bodies.Count(b => b.Visible));
             LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("unknown"));

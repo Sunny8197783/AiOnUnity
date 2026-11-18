@@ -27,6 +27,11 @@ namespace AiOn.Story
     public static class Elder
     {
         public const double CallR = 11, Behind = 1.1, Pace = 0.5;
+        /// <summary>The follower keeps at least this far from the player (port fix: after a teleport she stood inside them).</summary>
+        public const double MinGap = 0.8;
+
+        /// <summary>Pure: a step (0.9 m) behind someone at (x, z) facing yaw (yaw 0 looks toward -z).</summary>
+        public static (double x, double z) BehindOf(double x, double z, double yaw) => (x + Math.Sin(yaw) * 0.9, z + Math.Cos(yaw) * 0.9);
 
         /// <summary>JS semantics for loose know/rel values: a string's value (else null) and truthiness.</summary>
         internal static string Str(JToken t) => t != null && t.Type == JTokenType.String ? (string)t : null;
@@ -86,6 +91,48 @@ namespace AiOn.Story
             new(-2.4, 0.3, 1.3, 8, 5.75),
             new(-7.6, 0.3, 8, 9.4, 5.67),
         };
+
+        /// <summary>The walk zone under (x, z) at about feetY (the highest, as GroundAt picks), or -1.</summary>
+        public static int ZoneAt(IReadOnlyList<StoryCine.WalkZone> walk, double x, double z, double feetY, double below = 0.6)
+        {
+            int best = -1; double by = double.NegativeInfinity;
+            for (int i = 0; i < walk.Count; i++)
+            {
+                var w = walk[i];
+                if (x < w.X0 - 0.02 || x > w.X1 + 0.02 || z < w.Z0 - 0.02 || z > w.Z1 + 0.02) continue;
+                double y = w.Y;
+                if (w.Axis != null)
+                {
+                    double span = w.Axis == "x" ? w.X1 - w.X0 : w.Z1 - w.Z0;
+                    if (span == 0) span = 1;
+                    double k = Math.Min(1, Math.Max(0, (w.Axis == "x" ? x - w.X0 : z - w.Z0) / span));
+                    y = w.Y0 + (w.Y1 - w.Y0) * k;
+                }
+                if (y > feetY + 0.45 || y < feetY - below) continue;
+                if (y > by) { by = y; best = i; }
+            }
+            return best;
+        }
+
+        static readonly double[] FollowTurns = { 0, 0.6, -0.6, 1.3, -1.3, 2.0, -2.0 };
+
+        /// <summary>
+        /// Where the follower comes through after a door or teleport: a step (0.9 m) behind the player, or, when that is
+        /// off the walk mesh or on another walk zone (through the door or wall just passed), a step to one side.
+        /// The plain spot behind when nothing fits.
+        /// </summary>
+        public static (double x, double z) FollowSpot(IReadOnlyList<StoryCine.WalkZone> walk, double px, double py, double pz, double yaw)
+        {
+            int here = ZoneAt(walk, px, pz, py);
+            for (int pass = 0; pass < 2; pass++)
+                foreach (var a in FollowTurns)
+                {
+                    double x = px + Math.Sin(yaw + a) * 0.9, z = pz + Math.Cos(yaw + a) * 0.9;
+                    int zone = ZoneAt(walk, x, z, py);
+                    if (zone >= 0 && (pass == 1 || here < 0 || zone == here)) return (x, z);
+                }
+            return BehindOf(px, pz, yaw);
+        }
 
         /// <summary>engine/geom.js groundAt(walk, x, z, feetY, any = false, below): the highest surface within [feetY - below, feetY + 0.45], or null.</summary>
         public static double? GroundAt(IReadOnlyList<StoryCine.WalkZone> walk, double x, double z, double feetY, double below = 0.6)
@@ -201,10 +248,23 @@ namespace AiOn.Story
             if (!(tt is Crumb t)) return;
             double gx = n.X, gz = n.Z;
             double dx = t.X - gx, dz = t.Z - gz, d = Math.Sqrt(dx * dx + dz * dz);
-            if (d > 8 || Math.Abs(ny - py) > 3) { ny = t.Y; n.SetPosition(t.X, t.Y, t.Z); return; } // a door or teleport in between
+            if (d > 8 || Math.Abs(ny - py) > 3)
+            {
+                // A door or teleport in between: she comes through a step behind the player, never inside them.
+                var (bx, bz) = Elder.FollowSpot(Elder.ApartmentWalk, px, py, pz, Engine.PlayerYaw);
+                ny = py; n.SetPosition(bx, py, bz, Engine.PlayerYaw);
+                return;
+            }
             bool moving = false;
             double? yaw = null;
-            if (d > 0.2) { var v = Math.Min(d * 2, 2.2) * dt; gx += dx / d * v; gz += dz / d * v; yaw = Math.Atan2(-dx, -dz); moving = true; }
+            if (d > 0.2)
+            {
+                var v = Math.Min(d * 2, 2.2) * dt;
+                double nx = gx + dx / d * v, nz = gz + dz / d * v;
+                // never closer than MinGap to the player (a short trail's first crumb is where the player stands)
+                if (Math.Sqrt(Sq(nx - px) + Sq(nz - pz)) >= Elder.MinGap || Math.Sqrt(Sq(nx - px) + Sq(nz - pz)) > Math.Sqrt(Sq(gx - px) + Sq(gz - pz)))
+                { gx = nx; gz = nz; yaw = Math.Atan2(-dx, -dz); moving = true; }
+            }
             // She eases to the walk mesh under her (the trail's height where there is none), as the original does.
             var ground = Elder.GroundAt(Elder.ApartmentWalk, gx, gz, ny + 0.4, 1.2);
             ny += ((ground ?? t.Y) - ny) * Math.Min(1, dt * 10);

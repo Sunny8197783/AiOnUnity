@@ -138,9 +138,9 @@ namespace AiOn.Tests
             Assert.That(cine.Plays[0].shots[0].Lines.Count, Is.EqualTo(3));
             Assert.That(cine.Plays[0].shots[0].Lines[0].Text, Is.EqualTo("D-1 오전 · 원인0  →  D+3 오전 · 결과0"));
             Assert.That(cine.Plays[0].shots[0].Lines[0].Speaker, Is.EqualTo("준비0"));
-            Assert.That(ctx.LevelStates["town"]["buses"].ToString(), Is.EqualTo("on"));
-            Assert.That(host.Level("town").State["buses"].ToString(), Is.EqualTo("on"));
-            Assert.That(ctx.LevelStates["town"].Keys, Is.EqualTo(new[] { "buses" }));
+            Assert.That(ctx.LevelStates["town"]["buses"].ToString(), Is.EqualTo("departed")); // polish: the bay is empty in the closing shot (no replay of the pull-out)
+            Assert.That(host.Level("town").State["buses"].ToString(), Is.EqualTo("departed"));
+            Assert.That(ctx.LevelStates["town"].Keys, Is.EquivalentTo(new[] { "buses", "crowd" }));
 
             // No ripples: straight to the closing shot (it fades in itself); an unknown path falls back to the bus.
             var (qh, quiet) = Rig();
@@ -148,7 +148,7 @@ namespace AiOn.Tests
             qh.Run(async () => { await quiet.Goto("town", "home"); await Cutscenes.RippleMontage(quiet, new List<RippleRow>(), "nowhere"); });
             Assert.That(qc.Plays.Count, Is.EqualTo(1));
             Assert.That(qc.Plays[0].shots[0].Fade, Is.True);
-            Assert.That(quiet.LevelStates["town"]["buses"].ToString(), Is.EqualTo("on"));
+            Assert.That(quiet.LevelStates["town"]["buses"].ToString(), Is.EqualTo("departed"));
 
             // 303호 앞 with 서연: the closing shot moves to the apartment corridor.
             var (sh, sy) = Rig();
@@ -370,12 +370,12 @@ namespace AiOn.Tests
             Assert.That(cue.Text, Is.EqualTo("hit")); Assert.That((string)((JObject)cue.Data)["name"], Is.EqualTo("whistle"));
             Assert.That(fx.Missiles, Is.EqualTo(1)); Assert.That(fx.MissilesDisposed, Is.EqualTo(1));
             var jm = (FakePerson)host.Calls("spawnPerson").Single().Data;
-            Assert.That(jm.Anim, Is.EqualTo("crouch"));
-            Assert.That((jm.X, jm.Z), Is.EqualTo((host.PlayerX, host.PlayerZ)));
+            Assert.That(jm.Anim, Is.EqualTo("idle")); // polish: he stands and looks at the smoke (the crouch clip read as sitting on air)
+            Assert.That((jm.X, jm.Z), Is.EqualTo((Cutscenes.StrikeWitness.x, Cutscenes.StrikeWitness.z))); // polish: a fixed spot with a clear view of the fire
             Assert.That(host.Captions, Is.EqualTo(new[] { "쾅— 땅이 울렸다. 공원 너머 남쪽 빌라 한 동이 무너져 내린다.", "불길과 검은 연기가 치솟는다. 멈추지 말고 대피소로." }));
-            Assert.That(fx.Titles[0], Is.EqualTo(new[] { "연무동", "D-day 금요일 20:12" }));
+            Assert.That(fx.Titles[0], Is.EqualTo(Cutscenes.StrikeTitle(ctx.G.Minute))); // polish: the clock as it is, not a fixed 20:12
             var grades = host.Calls("grade").Select(c => (double)((JObject)c.Data)["exposure"]).ToList();
-            Assert.That(grades, Is.EqualTo(new[] { 0.5, 0.6, 0.4, 0.0 }));
+            Assert.That(grades, Is.EqualTo(new[] { 0.5, 0.6, 1.0, 0.0 })); // polish: shot 3 is lifted to read 정민 against the night
             AssertRestored(host, ctx);
         }
 
@@ -431,7 +431,7 @@ namespace AiOn.Tests
             Assert.That(people[3].Props, Is.EquivalentTo(new[] { "backpack", "flashlight" }));
             Assert.That(people.All(p => p.X < 56), Is.True, "everyone got past the gate toward the shelter");
             Assert.That(host.Calls("removePerson").Count(), Is.EqualTo(5));
-            Assert.That(fx.LastFill, Is.EqualTo(9), "phone torches");
+            Assert.That(fx.LastFill, Is.EqualTo(2.2).Within(1e-9), "phone torch in the lead's hand (polish: short reach, soft, no blown-out walkers)");
             Assert.That(host.Captions, Is.EqualTo(new[] { "20:05 — 공습경보. 사이렌이 오르내리며 1분 동안 울린다.", "어두운 거리로 사람들이 쏟아져 나온다. 다들 지하로 향한다." }));
             Assert.That(Enters(host), Is.EqualTo(new[] { "apartment:home", "town:home", "apartment" }));
             Assert.That((host.PlayerX, host.PlayerZ), Is.EqualTo((-2.0, 6.0)));
@@ -490,6 +490,44 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void BusDeparture_EndsInItsOwnBlack_AndTheMontageFadesInFromIt()
+        {
+            var (host, ctx, fx) = Live();
+            bool controls = true, cinematic = false, held = false; double black = 0;
+            var res = host.Run(async () =>
+            {
+                await ctx.Goto("town", "home");
+                var r = await Cutscenes.BusDeparture(ctx);
+                controls = host.ControlsEnabled; cinematic = host.Cinematic; held = ctx.Cine.Held; black = host.Black;
+                return r;
+            });
+            Assert.That(res, Is.EqualTo("done"));
+            Assert.That(black, Is.EqualTo(1), "the shot fades itself out");
+            Assert.That(controls, Is.False, "no gameplay frame after the departure");
+            Assert.That(cinematic, Is.True);
+            Assert.That(held, Is.True);
+            Assert.That(host.State("buses").ToString(), Is.EqualTo("departing"));
+            // the ending's montage takes over from the black: no second fade-out, then everything handed back
+            var rows = Rows(1);
+            var res2 = host.Run(async () => await Cutscenes.RippleMontage(ctx, rows, "bus"));
+            Assert.That(res2, Is.EqualTo("done"));
+            Assert.That(ctx.Cine.Held, Is.False);
+            AssertRestored(host, ctx);
+        }
+
+        [Test]
+        public void HeldCutscene_ReleaseHandsBack()
+        {
+            var (host, ctx, fx) = Live();
+            host.Run(async () => { await ctx.Goto("town", "home"); return await Cutscenes.BusDeparture(ctx); });
+            Assert.That(ctx.Cine.Held, Is.True);
+            ctx.Cine.Release();
+            _ = ctx.Engine.FadeTo(0, 0);
+            Assert.That(ctx.Cine.Held, Is.False);
+            AssertRestored(host, ctx);
+        }
+
+        [Test]
         public void RippleMontage_BusWithRealRipples_CraneThenAssembly()
         {
             var (host, ctx, fx) = Live();
@@ -499,7 +537,7 @@ namespace AiOn.Tests
             Assert.That(host.Captions, Is.EqualTo(new[] { "D-1 오전 · 원인0  →  D+3 오전 · 결과0", "D-1 오전 · 원인1  →  D+3 오전 · 결과1" }));
             Assert.That(host.Calls("caption").Select(c => (string)c.Data), Is.EqualTo(new[] { "준비0", "준비1" }));
             Assert.That(Enters(host), Is.EqualTo(new[] { "apartment:home", "town:home" }));
-            Assert.That(host.State("buses").ToString(), Is.EqualTo("on"));
+            Assert.That(host.State("buses").ToString(), Is.EqualTo("departed"));
             Assert.That(fx.Titles.Select(x => x[0]), Is.EqualTo(new[] { "그날의 선택들", "행정복지센터 앞 임시 집결지" }));
             Assert.That(host.Seconds, Is.EqualTo(2 + 2 * 4.6 + 4.6).Within(0.3));
             AssertRestored(host, ctx);

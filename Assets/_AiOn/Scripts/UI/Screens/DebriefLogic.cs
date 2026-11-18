@@ -53,6 +53,23 @@ namespace AiOn.UI
         public string PayoffsTitle = "준비가 도움이 된 순간", LinesTitle = "이번 장의 기록";
         public List<string> Lines = new();
         public string Empty = "기록할 것이 많지 않았습니다.";
+
+        /// <summary>
+        /// The payoffs grouped under one heading per preparation (Bold), in first-seen order, so a bag that helped three
+        /// times shows "비상가방" once with its three moments under it.
+        /// </summary>
+        public List<(string head, List<DebriefLine> items)> PayoffGroups()
+        {
+            var groups = new List<(string head, List<DebriefLine> items)>();
+            foreach (var p in Payoffs)
+            {
+                var head = p.Bold ?? "";
+                int at = groups.FindIndex(g => g.head == head);
+                if (at < 0) groups.Add((head, new List<DebriefLine> { p }));
+                else groups[at].items.Add(p);
+            }
+            return groups;
+        }
     }
 
     /// <summary>The 생존 기록 document.</summary>
@@ -86,7 +103,7 @@ namespace AiOn.UI
         public List<DebriefLine> Ranks = new();
         public string BestTitle = "장별 최고 기록";
         public List<DebriefLine> Bests = new();
-        public string Note = "순위는 도전 과제가 많은 순, 다시 하기가 적은 순, 시간이 짧은 순입니다. 빠르기보다 안전이 먼저입니다. 기록은 이 브라우저에만 저장됩니다.";
+        public string Note = "순위는 도전 과제가 많은 순, 다시 하기가 적은 순, 시간이 짧은 순입니다. 빠르기보다 안전이 먼저입니다. 기록은 이 기기에만 저장됩니다.";
     }
 
     public static class DebriefLogic

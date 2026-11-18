@@ -37,7 +37,7 @@ namespace AiOn.Levels
         public static Dictionary<string, EnvPreset> ParseAll(string json)
         {
             var all = new Dictionary<string, EnvPreset>();
-            foreach (var p in JObject.Parse(json).Properties()) all[p.Name] = Parse(p.Name, (JObject)p.Value);
+            foreach (var p in JObject.Parse(json).Properties()) { var e = Parse(p.Name, (JObject)p.Value); Tune(e); all[p.Name] = e; }
             return all;
         }
 
@@ -77,6 +77,102 @@ namespace AiOn.Levels
             if (o["hills"] != null) e.Hills = Hex((string)o["hills"]);
             if (o["lit"] is JObject l) foreach (var p in l.Properties()) e.Lit[p.Name] = (float)p.Value;
             return e;
+        }
+
+        /// <summary>Copies every value of o into this preset (the lit table too, without reallocating it).</summary>
+        public void CopyFrom(EnvPreset o)
+        {
+            Name = o.Name; Outdoor = o.Outdoor; Sun = o.Sun; Key = o.Key; KeyColor = o.KeyColor; KeyIntensity = o.KeyIntensity;
+            SkyFill = o.SkyFill; GroundFill = o.GroundFill; FillIntensity = o.FillIntensity; FogColor = o.FogColor; FogDensity = o.FogDensity;
+            Exposure = o.Exposure; BloomStrength = o.BloomStrength; BloomRadius = o.BloomRadius; BloomThreshold = o.BloomThreshold;
+            Saturation = o.Saturation; Contrast = o.Contrast; GradeExposure = o.GradeExposure; Vignette = o.Vignette; Grain = o.Grain;
+            TintAmount = o.TintAmount; Tint = o.Tint; NightAmount = o.NightAmount; Zenith = o.Zenith; Horizon = o.Horizon;
+            NoSky = o.NoSky; Turbidity = o.Turbidity; Rayleigh = o.Rayleigh; Mie = o.Mie; MieG = o.MieG; SkyGain = o.SkyGain;
+            Glow = o.Glow; Stars = o.Stars; Moon = o.Moon; GlowColor = o.GlowColor; CloudCover = o.CloudCover; CloudOpacity = o.CloudOpacity;
+            CloudGain = o.CloudGain; CloudLit = o.CloudLit; CloudShade = o.CloudShade; Hills = o.Hills;
+            if (!ReferenceEquals(Lit, o.Lit)) { Lit.Clear(); foreach (var kv in o.Lit) Lit[kv.Key] = kv.Value; }
+        }
+
+        /// <summary>core.js ease: smoothstep.</summary>
+        public static float Ease(float k) { k = Mathf.Clamp01(k); return k * k * (3 - 2 * k); }
+
+        /// <summary>
+        /// core.js mixState: every number and colour of a and b mixed at t (already eased) into dst (no allocation once the
+        /// lit table has its keys). Directions turn the short way round; the name, outdoor and sky flags switch at the half.
+        /// A lit group only one side names keeps that side's value.
+        /// </summary>
+        public static void LerpInto(EnvPreset dst, EnvPreset a, EnvPreset b, float t)
+        {
+            t = Mathf.Clamp01(t);
+            var near = t < 0.5f ? a : b;
+            dst.Name = near.Name; dst.Outdoor = near.Outdoor; dst.NoSky = near.NoSky;
+            dst.Sun = new Vector2(Mathf.LerpAngle(a.Sun.x, b.Sun.x, t), Mathf.Lerp(a.Sun.y, b.Sun.y, t));
+            dst.Key = new Vector2(Mathf.LerpAngle(a.Key.x, b.Key.x, t), Mathf.Lerp(a.Key.y, b.Key.y, t));
+            dst.KeyColor = Color.Lerp(a.KeyColor, b.KeyColor, t); dst.KeyIntensity = Mathf.Lerp(a.KeyIntensity, b.KeyIntensity, t);
+            dst.SkyFill = Color.Lerp(a.SkyFill, b.SkyFill, t); dst.GroundFill = Color.Lerp(a.GroundFill, b.GroundFill, t);
+            dst.FillIntensity = Mathf.Lerp(a.FillIntensity, b.FillIntensity, t);
+            dst.FogColor = Color.Lerp(a.FogColor, b.FogColor, t); dst.FogDensity = Mathf.Lerp(a.FogDensity, b.FogDensity, t);
+            dst.Exposure = Mathf.Lerp(a.Exposure, b.Exposure, t);
+            dst.BloomStrength = Mathf.Lerp(a.BloomStrength, b.BloomStrength, t); dst.BloomRadius = Mathf.Lerp(a.BloomRadius, b.BloomRadius, t);
+            dst.BloomThreshold = Mathf.Lerp(a.BloomThreshold, b.BloomThreshold, t);
+            dst.Saturation = Mathf.Lerp(a.Saturation, b.Saturation, t); dst.Contrast = Mathf.Lerp(a.Contrast, b.Contrast, t);
+            dst.GradeExposure = Mathf.Lerp(a.GradeExposure, b.GradeExposure, t); dst.Vignette = Mathf.Lerp(a.Vignette, b.Vignette, t);
+            dst.Grain = Mathf.Lerp(a.Grain, b.Grain, t);
+            // the tint as the mixed-in colour (tint at tintAmount), so a tint fades in rather than jumping hue
+            var ta = Color.Lerp(Color.white, a.Tint, Mathf.Clamp01(a.TintAmount)); var tb = Color.Lerp(Color.white, b.Tint, Mathf.Clamp01(b.TintAmount));
+            dst.Tint = Color.Lerp(ta, tb, t); dst.TintAmount = 1f;
+            dst.NightAmount = Mathf.Lerp(a.NightAmount, b.NightAmount, t);
+            dst.Zenith = Color.Lerp(a.Zenith, b.Zenith, t); dst.Horizon = Color.Lerp(a.Horizon, b.Horizon, t);
+            dst.Turbidity = Mathf.Lerp(a.Turbidity, b.Turbidity, t); dst.Rayleigh = Mathf.Lerp(a.Rayleigh, b.Rayleigh, t);
+            dst.Mie = Mathf.Lerp(a.Mie, b.Mie, t); dst.MieG = Mathf.Lerp(a.MieG, b.MieG, t); dst.SkyGain = Mathf.Lerp(a.SkyGain, b.SkyGain, t);
+            dst.Glow = Mathf.Lerp(a.Glow, b.Glow, t); dst.Stars = Mathf.Lerp(a.Stars, b.Stars, t); dst.Moon = Mathf.Lerp(a.Moon, b.Moon, t);
+            dst.GlowColor = Color.Lerp(a.GlowColor, b.GlowColor, t);
+            dst.CloudCover = Mathf.Lerp(a.CloudCover, b.CloudCover, t); dst.CloudOpacity = Mathf.Lerp(a.CloudOpacity, b.CloudOpacity, t);
+            dst.CloudGain = Mathf.Lerp(a.CloudGain, b.CloudGain, t);
+            dst.CloudLit = Color.Lerp(a.CloudLit, b.CloudLit, t); dst.CloudShade = Color.Lerp(a.CloudShade, b.CloudShade, t);
+            dst.Hills = Color.Lerp(a.Hills, b.Hills, t);
+            foreach (var kv in a.Lit) dst.Lit[kv.Key] = b.Lit.TryGetValue(kv.Key, out var bv) ? Mathf.Lerp(kv.Value, bv, t) : kv.Value;
+            foreach (var kv in b.Lit) if (!a.Lit.ContainsKey(kv.Key)) dst.Lit[kv.Key] = kv.Value;
+        }
+
+        /// <summary>A colour with its HSV saturation capped at max (value and hue kept).</summary>
+        public static Color CapSaturation(Color c, float max)
+        {
+            Color.RGBToHSV(c, out float h, out float s, out float v);
+            if (s <= max) return c;
+            var o = Color.HSVToRGB(h, max, v);
+            o.a = c.a;
+            return o;
+        }
+
+        /// <summary>
+        /// The URP look on top of the original numbers (applied once per preset at load): night and dusk ambient 40 % lower
+        /// so lamps and windows carry the street (the three.js hemi lit the ground almost as evenly as day); a dusk without
+        /// the magenta wash (tint, sky fill and fog capped in saturation); a darker, cooler blackout (less ambient and moon);
+        /// interiors half a stop down with a higher bloom threshold (blown office ceilings).
+        /// </summary>
+        public static void Tune(EnvPreset e)
+        {
+            if (e.Outdoor && e.NightAmount > 0) e.FillIntensity *= 0.6f;
+            if (e.Name == "dusk")
+            {
+                e.Tint = CapSaturation(e.Tint, 0.06f);
+                e.SkyFill = CapSaturation(e.SkyFill, 0.22f);
+                e.FogColor = CapSaturation(e.FogColor, 0.16f);
+                e.Hills = CapSaturation(e.Hills, 0.2f);
+            }
+            if (e.Name == "blackout")
+            {
+                e.FillIntensity *= 0.6f;
+                e.KeyIntensity *= 0.75f;
+                e.Exposure *= 0.85f;
+            }
+            if (e.Name == "interiorDark") e.FillIntensity *= 0.7f;
+            if (!e.Outdoor && e.Name.StartsWith("interior", System.StringComparison.Ordinal) && e.Name != "interiorDark")
+            {
+                if (e.Name == "interior") e.Exposure *= 0.71f; // -0.5 EV
+                e.BloomThreshold = Mathf.Max(1.1f, e.BloomThreshold);
+            }
         }
 
         static Vector2 V2(JToken t) => t is JArray a ? new Vector2((float)a[0], (float)a[1]) : Vector2.zero;
@@ -131,7 +227,16 @@ namespace AiOn.Levels
         /// <summary>Current lit level per group (core.js litNow): the preset's lit table with grid power applied.</summary>
         public IReadOnlyDictionary<string, float> LitLevels => _lit;
 
+        /// <summary>The preset asked for last (a blend is heading here).</summary>
         public EnvPreset Current { get; private set; }
+        /// <summary>The look on screen now (mid-blend: the mix).</summary>
+        public EnvPreset Shown => _shown;
+        /// <summary>True while a timed blend runs.</summary>
+        public bool Blending => _blendDur > 0 && _blendK < 1;
+
+        readonly EnvPreset _shown = new EnvPreset(), _from = new EnvPreset();
+        EnvPreset _to;
+        float _blendK = 1, _blendDur;
         public static EnvironmentController Instance { get; private set; }
 
         void Awake()
@@ -221,23 +326,105 @@ namespace AiOn.Levels
 
         public bool Has(string name) => _all != null && _all.ContainsKey(name);
 
-        public void Apply(string name)
+        public void Apply(string name) => BlendTo(name, 0);
+
+        /// <summary>
+        /// Eases from what is shown now to the preset over seconds (core.js setEnv/stepEnv: smoothstep, from the mixed state
+        /// when a blend is already under way); 0 snaps. Key and fill lights, fog, sky, grade and the lit groups all follow.
+        /// </summary>
+        public void BlendTo(string name, float seconds) => BlendTo(name, seconds, false);
+
+        void BlendTo(string name, float seconds, bool keepGrade)
         {
             if (_all == null || !_all.TryGetValue(name, out var e)) { Debug.LogWarning($"[Env] unknown preset '{name}'"); return; }
+            if (name == "interiorDark" && DaylightOutside) e = DarkByDay(e);
+            bool first = Current == null;
             preset = name; Current = e;
+            // core.js setEnv sets the preset's whole grade: a story grade made before it is dropped (one made after it,
+            // like a cutscene shot's exposure, then holds over the whole blend)
+            if (!keepGrade) { _gSat = _gExp = _gVig = null; _gTint = null; }
+            if (first || seconds <= 0.01f)
+            {
+                _blendDur = 0; _blendK = 1; _to = e;
+                _shown.CopyFrom(e);
+                ApplyShown();
+                return;
+            }
+            _from.CopyFrom(_shown);
+            _to = e; _blendDur = seconds; _blendK = 0;
+        }
+
+        /// <summary>The window view shows daylight (the level state windowView is 'day').</summary>
+        public static bool DaylightOutside
+        {
+            get
+            {
+                var lm = LevelMaterials.Instance;
+                return lm != null && lm.StateOf("windowView") == "day";
+            }
+        }
+
+        EnvPreset _darkDay;
+
+        /// <summary>
+        /// A blackout by day indoors: interiorDark lit from the windows instead of by the moon (a neutral daylight key at
+        /// 0.6 and a cool sky fill), so a daytime room without power reads as grey daylight, not night.
+        /// </summary>
+        EnvPreset DarkByDay(EnvPreset dark)
+        {
+            if (_darkDay != null) return _darkDay;
+            _darkDay = new EnvPreset();
+            _darkDay.CopyFrom(dark);
+            DaylightVariant(_darkDay);
+            return _darkDay;
+        }
+
+        /// <summary>interiorDark turned into its daylight variant (pure; see DarkByDay).</summary>
+        public static void DaylightVariant(EnvPreset e)
+        {
+            e.KeyColor = new Color(0.91f, 0.93f, 0.96f);
+            e.KeyIntensity = 0.6f; // the window key
+            e.SkyFill = new Color(0.55f, 0.62f, 0.72f); e.GroundFill = new Color(0.22f, 0.21f, 0.2f);
+            e.FillIntensity = 0.16f;
+            e.FogColor = new Color(0.28f, 0.3f, 0.33f);
+            e.Tint = new Color(0.95f, 0.97f, 1.02f); e.TintAmount = 0.2f;
+            e.Saturation = 0.8f; e.Exposure = 1.1f;
+            e.NightAmount = 0f; e.Stars = 0f; e.Moon = 0f;
+            e.Zenith = new Color(0.55f, 0.65f, 0.78f); e.Horizon = new Color(0.78f, 0.82f, 0.86f);
+        }
+
+        /// <summary>The window view changed (LevelMaterials): the dark interior follows day or night outside.</summary>
+        public void OutsideChanged()
+        {
+            if (Current != null && preset == "interiorDark") BlendTo("interiorDark", 0.6f, true);
+        }
+
+        void Update()
+        {
+            if (!Blending || _to == null) return;
+            _blendK = Mathf.Min(1f, _blendK + Time.unscaledDeltaTime / _blendDur);
+            if (_blendK >= 1f) _shown.CopyFrom(_to);
+            else EnvPreset.LerpInto(_shown, _from, _to, EnvPreset.Ease(_blendK));
+            ApplyShown();
+        }
+
+        void ApplyShown()
+        {
+            var e = _shown;
 
             if (keyLight)
             {
                 keyLight.transform.rotation = Quaternion.LookRotation(-EnvPreset.DirectionTo(e.Key), Vector3.up);
                 keyLight.color = e.KeyColor;
-                keyLight.intensity = e.KeyIntensity * keyScale;
+                keyLight.intensity = e.KeyIntensity * keyScale * _roomDim;
                 keyLight.shadows = LightShadows.Soft;
             }
 
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = e.SkyFill * (e.FillIntensity * fillScale);
-            RenderSettings.ambientGroundColor = e.GroundFill * (e.FillIntensity * fillScale);
-            RenderSettings.ambientEquatorColor = Color.Lerp(e.SkyFill, e.GroundFill, 0.5f) * (e.FillIntensity * fillScale);
+            float fill = e.FillIntensity * fillScale * _roomDim;
+            RenderSettings.ambientSkyColor = e.SkyFill * fill;
+            RenderSettings.ambientGroundColor = e.GroundFill * fill;
+            RenderSettings.ambientEquatorColor = Color.Lerp(e.SkyFill, e.GroundFill, 0.5f) * fill;
 
             RenderSettings.fog = e.FogDensity > 0;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
@@ -273,16 +460,44 @@ namespace AiOn.Levels
             _grain.type.Override(FilmGrainLookup.Thin1);
             _grain.intensity.Override(Mathf.Clamp01(e.Grain * 6f));
 
+            ApplyGradeOverride(); // a story grade stays over the preset through a blend
+            // The default reflection is the edit-time daytime sky: at night or in a blackout it would put a pale sheen
+            // on every glossy surface (the player, parked cars). Reflections fade with the dark.
+            RenderSettings.reflectionIntensity = ReflectionFor(e.NightAmount, power, e.Outdoor);
+
             ApplyLamps();
             UpdateLit();
             if (SmokeLevel > 0) { _smokeFogBase = -1; SetSmoke(SmokeLevel); } // a preset change mid-escape keeps the smoke
+        }
+
+        /// <summary>Environment reflection strength: 1 by day, down to 0.15 at full night, a little less again without power.</summary>
+        public static float ReflectionFor(float nightAmount, bool power, bool outdoor)
+        {
+            float k = 1f - Mathf.Clamp01(nightAmount) * 0.85f;
+            if (!power) k *= outdoor ? 0.7f : 0.6f;
+            return k;
+        }
+
+        /// <summary>The preset's own grade again (after SetGradeOverride(null)): the shown look re-applied.</summary>
+        void Reapply() => ApplyShown();
+
+        // The story grade in force (null fields: the preset's own). Kept so every blend frame lays it over the preset.
+        float? _gSat, _gExp, _gVig;
+        Color? _gTint;
+
+        void ApplyGradeOverride()
+        {
+            if (_gSat.HasValue) _color.saturation.Override((_gSat.Value - 1f) * 100f);
+            if (_gExp.HasValue) _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, _shown.Exposure), 2f) + _shown.GradeExposure + _gExp.Value + exposureOffset);
+            if (_gVig.HasValue) _vignette.intensity.Override(_gVig.Value * 0.8f);
+            if (_gTint.HasValue) _color.colorFilter.Override(_gTint.Value);
         }
 
         /// <summary>Recomputes the lit levels from the current preset and power and hands them to the level's materials.</summary>
         void UpdateLit()
         {
             if (Current == null) return;
-            _lit = LevelMaterials.MergeLit(_lit, Current.Lit, power);
+            LevelMaterials.MergeLitInto(_lit, _shown.Lit, power);
             PushLit();
         }
 
@@ -290,7 +505,7 @@ namespace AiOn.Levels
         public void PushLit()
         {
             var mats = LevelMaterials.Instance;
-            if (mats != null) mats.SetLit(_lit);
+            if (mats != null) { mats.SetNight(_shown.NightAmount); mats.SetLit(_lit); }
         }
 
         /// <summary>
@@ -299,26 +514,46 @@ namespace AiOn.Levels
         /// </summary>
         public void SetGradeOverride(JObject grade)
         {
-            if (grade == null) { SmokeActive = false; SetSmoke(0); if (Current != null) Apply(Current.Name); return; }
+            if (grade == null)
+            {
+                _gSat = _gExp = _gVig = null; _gTint = null;
+                SmokeActive = false; SetSmoke(0); if (Current != null) Reapply(); return;
+            }
             if (grade["smoke"] != null) { SmokeActive = true; SetSmoke((float)grade["smoke"]); }
-            if (grade["saturation"] != null) _color.saturation.Override(((float)grade["saturation"] - 1f) * 100f);
-            if (grade["exposure"] != null) _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, Current?.Exposure ?? 1f), 2f) + (float)grade["exposure"] + exposureOffset);
-            if (grade["vignette"] != null) _vignette.intensity.Override((float)grade["vignette"] * 0.8f);
+            if (grade["saturation"] != null) _gSat = (float)grade["saturation"];
+            if (grade["exposure"] != null) _gExp = (float)grade["exposure"];
+            if (grade["vignette"] != null) _gVig = (float)grade["vignette"];
             if (grade["tint"] is JArray t)
-                _color.colorFilter.Override(Color.Lerp(Color.white, new Color((float)t[0], (float)t[1], (float)t[2]), Mathf.Clamp01(((float?)grade["tintAmount"] ?? 0.3f) * 1.5f)));
+                _gTint = Color.Lerp(Color.white, new Color((float)t[0], (float)t[1], (float)t[2]), Mathf.Clamp01(((float?)grade["tintAmount"] ?? 0.3f) * 1.5f));
+            ApplyGradeOverride();
         }
 
         /// <summary>Grid power: off is the blackout (lamps out; the interiors' battery lamps are InteriorDressing's).</summary>
         public void SetPower(bool on)
         {
             power = on;
+            if (Current != null) RenderSettings.reflectionIntensity = ReflectionFor(_shown.NightAmount, power, _shown.Outdoor);
             ApplyLamps();
             UpdateLit(); // grid groups (street, windows, shops, signs) of the level's materials
-            if (_skyRig && Current != null) _skyRig.Apply(Current, power); // grid groups: distant city windows + beacons
+            if (_skyRig && Current != null) _skyRig.Apply(_shown, power); // grid groups: distant city windows + beacons
+        }
+
+        float _roomDim = 1f;
+
+        /// <summary>
+        /// This level's own dimming of the env's key and fill (1 = as the preset): a shop with its power cut sits well
+        /// below its battery lamps, so their pools read. Per scene (a new level starts at 1).
+        /// </summary>
+        public void SetRoomDim(float k)
+        {
+            k = Mathf.Clamp01(k);
+            if (Mathf.Approximately(k, _roomDim)) return;
+            _roomDim = k;
+            if (Current != null) ApplyShown();
         }
 
         /// <summary>The current preset's 'indoor' lit level (1 when it has none).</summary>
-        public float IndoorLit => Current != null && Current.Lit.TryGetValue("indoor", out var v) ? v : 1f;
+        public float IndoorLit => Current != null && _shown.Lit.TryGetValue("indoor", out var v) ? v : 1f;
 
         System.Func<Vector3, float> _lampFactor;
 

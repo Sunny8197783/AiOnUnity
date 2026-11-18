@@ -10,6 +10,87 @@ using UnityEngine.UI;
 namespace AiOn.UI
 {
     /// <summary>
+    /// The bag screen's pure checks: why a goal with its item packed is still open (the item is not ready: a torch
+    /// whose batteries were never checked), and the one soft confirm before leaving without a critical goal.
+    /// </summary>
+    public static class BagCheck
+    {
+        /// <summary>The port's tag for a packed item that does not count yet (BagItemView.Ready false).</summary>
+        public const string NotReady = "작동 확인 안 함";
+
+        /// <summary>Goals worth one "are you sure" before leaving (BagDrill goal ids): ID / documents, then water.</summary>
+        public static readonly string[] Critical = { "docs", "water" };
+
+        static bool Counts(string id, Func<string, int> bagOf, IReadOnlyList<BagItemView> items) =>
+            bagOf(id) > 0 && items.FirstOrDefault(i => i.Id == id)?.Ready != false;
+
+        public static bool Met(BagGoal g, Func<string, int> bagOf, IReadOnlyList<BagItemView> items) =>
+            BagDrill.GoalMet(g, bagOf, id => Counts(id, bagOf, items));
+
+        /// <summary>NotReady when the goal is open although one of its items is packed (it is not ready); else null.</summary>
+        public static string GoalNote(BagGoal g, Func<string, int> bagOf, IReadOnlyList<BagItemView> items) =>
+            !Met(g, bagOf, items) && (g.Items ?? Array.Empty<string>()).Any(id => bagOf(id) > 0 && items.FirstOrDefault(i => i.Id == id)?.Ready == false)
+                ? NotReady : null;
+
+        /// <summary>The first critical goal still open, or null (none, or the free stage: no help there).</summary>
+        public static BagGoal CriticalOpen(IEnumerable<BagGoal> goals, string mode, Func<string, int> bagOf, IReadOnlyList<BagItemView> items) =>
+            CriticalOpenAll(goals, mode, bagOf, items).FirstOrDefault();
+
+        /// <summary>Every critical goal still open, in <see cref="Critical"/> order (empty in the free stage).</summary>
+        public static List<BagGoal> CriticalOpenAll(IEnumerable<BagGoal> goals, string mode, Func<string, int> bagOf, IReadOnlyList<BagItemView> items)
+        {
+            var open = new List<BagGoal>();
+            if (mode == "free" || goals == null) return open;
+            var list = goals.ToList();
+            foreach (var id in Critical)
+            {
+                var g = list.FirstOrDefault(x => x.Id == id);
+                if (g != null && !Met(g, bagOf, items)) open.Add(g);
+            }
+            return open;
+        }
+
+        public static string Question(BagGoal g) => $"{Noun(g)} 없이 나갈까요?";
+
+        /// <summary>The question naming every critical gap: "신분증과 마실 물 없이 나갈까요?" when both are open.</summary>
+        public static string Question(IReadOnlyList<BagGoal> open)
+        {
+            if (open == null || open.Count == 0) return "";
+            if (open.Count == 1) return Question(open[0]);
+            string a = Noun(open[0]);
+            return $"{a}{(HasBatchim(a) ? "과" : "와")} {Noun(open[1])} 없이 나갈까요?";
+        }
+
+        static string Noun(BagGoal g) => g.Id == "docs" ? "신분증" : g.Id == "water" ? "마실 물" : g.Label;
+        static bool HasBatchim(string w)
+        {
+            char c = string.IsNullOrEmpty(w) ? ' ' : w[w.Length - 1];
+            return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 != 0;
+        }
+
+        /// <summary>
+        /// "아직 ○ : a, b 외 N개", the line under the question: at most <paramref name="max"/> names and no more than
+        /// <paramref name="maxChars"/> characters of names, so the line never wraps with '외 N개' left on its own.
+        /// </summary>
+        public static string OpenSummary(IReadOnlyList<string> open, int max = 2, int maxChars = 18)
+        {
+            if (open == null || open.Count == 0) return "";
+            var names = new List<string>();
+            int chars = 0;
+            foreach (var n in open)
+            {
+                if (names.Count >= max || (names.Count > 0 && chars + n.Length + 2 > maxChars)) break;
+                names.Add(n); chars += n.Length + 2;
+            }
+            return "아직 ○ : " + string.Join(", ", names) + (open.Count > names.Count ? $" 외 {open.Count - names.Count}개" : "");
+        }
+
+        /// <summary>The other goals still open (labels), for the line under the question.</summary>
+        public static List<string> OpenLabels(IEnumerable<BagGoal> goals, Func<string, int> bagOf, IReadOnlyList<BagItemView> items) =>
+            (goals ?? Enumerable.Empty<BagGoal>()).Where(g => !Met(g, bagOf, items)).Select(g => g.Label).ToList();
+    }
+
+    /// <summary>
     /// Packing one bag (original ui/bag.js, design kept): two panes (집 비축 / 가방) where a click or a key moves one
     /// unit (Shift: all of it), weight and volume meters, the goals checklist, the ladder help (guided: shown, hint:
     /// behind a button, free: none and no ticks). New here: a 10x5 grid preview of where each piece sits in the bag.
@@ -34,6 +115,8 @@ namespace AiOn.UI
         int _sel;
         bool _helpOpen;
         float _openedAt;
+        RectTransform _win, _confirm;
+        bool _asked; // the soft confirm shows once per screen
 
         public bool IsOpen => _model != null;
         public string StatusText => _status ? _status.text : null;
@@ -51,6 +134,8 @@ namespace AiOn.UI
             s._helpOpen = mode == "guided";
             Current = s;
             InputGate.Hold();
+            UiScreen.PushModal(); // counts as a modal like the UiScreens: the HUD fades under it and toasts wait
+            s._counted = true;
             PlayerInputReader.SetCursorLocked(false);
             s.Build();
             s.Render();
@@ -66,6 +151,7 @@ namespace AiOn.UI
             _model = null;
             if (Current == this) Current = null;
             InputGate.Release();
+            Uncount();
             PlayerInputReader.SetCursorLocked(true);
             Destroy(gameObject);
             _onDone?.Invoke(result);
@@ -74,18 +160,23 @@ namespace AiOn.UI
         void OnDestroy()
         {
             if (_model != null) { _model = null; InputGate.Release(); }
+            Uncount();
             if (Current == this) Current = null;
         }
+
+        bool _counted;
+        void Uncount() { if (!_counted) return; _counted = false; UiScreen.PopModal(); }
 
         // ---------- layout ----------
 
         void Build()
         {
             var root = (RectTransform)transform;
-            UiKit.Fill(UiKit.Box("Shade", root, new Color(0, 0, 0, 0.55f), raycast: true).rectTransform);
+            UiKit.Fill(UiKit.Box("Shade", root, UiKit.ModalShade, raycast: true).rectTransform);
             var win = UiKit.Box("Window", root, UiKit.Panel).rectTransform;
             win.anchorMin = win.anchorMax = win.pivot = new Vector2(0.5f, 0.5f);
             win.sizeDelta = new Vector2(1720, 940);
+            _win = win;
 
             UiKit.At(UiKit.Label("Kicker", win, "가방", 22, UiKit.Dim).rectTransform, 40, 26, 300, 30);
             UiKit.At(UiKit.Label("Title", win, _title, 40, UiKit.Ink, style: FontStyle.Bold).rectTransform, 40, 52, 900, 56);
@@ -129,7 +220,47 @@ namespace AiOn.UI
             empty.onClick.AddListener(() => { _model.Empty(); Say("가방을 비웠다."); Render(); });
             var done = UiKit.Button("Done", win, "다 챙겼다", 26, UiKit.Teal, new Color(0.04f, 0.08f, 0.08f));
             UiKit.At((RectTransform)done.transform, 1430, 852, 250, 60);
-            done.onClick.AddListener(Close);
+            done.onClick.AddListener(TryClose);
+        }
+
+        /// <summary>다 챙겼다 / Esc: once per screen, ask before leaving with a critical goal (ID, water) still open.</summary>
+        void TryClose()
+        {
+            if (_confirm) return;
+            var open = _asked ? null : BagCheck.CriticalOpenAll(_goals, _mode, _model.BagOf, _model.Items);
+            if (open == null || open.Count == 0) { Close(); return; }
+            _asked = true;
+            ShowConfirm(open);
+        }
+
+        void ShowConfirm(List<BagGoal> critical)
+        {
+            _confirm = UiKit.Box("Confirm", _win, new Color(0, 0, 0, ScreenDecor.A(0.6f)), raycast: true).rectTransform;
+            UiKit.Fill(_confirm);
+            var box = ScreenDecor.Rounded("Box", _confirm, new Color(0.09f, 0.13f, 0.14f, 0.99f)).rectTransform;
+            var panel = new Color(0.09f, 0.13f, 0.14f, 1);
+            box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, 0.5f); box.sizeDelta = new Vector2(600, 226);
+            var q = UiKit.Label("Q", box, BagCheck.Question(critical), 30, UiKit.Ink, style: FontStyle.Bold);
+            q.resizeTextForBestFit = true; q.resizeTextMinSize = 24; q.resizeTextMaxSize = 30;
+            UiKit.At(q.rectTransform, 36, 32, 528, 42);
+            // the other gaps (the ones the question names are not repeated)
+            var named = new HashSet<string>(critical.Select(c => c.Label));
+            var open = BagCheck.OpenLabels(_goals, _model.BagOf, _model.Items).Where(l => !named.Contains(l)).ToList();
+            UiKit.At(UiKit.Label("Open", box, BagCheck.OpenSummary(open), 20, UiKit.Dim).rectTransform, 36, 86, 528, 30);
+            var back = UiKit.Button("Back", box, "다시 보기", 24, UiKit.Teal, new Color(0.04f, 0.08f, 0.08f));
+            UiKit.At((RectTransform)back.transform, 36, 138, 256, 56);
+            back.onClick.AddListener(HideConfirm);
+            var go = UiKit.Button("Go", box, "그대로 나가기", 24, ScreenDecor.Over(panel, Color.white, 0.08f), UiKit.Ink);
+            UiKit.At((RectTransform)go.transform, 308, 138, 256, 56);
+            go.onClick.AddListener(Close);
+        }
+
+        void HideConfirm()
+        {
+            if (!_confirm) return;
+            var c = _confirm.gameObject; _confirm = null;
+            c.transform.SetParent(null, false); // detached first: Destroy is deferred
+            Destroy(c);
         }
 
         (Text, Image) Meter(RectTransform side, float y, string label)
@@ -170,10 +301,14 @@ namespace AiOn.UI
             // The list fits its goals (the evacuation bag has ten) and the help moves down under it instead of over it.
             bool tight = goals.Count > 6;
             float rowH = tight ? 28 : 32;
-            foreach (var (label, ok) in goals)
+            for (int gi = 0; gi < goals.Count; gi++)
             {
+                var (label, ok) = goals[gi];
                 string mark = ok == null ? "·" : ok.Value ? "<color=#3cc6b5>✓</color>" : "<color=#9aa6ad>○</color>";
-                var t = UiKit.Label("Goal", _goalList, $"{mark}  {label}", tight ? 20 : 22, ok == true ? UiKit.Ink : UiKit.Dim);
+                // an open goal whose item is packed says why it does not count yet
+                var why = ok == false && gi < _goals.Count ? BagCheck.GoalNote(_goals[gi], _model.BagOf, _model.Items) : null;
+                var tag = why != null ? $"  <size={(tight ? 16 : 17)}><color=#f2b33d>({why})</color></size>" : "";
+                var t = UiKit.Label("Goal", _goalList, $"{mark}  {label}{tag}", tight ? 20 : 22, ok == true ? UiKit.Ink : UiKit.Dim);
                 UiKit.Height(t, rowH);
             }
             float listH = Mathf.Max(236, goals.Count * rowH + Mathf.Max(0, goals.Count - 1) * 4);
@@ -214,6 +349,7 @@ namespace AiOn.UI
                 var spec = $"{BagDrill.FormatKg(it.WeightKg)} · {it.VolumeL.ToString(System.Globalization.CultureInfo.InvariantCulture)}L" + (note != "" && note != "기한 지남" ? $" · ({note})" : "");
                 var badges = string.Join(" ", BagDrill.ShownTags(it).Select(t => BagDrill.WarnTags.Contains(t)
                     ? $"<color=#f2b33d>! {BagDrill.TagName(t)}</color>" : $"<color=#7fb8c4>{BagDrill.TagName(t)}</color>"));
+                if (!it.Ready && _mode != "free") badges += $" <color=#f2b33d>! {BagCheck.NotReady}</color>"; // packed, but it does not count yet
                 bool showTip = !string.IsNullOrEmpty(it.Tip) && _mode != "free";
                 var arrow = inBag ? "←  " : "";
                 var tail = inBag ? "" : "  →";
@@ -248,7 +384,7 @@ namespace AiOn.UI
             foreach (var p in layout.Placed)
             {
                 var it = _model.Items.First(i => i.Id == p.Id);
-                var col = CategoryColor.TryGetValue(it.Tags[0], out var c) ? c : UiKit.Dim;
+                var col = it.Tags.Count > 0 && CategoryColor.TryGetValue(it.Tags[0], out var c) ? c : UiKit.Dim; // an item without tags (bad data) gets the plain colour
                 var piece = UiKit.Box("Piece_" + p.Id, _grid, new Color(col.r, col.g, col.b, 0.85f));
                 UiKit.At(piece.rectTransform, ox + p.X * cell + 3, oy + p.Y * cell + 3, p.W * cell - 6, p.H * cell - 6);
                 if (p.W * p.H >= 2)
@@ -320,7 +456,13 @@ namespace AiOn.UI
             if (_model == null || Time.unscaledTime - _openedAt < 0.2f) return; // the E that opened it
             var kb = Keyboard.current;
             if (kb == null) return;
-            if (kb.escapeKey.wasPressedThisFrame) { Close(); return; }
+            if (_confirm)
+            {
+                // the confirm is modal: Enter / Esc = 다시 보기 (the safe answer)
+                if (kb.escapeKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) HideConfirm();
+                return;
+            }
+            if (kb.escapeKey.wasPressedThisFrame) { TryClose(); return; }
 
             var list = (_bagPane ? _model.InBag : _model.AtHome).ToList();
             if (kb.downArrowKey.wasPressedThisFrame) { _sel = Mathf.Min(_sel + 1, Mathf.Max(0, list.Count - 1)); Render(); }

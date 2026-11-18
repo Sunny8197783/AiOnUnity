@@ -88,6 +88,7 @@ namespace AiOn.Story
                     var chips = res?["chips"] is JObject cj ? cj.ToObject<NoteChips>() : null;
                     Relay.MakeHandover(g, chips, Str(res?["text"]), res?["edited"] is JValue ed && ed.Type == JTokenType.Boolean && (bool)ed);
                     StoryCommon.DrainBattery(g, 2);
+                    ctx.Refresh();
                     ctx.Toast($"{ctx.Facts.Text("comms_text")}", "official", 5000);
                 }
             }
@@ -113,7 +114,9 @@ namespace AiOn.Story
                 ctx.Engine.TeleportTo(Cafe.X, ctx.Engine.PlayerY, Cafe.Z, Cafe.Yaw);
                 ctx.SetPlayer?.Invoke("seoyeon");
                 ctx.SpeedOverride = 0.55;
-                ctx.Refresh();
+                ctx.Refresh(); // the HUD drops 정민's bag and phone chips for 서연 (StoryDirector.Pov)
+                // her own goal from the first frame (정민's '대피소 안에서' stayed up through the re-read)
+                ctx.Objective("서연 · 카페 쉼표 앞", "정민에게서 온 문자를 다시 읽어 봅니다.", Array.Empty<ObjectiveStep>());
                 if (Relay.StoredHandover(ctx.G) != null) await Reread(ctx);
                 else await ctx.Card(new CardOptions
                 {
@@ -127,6 +130,7 @@ namespace AiOn.Story
             ctx.SetPlayer?.Invoke("jeongmin");
             g = ctx.G;
             g.Minute = Math.Max(g.Minute, ToMin(relay.ReceivedAt) + 5);
+            ctx.Refresh(); // 정민's own clock, bag and phone again
             ctx.Hud.SetChapter("2장", "정전과 경보");
             // Back to 정민: his own goal again, done (the original left 서연's goal on screen).
             ctx.Objective("대피소 안에서", "정민은 대피소에 자리를 잡았습니다.", new[] { new ObjectiveStep("명부 쓰기 (접수대)", true), new ObjectiveStep("자리 잡기", true) });

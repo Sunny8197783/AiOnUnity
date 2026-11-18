@@ -64,6 +64,8 @@ namespace AiOn.Levels.Crowd
             public List<Pt> Targets;
             /// <summary>brisk: respawn (default) | despawn | idle.</summary>
             public string Then = "respawn";
+            /// <summary>brisk + respawn: seconds (plus up to as much again, random) before an arrived member walks in again; null 0.5-1.5 s.</summary>
+            public double? RespawnDelay;
             public List<(PropMask prop, double prob)> Props;
             public List<(double x, double z, double? yaw)> Spots;
             public double? Standing, Y;
@@ -333,7 +335,7 @@ namespace AiOn.Levels.Crowd
                 a.State = StStand; a.HasGoal = false; a.StandAnim = Pick(new[] { "idle", "idle", "phone" });
                 a.Face = Math.Atan2(-(end.X - a.X), -(end.Z - a.Z)); return;
             }
-            a.State = StGone; a.Timer = 0.5 + R(); Show(a, false);
+            a.State = StGone; a.Timer = M.RespawnDelay is double rd ? rd + R() * rd : 0.5 + R(); Show(a, false);
         }
 
         void Stop(CrowdAgent a, double s)

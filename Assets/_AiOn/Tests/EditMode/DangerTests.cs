@@ -122,6 +122,36 @@ namespace AiOn.Tests
             }
         }
 
+        // Polish fix: the looter's body dies with the level, but the layer kept it while the player was indoors (Active() is
+        // town-only) and a bodiless '낯선 사람' fought on the player's return.
+        [Test]
+        public void Looter_IsDroppedWhenThePlayerLeavesTheLevel_AndNeverFightsAfterTheReturn()
+        {
+            var (host, ctx, layer, hurts) = Rig();
+            host.Run(async () =>
+            {
+                await ctx.Goto("town", "park");
+                layer.Trigger("looter");
+                Assert.That(layer.CurrentLooter, Is.Not.Null);
+                await ctx.Goto("apartment", "lobby");
+                host.RunFrames(5);
+                Assert.That(layer.CurrentLooter, Is.Null, "dropped while indoors");
+                await ctx.Goto("town", "park");
+                var roam = ctx.Roam(new RoamOptions { Doors = false, Tick = _ => host.FrameCount > 900 ? "done" : null });
+                await roam;
+            });
+            Assert.That(layer.CurrentLooter, Is.Null);
+            Assert.That(hurts.Where(h => h.why == "fight"), Is.Empty);
+            Assert.That(host.Talks.Where(t => t.Speaker == "낯선 사람"), Is.Empty);
+        }
+
+        [Test]
+        public void LooterBearing_IsAheadOrToTheSide_NeverBehind()
+        {
+            foreach (var r in new[] { 0.0, 0.25, 0.5, 0.75, 0.999 })
+                Assert.That(Math.Abs(Danger.LooterBearing(1.0, r) - 1.0), Is.LessThanOrEqualTo(0.7 + 1e-9));
+        }
+
         [Test]
         public void Blast_DamageByDistance_CrouchCutsIt_AndItIsRecorded()
         {

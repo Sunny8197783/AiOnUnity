@@ -90,6 +90,17 @@ namespace AiOn.Levels.Interiors
             return l;
         }
 
+        /// <summary>A battery unit's light: a wide spot aimed down from the fixture with a soft edge (no clipped hotspot on the
+        /// wall behind it, no silhouette of the player against it).</summary>
+        static Light DownLight(Transform parent, string name, Vector3 pos, Color color, float range, float angle = 150f)
+        {
+            var l = PointLight(parent, name, pos, color, range);
+            l.type = LightType.Spot;
+            l.transform.rotation = Quaternion.LookRotation(Vector3.down, Vector3.forward);
+            l.spotAngle = angle; l.innerSpotAngle = angle * 0.3f;
+            return l;
+        }
+
         static float IndoorLit => EnvironmentController.Instance ? EnvironmentController.Instance.IndoorLit : 1f;
         static bool GridPower => !EnvironmentController.Instance || EnvironmentController.Instance.power;
 
@@ -114,7 +125,9 @@ namespace AiOn.Levels.Interiors
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         static readonly Color DomeGlow = new Color(3.2f, 3.0f, 2.6f) * 0.55f;
         // Unity intensities for the original's fixtures (sensor 1.2, backup 1.6, x0.75 LIGHT_SCALE), matched to the grid lamps
-        const float SensorIntensity = 2.6f, SensorRange = 6.5f, BackupIntensity = 1.6f, BackupRange = 7f;
+        // The battery backups at about 40 % of the original's 1.6, as wide soft downlights: at full they were a clipped
+        // hotspot behind the player in the lobby and stairwell.
+        const float SensorIntensity = 2.6f, SensorRange = 6.5f, BackupIntensity = 0.75f, BackupRange = 6f;
 
         sealed class StockMesh { public L.StockKind Kind; public List<(Vector3, float, Vector3)> Units; public PartMesh Template; public MeshFilter Filter; public MeshRenderer Renderer; public int Shown = -1; }
         readonly List<StockMesh> _stock = new();
@@ -152,7 +165,7 @@ namespace AiOn.Levels.Interiors
             for (int i = 0; i < L.AptBackups.Length; i++)
             {
                 var b = L.AptBackups[i];
-                _backups.Add(new Fixture { At = b, Zone = L.AptZone(b.x, b.y, b.z), Light = PointLight(lights, "Backup_" + i, U(b.x, b.y - 0.4f, b.z), InteriorMeshes.Hex("#e6eeff"), BackupRange) });
+                _backups.Add(new Fixture { At = b, Zone = L.AptZone(b.x, b.y, b.z), Light = DownLight(lights, "Backup_" + i, U(b.x, b.y - 0.1f, b.z), InteriorMeshes.Hex("#e6eeff"), BackupRange) });
             }
 
             _fixtures.AddRange(_sensors); _fixtures.AddRange(_backups);
@@ -332,12 +345,18 @@ namespace AiOn.Levels.Interiors
             var root = new GameObject("StoreEmergency").transform;
             root.SetParent(transform, false);
             var at = new[] { new Vector3(0.6f, 2.5f, -0.67f), new Vector3(-2f, 2.43f, -8.57f), new Vector3(4.57f, 2.43f, -3.4f) };
-            for (int i = 0; i < at.Length; i++) _storeEmergency.Add(PointLight(root, "Emergency_" + i, U(at[i]), InteriorMeshes.Hex("#fff2dc"), 9f));
+            // '비상등만 켜져 있다': small dim pools under each unit, the rest of the shop in the dark
+            for (int i = 0; i < at.Length; i++) _storeEmergency.Add(DownLight(root, "Emergency_" + i, U(at[i]) + Vector3.down * 0.1f, InteriorMeshes.Hex("#fff2dc"), 4.5f, 130f));
         }
+
+        /// <summary>The store's key and fill with its power cut (a share of the env's).</summary>
+        public const float StoreDarkDim = 0.45f;
 
         void SetStorePower(bool on)
         {
-            foreach (var l in _storeEmergency) { l.enabled = !on; l.intensity = on ? 0 : 2.6f; }
+            foreach (var l in _storeEmergency) { l.enabled = !on; l.intensity = on ? 0 : 1.1f; }
+            // '비상등만 켜져 있다': the room's general light goes well under the battery units, so their pools show
+            AiOn.Levels.EnvironmentController.Instance?.SetRoomDim(on ? 1f : StoreDarkDim);
             var c = _npc?.Invoke("clerk");
             if (c != null) c.SetProp("flashlight", !on); // the clerk keeps a torch at hand in the dark shop
         }

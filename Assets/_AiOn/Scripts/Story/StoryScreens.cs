@@ -13,6 +13,27 @@ namespace AiOn.Story
     /// </summary>
     public static class StoryScreens
     {
+        /// <summary>
+        /// How long a time-skip line stays before it continues by itself (original ui/dialog.js timeSkip): reading time,
+        /// 1.4 s + 55 ms a character, held between 2.5 s and 7.5 s.
+        /// </summary>
+        public static int TimeSkipMs(string text) => System.Math.Max(2500, System.Math.Min(7500, 1400 + (text?.Length ?? 0) * 55));
+
+        /// <summary>
+        /// The time-skip group, centred on the screen as the original's .skip-inner: the from -> to line, 28 px, the
+        /// text, 36 px, the progress track, 22 px, the 계속 control. Returns each part's top edge (y up from the centre).
+        /// </summary>
+        public static float[] SkipLayout(float whenH, float bodyH, float trackH, float contH)
+        {
+            float gapBody = bodyH > 0 ? 28 : 0, total = whenH + gapBody + bodyH + 36 + trackH + 22 + contH;
+            var y = new float[4];
+            y[0] = total / 2;
+            y[1] = y[0] - whenH - gapBody;
+            y[2] = y[1] - bodyH - 36;
+            y[3] = y[2] - trackH - 22;
+            return y;
+        }
+
         public static void Register(UnityStoryHost host, GameSession session)
         {
             host.Screens["bag"] = o => Bag(o, session);

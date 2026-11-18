@@ -98,6 +98,16 @@ namespace AiOn.Game
             return e;
         }
 
+        /// <summary>
+        /// The one word for a stat (좋음 / 보통 / 나쁨), shared by the HUD bars and every card or debrief line so they never
+        /// disagree. Health is better high; thirst, fatigue and tension are better low. Bands: good &gt;= 67, &gt;= 34, else bad.
+        /// </summary>
+        public static string StatWord(string kind, double value)
+        {
+            double good = kind == "health" ? value : 100 - value;
+            return good >= 67 ? "좋음" : good >= 34 ? "보통" : "나쁨";
+        }
+
         public static string Hhmm(int minute) => $"{minute / 60:00}:{minute % 60:00}";
 
         public static string FormatClock(GameState g)

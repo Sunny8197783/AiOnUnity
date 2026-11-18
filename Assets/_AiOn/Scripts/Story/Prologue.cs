@@ -72,9 +72,12 @@ namespace AiOn.Story
 
             int sorted = 0; bool talked = false;
             ctx.Objective("대시보드 확인하기", "내 자리의 모니터를 확인합니다.", Steps(false, false, false));
+            // The way out is no prompt until the day's work is done (the first E near the door said "퇴근하기").
+            World.SetPointEnabled(ctx.Engine, "officeExit", false);
             await ctx.Roam(new RoamOptions
             {
                 Doors = false,
+                Tick = _ => { if (!talked) World.SetPointEnabled(ctx.Engine, "officeExit", false); return null; },
                 On =
                 {
                     ["desk"] = H(async () =>
@@ -86,18 +89,19 @@ namespace AiOn.Story
                             Body = { "각 신호를 확인된 사실 · 추정·해석 · 소문·미확인 가운데 하나로 나눠 보세요.", "정답보다 \"어떻게 알게 됐는가\"가 중요합니다." },
                             Actions = new List<CardAction> { new("ok", "나눠 보기", true) },
                         });
-                        int right = 0;
+                        int right = 0, nth = 0;
                         foreach (var s in Signals)
                         {
+                            nth++;
                             var pick = await ctx.Ui.Talk(new TalkOptions
                             {
-                                Speaker = s.From, Role = s.Meta, Lines = { s.Text }, Choices = Labels.Select(l => new TalkChoice(l.id, l.label)).ToList(),
+                                Speaker = s.From, Role = s.Meta, Progress = $"신호 {nth}/{Signals.Count}", Lines = { s.Text }, Choices = Labels.Select(l => new TalkChoice(l.id, l.label)).ToList(),
                             });
                             bool ok = pick == s.Answer;
                             right += ok ? 1 : 0;
                             ctx.Event("signal_sorted", new JObject { ["id"] = s.Id, ["pick"] = pick, ["ok"] = ok });
                             if (ok) ctx.Toast($"맞아요 · {LabelOf(s.Answer)}", "self", 2200); // only a miss stops to explain
-                            else await ctx.Ui.Talk(new TalkOptions { Speaker = $"\"{LabelOf(s.Answer)}\"에 가깝습니다", Role = LabelOf(s.Answer), Lines = { s.Why } });
+                            else await ctx.Ui.Talk(new TalkOptions { Speaker = $"\"{LabelOf(s.Answer)}\"에 가깝습니다", Role = LabelOf(s.Answer), Lines = { s.Why }, Tone = "miss" });
                             if (s.Answer == "fact") ctx.Note(s.Text, "site");
                         }
                         sorted = Signals.Count;
@@ -129,6 +133,7 @@ namespace AiOn.Story
                             },
                         });
                         talked = true;
+                        World.SetPointEnabled(ctx.Engine, "officeExit", true);
                         ctx.Objective("퇴근하기", "사무실 출입문으로 나갑니다.", Steps(true, true, false));
                         return null;
                     }),

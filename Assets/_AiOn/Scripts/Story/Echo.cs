@@ -195,6 +195,7 @@ namespace AiOn.Story
         EchoData _data;
         EchoRun _run; // the run being recorded
         string _shownLevel;
+        bool _told; // the original's shown.told: the 'traces' toast once per run, not on every level entry
         double _t, _lastSave;
 
         /// <summary>
@@ -256,7 +257,7 @@ namespace AiOn.Story
             _shownLevel = levelId;
             Shown = Echo.MarksFor(_data, levelId);
             Show?.Invoke(Shown);
-            if (Shown.Any) _ctx.Toast("이전 회차의 내가 남긴 흔적이 보인다. 그때의 나는 이 길로 걸었다.", "self", 5200);
+            if (Shown.Any && !_told) { _told = true; _ctx.Toast("이전 회차의 내가 남긴 흔적이 보인다. 그때의 나는 이 길로 걸었다.", "self", 5200); }
         }
 
         void OnFrame(double dt)
@@ -281,11 +282,11 @@ namespace AiOn.Story
             if (_run != null && Echo.Worth(_run)) { _data.Runs.Add(_run); if (_data.Runs.Count > Echo.Runs) _data.Runs.RemoveRange(0, _data.Runs.Count - Echo.Runs); }
             _run = new EchoRun();
             Save();
-            _shownLevel = null;
+            _shownLevel = null; _told = false;
         }
 
         /// <summary>Continuing a save keeps recording into the same run.</summary>
-        public void Resume() { _run ??= new EchoRun(); }
+        public void Resume() { _run ??= new EchoRun(); _told = false; }
 
         public void Death(string why)
         {

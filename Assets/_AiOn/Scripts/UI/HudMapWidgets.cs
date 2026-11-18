@@ -44,10 +44,37 @@ namespace AiOn.UI
             }
         }
 
-        static Sprite _disc, _ring;
+        static Sprite _disc, _ring, _rounded;
+
+        /// <summary>A white rounded rectangle (10 px corners) for sliced plates (the key strip).</summary>
+        public static Sprite RoundedSprite
+        {
+            get
+            {
+                if (_rounded) return _rounded;
+                const int n = 32; const float r = 10;
+                var t = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "HudRounded" };
+                var px = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float cx = Mathf.Clamp(x + 0.5f, r, n - r), cy = Mathf.Clamp(y + 0.5f, r, n - r);
+                        float dx = x + 0.5f - cx, dy = y + 0.5f - cy;
+                        float a = Mathf.Clamp01(r - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
+                        px[y * n + x] = new Color32(255, 255, 255, (byte)(a * 255));
+                    }
+                t.SetPixels32(px); t.Apply();
+                return _rounded = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
+            }
+        }
 
         /// <summary>An anti-aliased white disc (mask, badges).</summary>
         public static Sprite DiscSprite => _disc ? _disc : _disc = Make(r => Mathf.Clamp01(r));
+
+        static Sprite _soft;
+
+        /// <summary>A white disc that fades out over its outer half (a soft dark backing for floating text).</summary>
+        public static Sprite SoftSprite => _soft ? _soft : _soft = Make(r => Mathf.SmoothStep(0, 1, Mathf.Clamp01(r / 128f * 1.6f)));
 
         /// <summary>An anti-aliased white ring along the edge (the map's rim).</summary>
         public static Sprite RingSprite => _ring ? _ring : _ring = Make(r => Mathf.Clamp01(r) * Mathf.Clamp01(3.5f - r));
@@ -131,7 +158,7 @@ namespace AiOn.UI
             vh.Clear();
             var r = rectTransform.rect;
             float s = r.width / 360f;
-            Color32 clear = new(10, 15, 18, 0), band = new(10, 15, 18, 184);
+            Color32 clear = new(10, 15, 18, 0), band = new(10, 15, 18, 217); // 0.85: the names read over a white ceiling
             float xa = r.xMin + r.width * 0.15f, xb = r.xMin + r.width * 0.85f;
             HudDraw.Quad(vh, r.xMin, r.yMin, xa, r.yMax, clear, clear, band, band);
             HudDraw.Quad(vh, xa, r.yMin, xb, r.yMax, band);
@@ -164,6 +191,13 @@ namespace AiOn.UI
         readonly List<Box> _boxes = new();
         readonly List<Dot> _dots = new();
         float _yaw;
+
+        /// <summary>Drops the drawn plan (a new level: nothing of the last one shows while the first frame comes in).</summary>
+        public void Clear()
+        {
+            _boxes.Clear(); _dots.Clear();
+            SetVerticesDirty();
+        }
 
         /// <summary>Redraws from the Director's map frame (x, y, z, yaw, points, scale; original frame) and the level's layout.</summary>
         public void SetMap(JObject m, LevelLayout layout, Func<LevelLayout.SolidBox, bool> solidOff = null, List<LevelLayout.SolidBox> extra = null)
@@ -212,6 +246,8 @@ namespace AiOn.UI
             vh.Clear();
             var ctr = rectTransform.rect.center;
             float ui = rectTransform.rect.width / 184f;
+            // An opaque dark disc under the plan: the scene does not show through the walk zones.
+            HudDraw.Disc(vh, ctr.x, ctr.y, rectTransform.rect.width / 2, new Color32(8, 12, 15, 230), 48);
             foreach (var b in _boxes) HudDraw.Quad(vh, ctr.x + b.x0, ctr.y + b.y0, ctr.x + b.x1, ctr.y + b.y1, b.c);
             foreach (var d in _dots) HudDraw.Disc(vh, ctr.x + d.x, ctr.y + d.y, d.r, d.c);
             // The arrow points up (north) at yaw 0 and turns left with positive yaw; a dark rim first, then the white body.

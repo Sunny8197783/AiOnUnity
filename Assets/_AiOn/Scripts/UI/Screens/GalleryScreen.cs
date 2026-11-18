@@ -27,6 +27,7 @@ namespace AiOn.UI
             Eyebrow(Window, _v.Eyebrow, 48, 30, 900);
             Heading(Window, _v.Title, 48, 62, WindowW - 96);
             var col = DebriefUi.Scroll(Window, 48, 132, WindowW - 96, WindowH - 132 - 112, out var scroll, 8);
+            ScrollCue.Attach(scroll, UiKit.Panel); // a thin bar and a bottom fade while more follows
             Keys.Scroll = scroll;
             foreach (var r in _v.Rows) DebriefListRows.Add(col, r);
             Footer(("닫기", true, true, () => Finish(null)));

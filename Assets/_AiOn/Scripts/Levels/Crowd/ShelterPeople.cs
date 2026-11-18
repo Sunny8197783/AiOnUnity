@@ -107,6 +107,9 @@ namespace AiOn.Levels.Crowd
             b.X = x; b.Y = y; b.Z = z; b.Yaw = yaw; b.Anim = anim; b.Speed = 0; b.Visible = true; b.Snap = true;
         }
 
+        /// <summary>Port: the corner burns during the alert: the seated are on their feet, facing the fire.</summary>
+        public bool Alarm => _phase == "alert" && _fire;
+
         bool NearFire(Seat h) => _fire && Hypot(h.X - Fire.X, h.Z - Fire.Z) < FireClear;
         bool NearPlayer(Ev e) => _hasLast && Hypot(e.Home.X - _lastX, e.Home.Z - _lastZ) < 3;
         int Busy() { int k = 0; foreach (var e in _ev) if (e.Mode == "walk" || e.Mode == "away") k++; return k; }
@@ -156,6 +159,16 @@ namespace AiOn.Levels.Crowd
         {
             bool alert = _phase == "alert";
             for (int i = 0; i < _queue.Count; i++) _queue[i].Anim = alert && i == 1 ? "phone" : "idle";
+            // Port: alarm while the corner burns: the seated get to their feet and turn toward the fire; calm sits them back.
+            bool alarm = Alarm;
+            foreach (var l in _listeners) { l.Anim = alarm ? "idle" : "sitChair"; l.Snap = true; } // the radio's listeners get up too
+            foreach (var e in _ev)
+            {
+                if (e.Mode != "seat") continue;
+                if (alarm) { e.B.Anim = "idle"; e.B.Yaw = YawTo(Fire.X - e.B.X, Fire.Z - e.B.Z); e.B.Y = H(e.B.X, e.B.Z); }
+                else if (e.B.Anim != "sit") { e.B.Anim = "sit"; e.B.Yaw = e.Home.Yaw; e.B.Y = 0.012; }
+                e.B.Snap = true;
+            }
         }
 
         // Ramp B and ramp C ends are in plain view from the hall: use them only while the camera does not see that end
@@ -306,7 +319,7 @@ namespace AiOn.Levels.Crowd
                     _phase = s; ApplyPhase(); return true;
                 case "fire":
                     if (s != "none" && s != "large") return true;
-                    _fire = s == "large"; Reset(); return true;
+                    _fire = s == "large"; Reset(); ApplyPhase(); return true;
                 case "ways":
                     {
                         var w = new List<string>();
@@ -331,9 +344,11 @@ namespace AiOn.Levels.Crowd
             {
                 if (e.Mode == "walk") Step(e, dt);
                 else if (e.Mode == "away") { e.Away -= dt; if (e.Away <= 0) Go(e, SeatPath("toilet", e.Home), Done.Seat); }
-                else if (e.Mode == "seat") // turn back to the seat's facing after sitting down
+                else if (e.Mode == "seat") // turn back to the seat's facing after sitting down (on their feet, toward the fire)
                 {
-                    double a = Turn(e.B.Yaw, e.Home.Yaw);
+                    if (Alarm && e.B.Anim == "sit") { e.B.Anim = "idle"; e.B.Y = H(e.B.X, e.B.Z); } // one who sat down meanwhile gets up
+                    double want = Alarm ? YawTo(Fire.X - e.B.X, Fire.Z - e.B.Z) : e.Home.Yaw;
+                    double a = Turn(e.B.Yaw, want);
                     if (Math.Abs(a) > 0.01) e.B.Yaw += a * Math.Min(1, dt * 4);
                 }
             }

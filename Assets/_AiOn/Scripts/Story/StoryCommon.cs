@@ -119,7 +119,8 @@ namespace AiOn.Story
                     new JObject { ["freq"] = RadioFreq, ["name"] = $"재난방송 주관방송사 라디오 (게임 속 주파수 {F(RadioFreq)}MHz)", ["kind"] = "official", ["lines"] = new JArray(lines ?? Array.Empty<string>()) },
                 },
             });
-            if (dev == "phone") { DrainBattery(g, 3); ctx.Refresh(); }
+            // The app costs battery only once it was switched on (opening and closing it at once is free); a result without the flag (an older screen) still pays.
+            if (dev == "phone") { if (!(res is JObject rp && rp["powered"]?.Type == JTokenType.Boolean && !(bool)rp["powered"])) { DrainBattery(g, 3); ctx.Refresh(); } }
             else
             {
                 ctx.Rules.Use(g, "radio");

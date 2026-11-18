@@ -17,6 +17,10 @@ namespace AiOn.Story
     public static class DDay
     {
         public const int Alert = 20 * 60 + 5, Late = 20 * 60 + 30;
+        /// <summary>The quiet evening before the lights go (the original's 7 s felt like a cut; port pacing).</summary>
+        public const double EveningRoamSeconds = 15;
+        /// <summary>Until this minute evacuees keep coming out of the complex (town state trickle on); after it the street empties.</summary>
+        public const int TrickleEnd = Alert + 15;
 
         /// <summary>Math.random stand-in (far blasts). Tests may pin it.</summary>
         public static Func<double> Random = new System.Random().NextDouble;
@@ -130,7 +134,7 @@ namespace AiOn.Story
             await ctx.Roam(new RoamOptions
             {
                 Doors = false,
-                Tick = dt => (t += dt) > 7 ? "go" : null,
+                Tick = dt => (t += dt) > EveningRoamSeconds ? "go" : null, // or the first thing looked at
                 On = { ["*"] = _ => Task.FromResult<JToken>("go") },
             });
 
@@ -156,6 +160,7 @@ namespace AiOn.Story
             if (src == "flashlight") { ctx.Rules.Use(g, "flashlight"); ctx.Payoff("flashlight", "정전 직후 손전등을 바로 켰다"); }
             if (g.Knows("curtain")) ctx.Payoff("curtain", g.Knows("curtainSealed") ? "테이프로 가장자리를 막은 암막 커튼 덕분에 불빛이 밖으로 새지 않았다" : "암막 커튼을 쳐서 집 안 불빛이 밖으로 덜 새어 나갔다");
 
+            g.Minute = Math.Max(g.Minute, 19 * 60 + 41); ctx.Refresh(); // the clock reads what the choice says
             var done = new HashSet<string>();
             bool first = true;
             while (!done.Contains("radio") && !done.Contains("phone"))
@@ -181,6 +186,8 @@ namespace AiOn.Story
                 else if (pick == "phone")
                 {
                     StoryCommon.DrainBattery(g, 3);
+                    g.Minute = Math.Max(g.Minute, 19 * 60 + 46); // the text came in at 19:46
+                    ctx.Refresh();
                     await ctx.Modal(() => ctx.Ui.Open("phone", new JObject
                     {
                         ["battery"] = g.Phone.Battery, ["signal"] = "weak", ["mapApp"] = "fail",
@@ -201,14 +208,32 @@ namespace AiOn.Story
                 else if (pick == "hall")
                 {
                     ctx.Remember("hall_checked");
-                    var tip = await ctx.Say("3층 복도", new[] { "비상구 표시등만 초록색으로 켜져 있다. 304호 어르신이 문을 열고 내다본다.", "\"정전인가 봐요. 나는 초 하나 켜 놨어요.\"" },
-                        new List<TalkChoice> { new("tip", "\"어르신, 자리 비우실 땐 촛불 꼭 꺼 주세요\""), new("in", "그냥 들어간다") }, "정전");
-                    if (tip == "tip")
+                    // A look out of the door while the lines play: 304호 어르신 at her door, lit only by the exit sign.
+                    var hallCam = HallLook(ctx);
+                    if (hallCam != null)
                     {
-                        await ctx.Say("304호 어르신", new[] { "그래요, 그래요. 깜빡 잊을 수도 있으니 말해 주니 좋네." }, null, "3층 복도");
-                        ctx.Toast(ctx.Facts.Text("candle_rules"), "official", 6000);
-                        ctx.Remember("elder_candle_tip");
+                        ctx.SetLevelState("apartment", "elder304", "on");
+                        ctx.Hud.SetCinematic(true); // a cut, not a broken camera: no HUD panels or the living room's prompt over it
+                        ctx.Engine.SetCameraOverride(hallCam);
+                        // the exit sign's green and her candle: just enough to see her at the door
+                        ctx.Cine?.FillAt(Elder.HomeX - 1.2, Cutscenes.F3 + 2.2, Elder.HomeZ - 0.9, 3, "#b8f0c4", 5);
                     }
+                    string tip = null;
+                    try
+                    {
+                        tip = await ctx.Say("3층 복도", new[] { "비상구 표시등만 초록색으로 켜져 있다. 304호 어르신이 문을 열고 내다본다.", "\"정전인가 봐요. 나는 초 하나 켜 놨어요.\"" },
+                        new List<TalkChoice> { new("tip", "\"어르신, 자리 비우실 땐 촛불 꼭 꺼 주세요\""), new("in", "그냥 들어간다") }, "정전");
+                        if (tip == "tip")
+                        {
+                            await ctx.Say("304호 어르신", new[] { "그래요, 그래요. 깜빡 잊을 수도 있으니 말해 주니 좋네." }, null, "3층 복도");
+                            ctx.Remember("elder_candle_tip");
+                        }
+                    }
+                    finally
+                    {
+                        if (hallCam != null) { ctx.Engine.SetCameraOverride(null); ctx.Hud.SetCinematic(false); ctx.Cine?.FillAt(0, -500, 0, 0); ctx.SetLevelState("apartment", "elder304", "off"); }
+                    }
+                    if (tip == "tip") ctx.Toast(ctx.Facts.Text("candle_rules"), "official", 6000); // after the cut: the cinematic view hides toasts
                 }
                 else if (pick == "candle")
                 {
@@ -220,6 +245,16 @@ namespace AiOn.Story
                 }
             }
             ctx.Pass(Alert - g.Minute > 0 ? Alert - g.Minute : 0);
+        }
+
+        /// <summary>The 3F corridor seen from 302's door toward 304 (levels/apartment-corridor.js ELDER), or null off the apartment.</summary>
+        static CameraShot HallLook(StoryContext ctx)
+        {
+            var e = ctx.Engine;
+            if (e.LevelId != "apartment" || !e.TryGetSpawn("corridor3F", out var x, out _, out var z, out _)) return null;
+            const double ex = Elder.HomeX, ez = Elder.HomeZ, y = Cutscenes.F3;
+            // from 302's doorway (the spawn there, kept inside the 2 m corridor) down the open corridor to 304, long lens
+            return new CameraShot { X = x + 0.3, Y = y + 1.62, Z = Math.Max(-1.7, Math.Min(-0.3, z)), TargetX = ex, TargetY = y + 1.15, TargetZ = ez - 0.3, Fov = 30 };
         }
 
         static async Task AlertScene(StoryContext ctx)
@@ -244,7 +279,8 @@ namespace AiOn.Story
 
             // What is still open depends on this run's closures; nobody names a road that is closed tonight.
             var detour = string.Join("이나 ", new[] { ("danji", "단지길"), ("sijang", "시장길") }.Where(r => !closures.Contains(r.Item1)).Select(r => r.Item2));
-            bool left = false, inStairs = false;
+            bool left = false, inStairs = false, trickleOff = false;
+            ctx.SetLevelState("town", "trickle", "on");
             double outT = 0;
             var blasts = FarBlasts(ctx);
             var trail = ctx.Trail = new List<JObject>();
@@ -392,6 +428,10 @@ namespace AiOn.Story
                 {
                     var e = ctx.Engine;
                     if (left) elder.Tick(dt);
+                    // The bag is on the back: the spot by the door is no longer something to press E on.
+                    if (g.Knows("bagOn") && e.LevelId == "apartment") World.SetPointEnabled(e, "homeBag", false);
+                    // Evacuees keep trickling out of the complex for a quarter of an hour, then the street empties.
+                    if (!trickleOff && g.Minute > TrickleEnd) { trickleOff = true; ctx.SetLevelState("town", "trickle", "off"); }
                     if (e.LevelId == "town")
                     {
                         var last = trail.Count > 0 ? trail[^1] : null;
@@ -486,6 +526,8 @@ namespace AiOn.Story
             if (g.Knows("routeChecked")) ctx.Payoff("route", "확인해 둔 경로 덕분에 막힌 길에서 돌아갈 길을 알았다");
             ctx.Audio.Loop("siren", false);
             await ctx.Goto("shelter", route == "stairs" ? "stairs" : "ramp");
+            ctx.Refresh();
+            _ = ctx.Caption($"대피소 도착 · {Hhmm(g)}", null, 2600);
             return "arrived";
         }
 
@@ -539,7 +581,7 @@ namespace AiOn.Story
                         if (signed) { ctx.Toast("명부를 썼다."); return null; }
                         var (card, line) = ReceptionCard(g);
                         await ctx.Ui.Talk(new TalkOptions { Speaker = "대피소 관리자", Role = "접수대", Lines = { "이름이랑 연락처, 복용하는 약 있으면 여기 적어 주세요.", line } });
-                        if (card) ctx.Payoff("docs", "비상연락카드를 보고 명부를 바로 적었다"); else StoryCommon.DrainBattery(g, 2);
+                        if (card) ctx.Payoff("docs", "비상연락카드를 보고 명부를 바로 적었다"); else { StoryCommon.DrainBattery(g, 2); ctx.Refresh(); }
                         await ctx.Ui.Talk(new TalkOptions { Speaker = "대피소 관리자", Role = "접수대", Lines = { ctx.Facts.Text("shelter_rules"), ctx.Facts.Text("shelter_rumor") } });
                         signed = true;
                         var help = await ctx.Ui.Talk(new TalkOptions
@@ -620,6 +662,7 @@ namespace AiOn.Story
             ctx.OutdoorEnv = "blackout";
             ctx.SetLevelState("town", "crowd", "sparse");
             await ctx.Goto("apartment", "lobby");
+            ctx.Objective("집으로", "서연과 함께 3층까지 계단으로 올라갑니다.", new List<ObjectiveStep>());
             // An upgrade over the original (where she was only a voice here): 서연 stands at the stairs with her walker,
             // facing 정민, for this conversation.
             IStoryPerson sy = null;

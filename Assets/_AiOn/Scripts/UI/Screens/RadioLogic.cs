@@ -151,6 +151,8 @@ namespace AiOn.UI
 
         public double Freq { get; private set; }
         public bool Power { get; private set; }
+        /// <summary>The power was switched on at least once (the phone app costs battery only then).</summary>
+        public bool WasPowered { get; private set; }
         public bool Antenna { get; private set; }
         public bool CanPower { get; private set; }
         public bool Closed { get; private set; }
@@ -246,7 +248,7 @@ namespace AiOn.UI
         {
             if (!CanPower || Closed) return;
             if (Power) { Power = false; Refresh(); }
-            else { Power = true; Status = ""; Refresh(); }
+            else { Power = true; WasPowered = true; Status = ""; Refresh(); }
         }
 
         public void ToggleAntenna()
@@ -406,6 +408,7 @@ namespace AiOn.UI
                 ["official"] = Heard.Any(h => h.Station.Kind == "official"),
                 ["heard"] = new JArray(Heard.Select(h => h.Text)),
                 ["noted"] = new JArray(_noted.Select(x => NotedJson(x.text, x.station))),
+                ["powered"] = WasPowered,
             };
         }
 

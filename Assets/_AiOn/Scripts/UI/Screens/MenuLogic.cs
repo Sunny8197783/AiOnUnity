@@ -163,13 +163,8 @@ namespace AiOn.UI
             new MenuButton("menu?", "메인 메뉴로", ghost: true), // opens the confirm box
         };
 
-        public static readonly string[][] PauseKeys =
-        {
-            new[] { "WASD · 방향키", "이동" }, new[] { "Shift", "달리기 (기력)" }, new[] { "Space", "점프" },
-            new[] { "마우스 (클릭 후) · Alt+방향키", "둘러보기" }, new[] { "E · Enter", "살피기 · 대화" },
-            new[] { "F", "손전등 · 휴대폰 불빛" }, new[] { "P", "휴대폰 · FM 라디오" }, new[] { "Tab", "수첩" },
-            new[] { "I", "소지품" }, new[] { "M", "지도" }, new[] { "V", "1인칭 / 3인칭" }, new[] { "H", "조작법" }, new[] { "Esc", "이 메뉴" },
-        };
+        /// <summary>The pause key list, from the one key table (UiKeys) so Q/G/C/X/B and later keys show here too.</summary>
+        public static readonly string[][] PauseKeys = UiKeys.PauseRows();
 
         /// <summary>Esc in the pause menu: closes the confirm box if open (null = stay), else resumes.</summary>
         public static string PauseEscape(ref bool confirmOpen)
@@ -274,6 +269,16 @@ namespace AiOn.UI
         };
         public static readonly string[] Profiles = { "none", "mobility", "wheelchair", "lowvision", "deaf", "guardian" };
 
+        /// <summary>The experience modes with their one-line subtitles (the settings radio and the first-run card's chips).</summary>
+        public static readonly RadioOption[] ProfileOptions =
+        {
+            new("none", "기본"), new("mobility", "보행 장애", "달리기 불가 · 느린 걸음"), new("wheelchair", "휠체어", "앉은 눈높이 · 계단 불가"),
+            new("lowvision", "저시력", "흐린 시야 · 음성 안내"), new("deaf", "청각 장애", "소리 없음 · 자막과 신호"), new("guardian", "보호자 동반", "지체 장애 · 함께 걷기"),
+        };
+
+        /// <summary>A profile's subtitle, or null (기본 has none).</summary>
+        public static string ProfileSub(string id) => ProfileOptions.FirstOrDefault(o => o.Value == id)?.Sub;
+
         public const string Eyebrow = "설정";
         public const string Title = "보기·소리·조작·접근성";
         public const string ControlsLegend = "조작";
@@ -314,11 +319,7 @@ namespace AiOn.UI
                     Note = $"{(UiJs.Truthy(Cur["qualityAuto"]) ? "처음 실행할 때 이 컴퓨터에 맞춰 골랐어요. " : "")}화면이 자주 멈추면 한 단계씩 자동으로 낮춥니다. 사람 수·조명 수·텍스처는 다음 장소로 이동할 때부터 바뀝니다." },
                 new() { Name = "view", Legend = "시점", Options = new[] { new RadioOption("third", "3인칭", "어깨 너머"), new RadioOption("first", "1인칭", "정민의 눈") } },
                 new() { Name = "textScale", Legend = "글자 크기", Options = new[] { new RadioOption("0.9", "작게"), new RadioOption("1", "보통"), new RadioOption("1.15", "크게"), new RadioOption("1.3", "아주 크게") } },
-                new() { Name = "profile", Legend = "체험 모드", Note = "몸과 감각의 조건에 따라 같은 길도 달라집니다.", Options = new[]
-                {
-                    new RadioOption("none", "기본"), new RadioOption("mobility", "보행 장애", "달리기 불가 · 느린 걸음"), new RadioOption("wheelchair", "휠체어", "앉은 눈높이 · 계단 불가"),
-                    new RadioOption("lowvision", "저시력", "흐린 시야 · 음성 안내"), new RadioOption("deaf", "청각 장애", "소리 없음 · 자막과 신호"), new RadioOption("guardian", "보호자 동반", "지체 장애 · 함께 걷기"),
-                } },
+                new() { Name = "profile", Legend = "체험 모드", Note = "몸과 감각의 조건에 따라 같은 길도 달라집니다.", Options = ProfileOptions },
             };
             foreach (var g in LeftRadios)
             {

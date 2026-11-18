@@ -20,6 +20,8 @@ namespace AiOn.Settings
             Time.timeScale = 1f;
             AudioListener.pause = false;
             InputGate.Clear();
+            AiOn.UI.UiScreen.ResetModals(); // a card or time skip torn down mid-await never pops its count
+            AiOn.UI.GameHud.Cinematic = false;
             if (EnvironmentController.Instance) EnvironmentController.Instance.SetSmoke(0); // its statics outlive the scene
             // The persistent scene's roots (story host, player, camera, overlay, systems, cutscene canvases): found
             // through a probe moved there, then destroyed (deferred to the end of the frame, before the load runs).

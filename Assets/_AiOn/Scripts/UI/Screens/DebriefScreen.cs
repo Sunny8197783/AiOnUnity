@@ -39,14 +39,16 @@ namespace AiOn.UI
         public static readonly Color Accent = Hex("#f2b33d");
         public static readonly Color TextDim = Hex("#b8c5c9");
         public static readonly Color Muted = Hex("#8ea0a6");
-        public static readonly Color Line = new(1, 1, 1, 0.04f);
-        public static readonly Color PayoffBg = new(0.95f, 0.70f, 0.24f, 0.10f);
+        // Faint light fills over the dark panel are pre-mixed opaque (ScreenDecor.Over): translucent, they blend in linear
+        // space and read two to three times as strong (the .10 amber payoff box turned a mustard bar).
+        public static readonly Color Line = ScreenDecor.Over(UiKit.Panel, Color.white, 0.04f);
+        public static readonly Color PayoffBg = ScreenDecor.Over(UiKit.Panel, new Color(0.95f, 0.70f, 0.24f), 0.10f);
         public static readonly Color Paper = Hex("#f4f0e7");
         public static readonly Color PaperInk = Hex("#1c2326");
         public static readonly Color PaperDim = Hex("#5b666b");
         public static readonly Color PaperHead = Hex("#8a4f00");
         public static readonly Color Blue = Hex("#5aa6ff");
-        public static readonly Color Ghost = new(1, 1, 1, 0.08f);
+        public static readonly Color Ghost = ScreenDecor.Over(UiKit.Panel, Color.white, 0.08f);
 
         /// <summary>A scrolling column in the given rectangle of parent (top-left layout); returns its content and ScrollRect.</summary>
         public static RectTransform Scroll(RectTransform parent, float x, float y, float w, float h, out ScrollRect scroll, float spacing = 10)
@@ -181,6 +183,22 @@ namespace AiOn.UI
             return made;
         }
 
+        /// <summary>
+        /// Sizes the window to its scrolling content (between min and max, centred on screen): a short card is not a tall
+        /// box with half of it empty. top / bottom are the space above the list and below it (the footer).
+        /// </summary>
+        protected void FitHeight(RectTransform content, float top, float bottom, float min = 420, float max = 940)
+        {
+            var area = (RectTransform)content.parent.parent;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+            // 4 px of slack when it fits: a view exactly the content's height shows a full-length scrollbar on any
+            // sub-pixel excess (ScrollRect's AutoHide)
+            float want = top + LayoutUtility.GetPreferredHeight(content) + bottom;
+            float h = Mathf.Clamp(want < max ? want + 4 : want, min, max);
+            Window.sizeDelta = new Vector2(Window.sizeDelta.x, h);
+            area.sizeDelta = new Vector2(area.sizeDelta.x, h - top - bottom);
+        }
+
         protected Text Eyebrow(RectTransform parent, string text, float x, float y, float w)
         {
             var t = UiKit.Label("Eyebrow", parent, text ?? "", 21, DebriefUi.Accent, style: FontStyle.Bold);
@@ -230,6 +248,7 @@ namespace AiOn.UI
 
             var col = DebriefUi.Scroll(Window, 48, 30, WindowW - 96, WindowH - 30 - 112, out var scroll, 10);
             Keys.Scroll = scroll;
+            ScrollCue.Attach(scroll, UiKit.Panel);
             DebriefUi.Para(col, _v.Eyebrow, 21, DebriefUi.Accent, FontStyle.Bold);
             DebriefUi.Para(col, _v.Title, 38, UiKit.Ink, FontStyle.Bold);
             DebriefUi.Para(col, _v.Lead, 23, DebriefUi.TextDim);
@@ -250,6 +269,7 @@ namespace AiOn.UI
                     DebriefUi.Link(row, s.Url);
                 }
             }
+            FitHeight(col, 30, 112);
             Footer(("메인 메뉴", false, false, () => Go("menu")), ("체크포인트에서 다시", true, true, () => Go("retry")));
         }
 
@@ -275,21 +295,28 @@ namespace AiOn.UI
         {
             var col = DebriefUi.Scroll(Window, 48, 30, WindowW - 96, WindowH - 30 - 112, out var scroll, 8);
             Keys.Scroll = scroll;
+            ScrollCue.Attach(scroll, UiKit.Panel);
             DebriefUi.Para(col, _v.Eyebrow, 21, DebriefUi.Accent, FontStyle.Bold);
             DebriefUi.Para(col, _v.Title, 38, UiKit.Ink, FontStyle.Bold);
             if (_v.Payoffs.Count > 0)
             {
                 UiKit.Height(DebriefUi.Para(col, _v.PayoffsTitle, 24, UiKit.Ink, FontStyle.Bold), 48);
-                foreach (var p in _v.Payoffs)
+                // one heading per preparation, its moments under it (not "비상가방" repeated on every row)
+                foreach (var (head, items) in _v.PayoffGroups())
                 {
-                    var row = DebriefUi.Card(col, DebriefUi.PayoffBg, 20, 12, 2);
+                    var row = DebriefUi.Card(col, DebriefUi.PayoffBg, 20, 12, 4);
                     var edge = UiKit.Box("Edge", row, DebriefUi.Accent).rectTransform;
                     edge.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     edge.anchorMin = Vector2.zero; edge.anchorMax = new Vector2(0, 1); edge.pivot = new Vector2(0, 0.5f);
                     edge.offsetMin = Vector2.zero; edge.offsetMax = new Vector2(4, 0);
-                    UiKit.Label("Prep", row, p.Bold, 22, DebriefUi.Accent, style: FontStyle.Bold);
-                    UiKit.Label("Moment", row, p.Text, 22, UiKit.Ink);
-                    if (p.Small != null) UiKit.Label("Cause", row, $"<color={DebriefUi.Rgb(DebriefUi.Accent)}>← </color>{p.Small}", 19, DebriefUi.TextDim);
+                    UiKit.Label("Prep", row, head, 22, DebriefUi.Accent, style: FontStyle.Bold);
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        var p = items[i];
+                        var lead = items.Count > 1 ? $"<color={DebriefUi.Rgb(DebriefUi.Accent)}>·</color>  " : "";
+                        UiKit.Label("Moment", row, lead + p.Text, 22, UiKit.Ink);
+                        if (p.Small != null) UiKit.Label("Cause", row, $"{(items.Count > 1 ? "    " : "")}<color={DebriefUi.Rgb(DebriefUi.Accent)}>← </color>{p.Small}", 19, DebriefUi.TextDim);
+                    }
                 }
             }
             UiKit.Height(DebriefUi.Para(col, _v.LinesTitle, 24, UiKit.Ink, FontStyle.Bold), 48);
@@ -297,6 +324,7 @@ namespace AiOn.UI
                 foreach (var t in _v.Lines)
                     DebriefUi.Para(col, $"<color={DebriefUi.Rgb(DebriefUi.Accent)}><b>·</b></color>  {t}", 22, DebriefUi.TextDim);
             else DebriefUi.Para(col, _v.Empty, 22, DebriefUi.Muted);
+            FitHeight(col, 30, 112);
             Footer(("다음으로", true, true, () => { if (Ready) Finish("next"); }));
         }
     }
@@ -324,6 +352,9 @@ namespace AiOn.UI
             UiKit.At(paper, 0, 0, WindowW, WindowH - 120);
             var col = DebriefUi.Scroll(paper, 56, 28, WindowW - 112, WindowH - 120 - 40, out var scroll, 8);
             Keys.Scroll = scroll;
+            ScrollCue.Attach(scroll, DebriefUi.Paper);
+            scroll.verticalScrollbar.GetComponent<Image>().color = new Color(0, 0, 0, 0.06f); // dark on the paper
+            scroll.verticalScrollbar.handleRect.GetComponent<Image>().color = new Color(0, 0, 0, 0.3f);
 
             DebriefUi.Para(col, _v.Kicker, 19, DebriefUi.PaperDim, FontStyle.Bold);
             DebriefUi.Para(col, _v.Title, 42, DebriefUi.PaperInk, FontStyle.Bold);
@@ -342,6 +373,30 @@ namespace AiOn.UI
             buttons.Add(("처음부터 다시", true, true, () => Go("restart")));
             var made = Footer(buttons.ToArray());
             if (!string.IsNullOrEmpty(_v.Share)) copy = made[0];
+            // a silent hold on the record before anything can be pressed: the climax lands, then the buttons fade in
+            _buttons = made;
+            foreach (var b in made)
+            {
+                b.interactable = false;
+                b.gameObject.AddComponent<CanvasGroup>().alpha = 0;
+            }
+        }
+
+        const float Hold = 1.5f, FadeIn = 0.4f;
+        List<Button> _buttons;
+        bool _armed;
+
+        protected override void Update()
+        {
+            if (!_armed && _buttons != null)
+            {
+                float t = Time.unscaledTime - OpenedAt;
+                float a = Mathf.Clamp01((t - Hold) / FadeIn);
+                foreach (var b in _buttons) if (b) b.GetComponent<CanvasGroup>().alpha = a;
+                if (t >= Hold) foreach (var b in _buttons) if (b) b.interactable = true;
+                if (a >= 1) _armed = true;
+            }
+            base.Update();
         }
 
         void Section(RectTransform col, DebriefSection s)
@@ -368,7 +423,7 @@ namespace AiOn.UI
             if (s.Tail != null) UiKit.Label("Tail", box, s.Tail.Text, 21, s.TailMuted ? DebriefUi.PaperDim : DebriefUi.PaperInk);
         }
 
-        void Go(string id) { if (Ready) Finish(id); }
+        void Go(string id) { if (Ready && Time.unscaledTime - OpenedAt >= Hold) Finish(id); }
 
         void Copy(Button b)
         {

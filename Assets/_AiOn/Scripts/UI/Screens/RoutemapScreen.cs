@@ -63,12 +63,14 @@ namespace AiOn.UI
         {
             bool view = _req.View;
             Title(RoutemapLogic.Eyebrow(view), RoutemapLogic.Heading(view));
-            if (_req.Mode != null && RoutemapLogic.ModeText.TryGetValue(_req.Mode, out var modeText))
+            // The help-ladder tag (안내 있음 / 힌트 가능 / 혼자 판단) as a rounded tag, not a button. Just looking at the map
+            // (view) has no ladder, and a lone '보기' box there read as a button that did nothing, so it is left out.
+            if (!view && _req.Mode != null && RoutemapLogic.ModeText.TryGetValue(_req.Mode, out var modeText))
             {
                 var c = _req.Mode == "guided" ? UiKit.Teal : _req.Mode == "hint" ? UiKit.Amber : Muted;
-                var chip = UiKit.Box("Mode", Window, new Color(c.r, c.g, c.b, 0.16f)).rectTransform;
-                UiKit.At(chip, 1540, 34, 140, 40);
-                UiKit.Fill(UiKit.Label("Text", chip, modeText, 22, c, TextAnchor.MiddleCenter).rectTransform);
+                var chip = ScreenDecor.Rounded("Mode", Window, new Color(c.r, c.g, c.b, 0.16f)).rectTransform;
+                UiKit.At(chip, 1540, 40, 140, 36);
+                UiKit.Fill(UiKit.Label("Text", chip, modeText, 20, c, TextAnchor.MiddleCenter, FontStyle.Bold).rectTransform);
             }
             var eyebrow = Window.Find("Kicker")?.GetComponent<Text>();
             if (eyebrow) eyebrow.color = UiKit.Amber; // .mg-eyebrow is amber
@@ -142,7 +144,8 @@ namespace AiOn.UI
                 for (int i = 0; i < n; i++) RouteRow(i);
             }
 
-            // Shelter entrances
+            // Shelter entrances (24 px above each section head: 16 + the list's 8 px spacing)
+            if (_side.childCount > 0) SectionGap();
             UiKit.Height(UiKit.Label("GatesHead", _side, $"<b>{RoutemapLogic.GatesHead}</b>", 23, UiKit.Ink), 38);
             foreach (var (state, icon, text) in RoutemapLogic.GateLines(_req.Gates))
             {
@@ -156,15 +159,18 @@ namespace AiOn.UI
             }
 
             // Known closures
+            SectionGap();
             UiKit.Height(UiKit.Label("ClosuresHead", _side, $"<b>{RoutemapLogic.ClosuresHead}</b>", 23, UiKit.Ink), 38);
             var closures = RoutemapLogic.ClosureLines(_req.Shown);
             if (closures.Count == 0) UiKit.Label("None", _side, RoutemapLogic.NoClosures, 20, Muted);
             foreach (var c in closures) UiKit.Label("Closure", _side, "⊘ " + c, 21, new Color(1f, 0.69f, 0.7f));
 
             // Legend
-            UiKit.Height(UiKit.Rect("Gap", _side), 4);
+            SectionGap();
             UiKit.Label("Legend", _side, RoutemapLogic.Legend, 18, Muted);
         }
+
+        void SectionGap() => UiKit.Height(UiKit.Rect("Gap", _side), 16);
 
         void RouteRow(int i)
         {
@@ -323,6 +329,14 @@ namespace AiOn.UI
                         t.horizontalOverflow = HorizontalWrapMode.Overflow;
                         t.supportRichText = false;
                         UiKit.At(t.rectTransform, s.X - 200, s.Y - size, 400, size * 2);
+                        if (s.Bg.A > 0)
+                        {
+                            // a dark pill behind the label, sized to the real text, drawn just before it
+                            float w = t.preferredWidth + 10, h = size * 1.3f;
+                            var pill = ScreenDecor.Rounded("Pill", parent, C(s.Bg));
+                            UiKit.At(pill.rectTransform, s.X - w / 2, s.Y - h / 2, w, h);
+                            pill.transform.SetSiblingIndex(t.transform.GetSiblingIndex());
+                        }
                         var outline = t.gameObject.AddComponent<Outline>();
                         outline.effectColor = C(s.Outline);
                         float d = Mathf.Max(1f, size * 0.12f);

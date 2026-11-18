@@ -31,15 +31,24 @@ namespace AiOn.UI
                 if (_itemPrompt == value) return;
                 _itemPrompt = value;
                 const string key = "G · ";
-                _itemPromptText = string.IsNullOrEmpty(value) ? null : value.StartsWith(key, StringComparison.Ordinal) ? $"<b>G</b>   {value.Substring(key.Length)}" : value;
+                _itemPromptText = string.IsNullOrEmpty(value) ? null : value.StartsWith(key, StringComparison.Ordinal) ? $"<color=#3cc6b5><b>G</b></color>   {value.Substring(key.Length)}" : value;
             }
         }
-        string _itemPrompt, _itemPromptText;
+        string _itemPrompt, _itemPromptText, _promptLabel;
+        AiOn.Interaction.InteractionPoint _promptFor;
         public string PromptText => _prompt && _prompt.gameObject.activeSelf ? _prompt.text : null;
         public string DialogLine => DialogOpen ? _line.text : null;
         public string ToastText => _toast && _toast.gameObject.activeSelf ? _toast.text : null;
 
         Font _font;
+        CanvasGroup _group;
+        RectTransform _promptBg;
+        /// <summary>A cutscene runs (StoryOverlay.SetCinematic): no dot or prompt on any GameHud, the persistent one or a level's own.</summary>
+        public static bool Cinematic { get; set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { Cinematic = false; }
+        string _promptSized;
         Text _prompt, _speaker, _role, _line, _counter, _toast;
         GameObject _dialog, _dot;
         readonly List<string> _lines = new();
@@ -78,12 +87,23 @@ namespace AiOn.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(referenceHeight * 16f / 9f, referenceHeight);
             scaler.matchWidthOrHeight = 1f;
+            _group = gameObject.AddComponent<CanvasGroup>(); // fades out under modal windows
+            _group.blocksRaycasts = false; _group.interactable = false;
 
             _dot = Panel("Dot", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(6, 6), new Color(1, 1, 1, 0.7f)).gameObject;
 
-            var promptBg = Panel("Prompt", transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 230), new Vector2(560, 64), new Color(0.05f, 0.08f, 0.09f, 0.78f));
-            _prompt = Label("Text", promptBg, 30, TextAnchor.MiddleCenter, Color.white);
-            Stretch(_prompt.rectTransform, 16, 0);
+            // A pill (hud.js .hud-prompt: dark, teal edge) sized to its words. Third person: just clear of the character's
+            // head, not across its back; first person: low (the original's bottom 20 %), off the thing under the dot.
+            // The plate is the teal edge, an opaque dark fill sits 2 px inside it: an Outline effect under a translucent
+            // fill showed through as a teal box.
+            var promptBg = Panel("Prompt", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, PromptYThird), new Vector2(PromptMinWidth, 54), new Color(0.24f, 0.78f, 0.71f, 0.6f));
+            var pimg = promptBg.GetComponent<Image>(); pimg.sprite = HudDraw.RoundedSprite; pimg.type = Image.Type.Sliced;
+            var pfill = Panel("Fill", promptBg, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.04f, 0.06f, 0.07f, 1f));
+            Stretch(pfill, 2, 2);
+            var fimg = pfill.GetComponent<Image>(); fimg.sprite = HudDraw.RoundedSprite; fimg.type = Image.Type.Sliced;
+            _promptBg = promptBg;
+            _prompt = Label("Text", promptBg, 26, TextAnchor.MiddleCenter, Color.white);
+            Stretch(_prompt.rectTransform, PromptPad, 0);
             promptBg.gameObject.SetActive(false);
             _prompt = promptBg.GetComponentInChildren<Text>(true);
 
@@ -160,6 +180,19 @@ namespace AiOn.UI
             rt.sizeDelta = size;
         }
 
+        const float PromptMinWidth = 280, PromptMaxWidth = 900, PromptPad = 24, PromptYThird = -44, PromptYFirst = -305;
+
+        /// <summary>Cutscene on / off: the dot and the prompt stay off while it runs (the same static flag for every HUD).</summary>
+        public void SetCinematic(bool on) => Cinematic = on;
+
+        void SizePrompt()
+        {
+            if (ReferenceEquals(_promptSized, _prompt.text)) return;
+            _promptSized = _prompt.text;
+            float w = Mathf.Clamp(Mathf.Ceil(_prompt.preferredWidth) + PromptPad * 2 + 4, PromptMinWidth, PromptMaxWidth);
+            _promptBg.sizeDelta = new Vector2(w, _promptBg.sizeDelta.y);
+        }
+
         // ---------- behaviour ----------
 
         /// <summary>Shows a conversation or description; onDone runs after the last line.</summary>
@@ -208,14 +241,31 @@ namespace AiOn.UI
             if (!Current) Current = this; // a level scene's own HUD took Current on load and dropped it when it was removed
             if (DialogOpen && Time.unscaledTime >= _armedAt && AdvancePressed()) Advance();
 
+            // The HUD goes under a modal window (the window's own shade is enough); a dialog of this HUD keeps it up.
+            float target = DialogOpen ? 1f : HudVisibility.LayerAlpha(UiScreen.OpenCount);
+            if (_group.alpha != target) _group.alpha = Mathf.MoveTowards(_group.alpha, target, Time.unscaledDeltaTime / 0.15f);
+
+            // The dot and the prompt only in free play: not in a cutscene, under a window or over a dialog.
+            bool pointer = HudVisibility.Pointer(Cinematic, UiScreen.OpenCount, DialogOpen || StoryOverlay.TalkOpen);
             var p = interactor ? interactor.Current : null;
-            bool showPrompt = p != null && !DialogOpen;
+            bool showPrompt = pointer && p != null;
             // app.js: a loose thing in reach ("G · 벽돌 줍기") shows when no point is in reach
-            bool showItem = !showPrompt && !DialogOpen && !string.IsNullOrEmpty(ItemPrompt) && !AiOn.Player.InputGate.Blocked;
-            _prompt.transform.parent.gameObject.SetActive(showPrompt || showItem);
-            if (showPrompt) _prompt.text = $"<b>E</b>   {p.label}";
-            else if (showItem && _prompt.text != _itemPromptText) _prompt.text = _itemPromptText;
-            _dot.SetActive(!DialogOpen);
+            bool showItem = pointer && !showPrompt && !string.IsNullOrEmpty(ItemPrompt) && !AiOn.Player.InputGate.Blocked;
+            var plate = _promptBg.gameObject;
+            if (plate.activeSelf != (showPrompt || showItem)) plate.SetActive(showPrompt || showItem);
+            if (showPrompt)
+            {
+                if (!ReferenceEquals(p, _promptFor) || p.label != _promptLabel) { _promptFor = p; _promptLabel = p.label; _prompt.text = $"<color=#3cc6b5><b>E</b></color>   {p.label}"; }
+            }
+            else if (showItem && _prompt.text != _itemPromptText) { _prompt.text = _itemPromptText; _promptFor = null; }
+            if (showPrompt || showItem)
+            {
+                SizePrompt();
+                var host = AiOn.Story.UnityStoryHost.Instance;
+                float py = host && host.View == "first" ? PromptYFirst : PromptYThird;
+                if (_promptBg.anchoredPosition.y != py) _promptBg.anchoredPosition = new Vector2(0, py);
+            }
+            if (_dot.activeSelf != pointer) _dot.SetActive(pointer);
 
             if (_toast.transform.parent.gameObject.activeSelf && Time.unscaledTime > _toastUntil)
                 _toast.transform.parent.gameObject.SetActive(false);

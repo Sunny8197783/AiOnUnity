@@ -46,7 +46,7 @@ namespace AiOn.Tests
             Assert.That(confirm, Is.False);
             Assert.That(MenuLogic.PauseEscape(ref confirm), Is.EqualTo("resume"));
             Assert.That(MenuLogic.PauseButtons().Select(x => x.Id), Is.EqualTo(new[] { "resume", "settings", "save", "lounge", "menu?" }));
-            Assert.That(MenuLogic.PauseKeys.Length, Is.EqualTo(13));
+            Assert.That(MenuLogic.PauseKeys.Length, Is.EqualTo(UiKeys.All.Length));
         }
 
         // ---------- settings ----------
