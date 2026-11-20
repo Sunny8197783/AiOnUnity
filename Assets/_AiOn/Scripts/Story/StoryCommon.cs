@@ -149,6 +149,7 @@ namespace AiOn.Story
             var g = ctx.G;
             GameRules.RecordEvent(g, "sms", new JObject { ["kind"] = kind, ["time"] = time });
             if (g.Phone.Battery <= 0) { ctx.Toast("휴대폰이 꺼져 있어 문자를 볼 수 없다. 주변 안내를 따른다.", "site"); return; }
+            AiOn.Rendering.AtmosphereDirector.Glitch(0.35f); // the alert tears the picture for a moment (play mode only)
             ctx.Audio.Cue("phoneAlert", new JObject { ["kind"] = kind == "위급재난문자" ? "emergency" : "safety" });
             ctx.Note(text, "official");
             await ctx.Modal(() => ctx.Ui.Open("emergencyAlert", new JObject { ["kind"] = kind, ["text"] = text, ["time"] = time }));

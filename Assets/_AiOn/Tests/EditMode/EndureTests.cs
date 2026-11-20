@@ -20,6 +20,13 @@ namespace AiOn.Tests
 {
     public class EndureTests
     {
+        // The chapter as the original had it: without the competition upgrade's 살펴서 대피 step (LookFirstSceneTests
+        // plays it) and with the original fact toast at the elevator during the smoke escape.
+        Func<StoryContext, bool, System.Threading.Tasks.Task<LookFirstLogic.Outcome>> _look;
+        bool _stops;
+        [SetUp] public void WithoutTheLookFirstStep() { _look = Endure.LookPart; _stops = Escape.NeighbourStops; Endure.LookPart = null; Escape.NeighbourStops = false; }
+        [TearDown] public void PutTheStepBack() { Endure.LookPart = _look; Escape.NeighbourStops = _stops; }
+
         static JObject _golden;
         // Polish pass (port upgrades the original did not have): the wait in the water queue, the knock before 서연's
         // doorway talk, and the afternoon / night shown as time passing. The golden comparison leaves them out.

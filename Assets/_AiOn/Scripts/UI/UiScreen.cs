@@ -20,7 +20,7 @@ namespace AiOn.UI
         protected float OpenedAt { get; private set; }
 
         TaskCompletionSource<object> _done;
-        bool _wasLocked, _closed, _counted;
+        bool _closed, _counted;
 
         /// <summary>Modal windows open now: UiScreens plus the overlay's story cards and time skips (PushModal).</summary>
         public static int OpenCount { get; private set; }
@@ -74,10 +74,11 @@ namespace AiOn.UI
             s._counted = true;
             PushModal();
             UiSound.Play("open");
-            s._wasLocked = Cursor.lockState == CursorLockMode.Locked;
-            PlayerInputReader.SetCursorLocked(false);
+            PlayerInputReader.HoldPointer(); // every UiScreen is clicked: the cursor shows until the last one closes
+            s._pointer = true;
             setup?.Invoke(s);
             s.Build();
+            UiAppear.On(win.gameObject, 0f, slide: true, duration: 0.22f); // the window fades and slides up into place
             s.OpenedAt = Time.unscaledTime;
             return await s._done.Task;
         }
@@ -96,7 +97,7 @@ namespace AiOn.UI
             InputGate.Release();
             Uncount();
             UiSound.Play("close");
-            if (_wasLocked) PlayerInputReader.SetCursorLocked(true);
+            Unpoint();
             Destroy(gameObject);
             _done.TrySetResult(result);
         }
@@ -107,7 +108,17 @@ namespace AiOn.UI
             _closed = true;
             InputGate.Release();
             Uncount();
+            Unpoint();
             _done?.TrySetResult(EscapeResult());
+        }
+
+        bool _pointer;
+
+        void Unpoint()
+        {
+            if (!_pointer) return;
+            _pointer = false;
+            PlayerInputReader.ReleasePointer();
         }
 
         void Uncount()

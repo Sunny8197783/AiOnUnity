@@ -328,7 +328,7 @@ namespace AiOn.UI
         static RereadCaption _current;
         TaskCompletionSource<JToken> _done;
         float _openedAt;
-        bool _wasLocked;
+        bool _pointer;
 
         public static Task<JToken> Open(JObject options)
         {
@@ -344,8 +344,8 @@ namespace AiOn.UI
             _current = c;
             c._done = new TaskCompletionSource<JToken>();
             InputGate.Hold();
-            c._wasLocked = Cursor.lockState == CursorLockMode.Locked;
-            PlayerInputReader.SetCursorLocked(false);
+            PlayerInputReader.HoldPointer();
+            c._pointer = true;
             c.Build(text, pin, last);
             c._openedAt = Time.unscaledTime;
             return c._done.Task;
@@ -406,7 +406,7 @@ namespace AiOn.UI
             var tcs = _done;
             _done = null;
             InputGate.Release();
-            if (_wasLocked) PlayerInputReader.SetCursorLocked(true);
+            if (_pointer) { _pointer = false; PlayerInputReader.ReleasePointer(); }
             if (_current == this) _current = null;
             Destroy(gameObject);
             tcs.TrySetResult(result == null ? null : new JValue(result));
@@ -418,6 +418,7 @@ namespace AiOn.UI
             var tcs = _done;
             _done = null;
             InputGate.Release();
+            if (_pointer) { _pointer = false; PlayerInputReader.ReleasePointer(); }
             if (_current == this) _current = null;
             tcs.TrySetResult(new JValue("skip"));
         }

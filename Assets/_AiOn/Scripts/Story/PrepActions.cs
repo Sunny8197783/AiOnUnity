@@ -63,6 +63,37 @@ namespace AiOn.Story
             ctx.SetLevelState("apartment", "bag", g.Knows("bagPacked") ? "packed" : "empty");
             ctx.SetLevelState("apartment", "radio", Has(g, "radio") || Has(g, "radio", "bag") ? (g.Knows("radioOn") ? "on" : "off") : "none");
             ctx.SetLevelState("apartment", "power", ctx.Power ? "on" : "off");
+            // the default is the box pile; after the 3장 night at the partition it stays broken
+            if (LookFirstScene.Broken(g)) ctx.SetLevelState("apartment", LookFirstScene.StateKey, "broken");
+            else if (g.Knows(LookFirstScene.ClearedKnow)) ctx.SetLevelState("apartment", LookFirstScene.StateKey, "clear");
+        }
+
+        /// <summary>
+        /// The balcony's 경량칸막이 with the moving boxes still stacked in front of it (competition upgrade). Clearing them
+        /// (know partitionCleared, event partition_cleared) makes the partition a way out at the 3장 fire
+        /// (LookFirstScene); otherwise the boxes have to be moved first, then. Available in the home roams of 1장.
+        /// </summary>
+        public static async Task<JToken> Partition(StoryContext ctx)
+        {
+            var g = ctx.G;
+            if (g.Knows(LookFirstScene.ClearedKnow))
+            {
+                ctx.Toast("경량칸막이 앞은 비워 두었다. 불이 나 현관으로 못 나가면 이 벽을 부수고 옆집으로 피한다.");
+                return null;
+            }
+            var pick = await ctx.Ui.Talk(T("베란다 끝 벽", "경량칸막이", new[]
+            {
+                "베란다 끝 벽에 '경량칸막이' 표시가 붙어 있다. 그 앞에는 이사 때 상자들이 그대로 쌓여 있다.",
+                ctx.Facts.Text("fire_partition"),
+            }, C(("clear", "상자를 치운다 (10분)"), ("later", "다음에"))));
+            if (pick != "clear") return null;
+            ctx.Pass(10);
+            g.SetKnow(LookFirstScene.ClearedKnow, true);
+            GameRules.RecordEvent(g, "partition_cleared", new JObject());
+            ctx.SetLevelState("apartment", LookFirstScene.StateKey, "clear");
+            ctx.Note("베란다 경량칸막이 앞 상자를 치웠다. 불이 나 현관으로 못 나가면 이쪽으로.", "self");
+            ctx.Toast(ctx.Facts.Text("fire_partition_clear"), "official", 5600);
+            return null;
         }
 
         /// <summary>Back home after an errand: the walk takes time, heavier with shopping.</summary>
@@ -165,6 +196,7 @@ namespace AiOn.Story
             await GoOut(ctx, "연무마트에 가기", "단지 정문으로 나가 연무로 건너편 연무마트로 갑니다.");
             ctx.Objective("장보기", "진열대에서 고르고 계산대에서 계산합니다. 필요한 만큼, 들고 올 수 있는 만큼.", Steps(("진열대 둘러보기", false), ("계산하기", false)));
             double carried = 0; bool boughtAny = false, hoard = false; int water = 0;
+            var trip = new Dictionary<string, int>(); // everything bought on this trip, all carts together (사재기 is per trip)
             var info = new JArray { new JObject { ["text"] = "생수 1인 6병 한정", ["label"] = "site" } };
             if (g.Rel.TryGetValue("clerk", out var clerk) && Truthy(clerk?.Contact))
                 info.Add(new JObject { ["text"] = "수아: \"건전지는 오늘 오전에 더 들어온다고 했어요. 확실하진 않아요.\"", ["label"] = "neighbor" });
@@ -192,6 +224,8 @@ namespace AiOn.Story
                 try { ctx.Rules.Buy(g, cart, prices); }
                 catch (Exception e) { ctx.Toast(string.IsNullOrEmpty(e.Message) ? "살 수 없습니다." : e.Message, "site"); return null; }
                 boughtAny = true; water += cart.Where(kv => kv.Key == "water_2l").Sum(kv => kv.Value);
+                foreach (var kv in cart) trip[kv.Key] = (trip.TryGetValue(kv.Key, out var had) ? had : 0) + kv.Value;
+                if (BagRules.Hoarding(trip)) hoard = true; // two carts of 5 are 10, as much as one of 10
                 carried += cart.Sum(kv => db.Get(kv.Key).weightKg * kv.Value);
                 var cartJ = new JObject();
                 foreach (var kv in cart) cartJ[kv.Key] = kv.Value;
@@ -224,6 +258,9 @@ namespace AiOn.Story
                         {
                             await ctx.Ui.Talk(T("계산원", "연무마트", new[] { "오늘 많이들 사 가셔서요… 다른 분들 몫도 남겨 주시면 감사하겠습니다." }));
                             ctx.Event("hoard", new JObject()); ctx.Toast(ctx.Facts.Text("home_nohoard"), "official", 6000);
+                            // the neighbours in the queue saw it: 수아 (the clerk) trusts you a little less
+                            if (g.Rel.TryGetValue("clerk", out var cl) && cl != null) cl.Trust -= 1;
+                            ctx.Toast("줄 선 이웃들이 빈 진열대와 내 바구니를 번갈아 본다. 사재기하지 않기.", "neighbor", 5200);
                         }
                         if (water >= 4 && Has(g, "water_2l"))
                         {
@@ -372,15 +409,25 @@ namespace AiOn.Story
                     ["extinguisher"] = H(async () =>
                     {
                         if (ext) { ctx.Toast("소화기 위치를 확인했다."); return null; }
+                        bool gauge = ExtinguisherScene.GaugePart != null; // competition upgrade: the pressure gauge first
                         await ctx.Ui.Card(new CardOptions
                         {
                             Kind = "notice", Title = "3층 복도 소화기", Meta = "옥내소화전 옆", Body = { ctx.Facts.Text("ext_1"), ctx.Facts.Text("ext_2"), ctx.Facts.Text("ext_3") },
-                            Actions = new List<CardAction> { new("ok", "사용 순서 익혀 보기", true) },
+                            Actions = new List<CardAction> { new("ok", gauge ? "압력계부터 보고, 사용 순서 익혀 보기" : "사용 순서 익혀 보기", true) },
                         });
-                        await ctx.Ui.Open("extinguisher", new JObject { ["mode"] = "guided", ["fire"] = "small", ["practice"] = true });
+                        if (gauge && !await ExtinguisherScene.GaugePart(ctx))
+                        {
+                            ctx.Toast("압력계는 다시 와서 볼 수 있다.", "self", 2600); // Esc: nothing decided, the point stays open
+                            return null;
+                        }
+                        // the practice: the 3D extinguisher in hand at a stand-in target, or the 2D screen (the accessible alternative)
+                        if (ExtinguisherScene.Use3D(ctx))
+                            await ExtinguisherScene.Run3D(ctx, ExtinguisherScene.Setup(ctx, "guided", "small", ExtinguisherScene.Practice, practice: true), ExtinguisherScene.Practice);
+                        else await ctx.Ui.Open("extinguisher", new JObject { ["mode"] = "guided", ["fire"] = "small", ["practice"] = true });
                         Drills.RecordEncounter(g, "extinguisher", "practice");
                         g.SetKnow("extinguisherLocated", true); ext = true; Show(); return null;
                     }),
+                    [LookFirstScene.Point] = H(() => Partition(ctx)),
                     ["homeGas"] = H(async () =>
                     {
                         if (!g.Knows("gasValve")) ctx.Event("gas_checked", new JObject());
@@ -559,8 +606,10 @@ namespace AiOn.Story
             var g = ctx.G;
             bool window = false, water = g.Knows("tubFilled"), stock = false;
             bool Curtain() => Owned(g, "blackout_curtain");
+            // competition upgrade: the partition is an optional step (it does not hold up the end; PrepActions.Partition)
             void Show() => ctx.Objective("집 안 대비", "집 안을 돌며 하나씩 해 둡니다. 다 마치면 달력(계획판)에서 끝냅니다.", Steps(
-                (Curtain() ? "거실 창: 암막 커튼 달기" : "거실 창: 불빛이 새는지 살피기", window), ("주방: 큰 통·냄비에 물 받아 두기", water), ("베란다 수납장: 비상식량 기한 확인", stock)));
+                (Curtain() ? "거실 창: 암막 커튼 달기" : "거실 창: 불빛이 새는지 살피기", window), ("주방: 큰 통·냄비에 물 받아 두기", water), ("베란다 수납장: 비상식량 기한 확인", stock),
+                ("베란다 끝: 경량칸막이 앞 비우기 (선택)", g.Knows(LookFirstScene.ClearedKnow))));
             JToken Finished() => window && water && stock ? "done" : null;
             Show();
             await ctx.Roam(new RoamOptions
@@ -597,6 +646,7 @@ namespace AiOn.Story
                         if (await FillWater(ctx)) { water = true; Show(); return Finished(); }
                         return null;
                     }),
+                    [LookFirstScene.Point] = H(async () => { var r = await Partition(ctx); Show(); return r; }),
                     ["homeStock"] = H(async () =>
                     {
                         if (stock) { ctx.Toast("비상식량 기한은 확인했다."); return null; }
@@ -639,12 +689,17 @@ namespace AiOn.Story
             var mode = Drills.LadderStage(g, "bag");
             var items = new JArray(BagItems(ctx, true).Select(BagItemJson));
             var goals = new JArray(Drills.BagGoals["alert"].Select(GoalJson));
-            var res = await ctx.Modal(() => ctx.Ui.Open("bag", new JObject
+            var res = await ctx.Modal(() => ctx.Ui.Open("bag", BagHand.AddOptions(new JObject
             {
                 ["mode"] = mode, ["context"] = "alert", ["limit"] = new JObject { ["weightKg"] = db.bagLimitKg, ["volumeL"] = db.bagLimitL },
                 ["items"] = items, ["goals"] = goals, ["tips"] = new JArray(Tips(ctx, "bag_days", "bag_nocook", "bag_copies", "bag_foil", "bag_door")),
-            }));
+                ["tidy"] = new JObject { ["cost"] = "1분" },
+            }, g, ctx.Settings?.Profile, ctx.Settings?.ReduceMotion ?? false)));
             var r = res as JObject;
+            // 정리 (auto-pack) costs a minute each, as the original's tidy callback did on the D-day bag
+            if (r?["tidied"] is JValue tv && (tv.Type == JTokenType.Integer || tv.Type == JTokenType.Float))
+                for (int i = 0; i < (int)(double)tv; i++) ctx.Pass(1);
+            BagHand.Remember(g, r, "alert");
             ApplyBag(ctx, r?["bag"] as JObject ?? new JObject());
             ApplyPocket(ctx, r?["pocket"] as JObject);
             var ev = Drills.EvalBag(ctx.Rules, g, "alert");

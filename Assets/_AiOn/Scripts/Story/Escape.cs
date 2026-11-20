@@ -18,9 +18,13 @@ namespace AiOn.Story
         /// <summary>apartment 'smoke' state per fire size.</summary>
         public static readonly IReadOnlyDictionary<string, double> Air = new Dictionary<string, double> { ["small"] = 0.25, ["large"] = 0.7 };
 
+        /// <summary>At the elevator a neighbour stops 정민 (LookFirstScene.ElevatorStop). Tests comparing with the original turn it off.</summary>
+        public static bool NeighbourStops = true;
+
         static int Count(GameState g, string id) => g.Items.TryGetValue(id, out var e) && e != null ? e.Home + e.Bag : 0;
 
-        public static async Task<JObject> SmokeEscape(StoryContext ctx, string size = "large", Action grow = null)
+        /// <param name="neighbour">The elevator correction by 서연 (the look step was played); false keeps the original's fact toast.</param>
+        public static async Task<JObject> SmokeEscape(StoryContext ctx, string size = "large", Action grow = null, bool neighbour = true)
         {
             var g = ctx.G;
             var engine = ctx.Engine;
@@ -45,6 +49,7 @@ namespace AiOn.Story
                 if (g.Knows("tubFilled")) ctx.Payoff("tub", "받아 둔 물로 수건을 적셨다");
                 else { ctx.Rules.Consume(g, bottle, 1, g.Items[bottle].Home > 0 ? "home" : "bag"); ctx.Toast("생수 한 병으로 수건을 적셨다."); }
                 towel = true;
+                AiOn.Rendering.AtmosphereDirector.Mask("cloth"); // the wet towel at the bottom of the view, misting with each breath
                 GameRules.RecordEvent(g, "towel_wet", new JObject { ["with"] = g.Knows("tubFilled") ? "tub" : bottle });
                 Show();
                 ctx.Toast(ctx.Facts.Text("fire_big"), "official", 5200);
@@ -87,11 +92,13 @@ namespace AiOn.Story
                         ["homeExitDoor"] = async _ => { await ctx.Goto("apartment", "corridor3F"); return null; },
                         ["homeDoor"] = async _ => { await ctx.Goto("apartment", "homeEntry"); return null; }, // back in for a towel
                         ["homeSink"] = Wet, ["homeStock"] = Wet,
-                        ["elevator"] = _ =>
+                        ["elevator"] = async _ =>
                         {
+                            // competition upgrade: a neighbour stops 정민 (a correction); the original only showed the fact
+                            if (NeighbourStops && neighbour && LookFirstScene.OnThird(ctx)) { await LookFirstScene.ElevatorStop(ctx); return null; }
                             ctx.Toast(ctx.Facts.Text("fire_lift"), "official", 5000);
                             GameRules.RecordEvent(g, "elevator_tried", new JObject { ["fire"] = true });
-                            return Task.FromResult<JToken>(null);
+                            return null;
                         },
                         ["hallFire"] = _ => { ctx.Toast("불길에서 떨어져 계단으로.", "self"); return Task.FromResult<JToken>(null); },
                         ["extinguisher"] = _ => { ctx.Toast("불이 이미 번지고 있다. 끄기보다 대피가 먼저다.", "self"); return Task.FromResult<JToken>(null); },
@@ -104,6 +111,7 @@ namespace AiOn.Story
             finally
             {
                 engine.SetGrade(null);
+                AiOn.Rendering.AtmosphereDirector.Mask(null);
             }
         }
     }

@@ -54,8 +54,8 @@ namespace AiOn.UI
         };
 
         static Color Hex(string s) { ColorUtility.TryParseHtmlString(s, out var c); return c; }
-        // 0.96, not the 0.85 of a browser: uGUI blends in linear space, where 0.85 over a pale wall reads mid-grey.
-        static readonly Color PanelBg = new(0.06f, 0.09f, 0.1f, 0.96f);
+        // The HUD's plates: translucent dark slate (HudTheme), rounded; their text carries a shadow for pale walls.
+        static readonly Color PanelBg = HudTheme.Slate;
         static readonly Color Red = Hex("#e5484d");
 
         Canvas _canvas;
@@ -94,9 +94,23 @@ namespace AiOn.UI
         GameObject _smokeHint, _topLeft;
         RectTransform _chapterBg;
         readonly Dictionary<GameObject, bool> _cineHidden = new();
-        readonly Dictionary<string, (Image fill, Text word)> _statBars = new();
+        /// <summary>One meter of the vitals plate: label, track, fill, word; the trail lags behind a loss.</summary>
+        sealed class MeterRow
+        {
+            public RectTransform Root;
+            public Image Fill, Trail;
+            public Text Word;
+            public float Shown = 1, TrailK = 1, LossAt = -10;
+        }
+        MeterRow _healthRow, _staminaRow, _exposureRow;
+        readonly Dictionary<string, Text> _miniStats = new();
+        RectTransform _statsRt, _statsRule;
+        bool _exposureOn;
+        float _health = 100, _danger, _sinceBeat = 10, _beatEvery;
+        AudioSource _heart;
         RectTransform _toasts;
         float _hurtLevel, _tension;
+        static readonly Color HurtTint = new Color(0.16f, 0.13f, 0.1f);
         int _captionToken;
         bool _hidden, _batteryWanted, _bagWanted;
 
@@ -105,7 +119,7 @@ namespace AiOn.UI
         HudCompass _compass;
         RectTransform _mapRoot;
         HudMinimap _minimap;
-        GameObject _stamina, _keys;
+        GameObject _keys;
         Image _staminaFill;
         bool _cinematic, _compassWanted, _mapWanted, _staminaWanted;
         float _staminaShown = -1;
@@ -140,6 +154,7 @@ namespace AiOn.UI
             _scopes.Clear();
             _talkDepth = 0; TalkOpen = false;
             GameHud.Cinematic = false;
+            DecisionMoment.Reset();
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -149,6 +164,7 @@ namespace AiOn.UI
         readonly List<ModalScope> _scopes = new(4);
 
         static readonly Color ObjBody = Hex("#c9d2d6");
+        const float ObjX = 22, ObjW = 420;
 
         // ---------- layout ----------
 
@@ -158,7 +174,8 @@ namespace AiOn.UI
             _vignette = UiKit.Box("Vignette", _root, new Color(0.35f, 0, 0, 0));
             UiKit.Fill(_vignette.rectTransform);
             _vignette.sprite = RadialSprite();
-            _hurt = UiKit.Box("Hurt", _root, new Color(0.8f, 0.05f, 0.05f, 0));
+            // a dim, dusty edge when health drops (not a red flash: the game shows no injuries)
+            _hurt = UiKit.Box("Hurt", _root, new Color(HurtTint.r, HurtTint.g, HurtTint.b, 0));
             UiKit.Fill(_hurt.rectTransform);
             _hurt.sprite = _vignette.sprite;
 
@@ -176,26 +193,30 @@ namespace AiOn.UI
             var tl = UiKit.Rect("TopLeft", _hud); UiKit.At(tl, 28, 24, 560, 520);
             _topLeft = tl.gameObject;
             // A soft dark plate behind the chapter lines: the shadow alone left them ghostly over a pale ceiling.
-            _chapterBg = UiKit.Box("ChapterBg", tl, new Color(0.04f, 0.06f, 0.07f, 0.96f)).rectTransform;
+            _chapterBg = HudTheme.Plate("ChapterBg", tl).rectTransform;
             UiKit.At(_chapterBg, 0, -4, ChapterMinW, 70); // one left edge with the clock and objective, never narrower than the clock
-            _chapterNo = UiKit.Label("ChapterNo", tl, "", 20, UiKit.Amber, style: FontStyle.Bold);
-            UiKit.At(_chapterNo.rectTransform, ChapterPad, 0, 560 - ChapterPad, 28);
-            _chapterTitle = UiKit.Label("ChapterTitle", tl, "", 26, UiKit.Ink, style: FontStyle.Bold);
-            UiKit.At(_chapterTitle.rectTransform, ChapterPad, 28, 560 - ChapterPad, 36);
+            _chapterNo = UiKit.Label("ChapterNo", tl, "", HudTheme.Eyebrow + 1, UiKit.Amber, style: FontStyle.Bold);
+            UiKit.At(_chapterNo.rectTransform, ChapterPad, 5, 560 - ChapterPad, 24);
+            _chapterTitle = UiKit.Label("ChapterTitle", tl, "", 22, HudTheme.Text, style: FontStyle.Bold);
+            UiKit.At(_chapterTitle.rectTransform, ChapterPad, 28, 560 - ChapterPad, 34);
             foreach (var t in new[] { _chapterNo, _chapterTitle }) // readable over a bright wall or sky
             {
                 var sh = t.gameObject.AddComponent<Shadow>();
                 sh.effectColor = new Color(0, 0, 0, 0.75f); sh.effectDistance = new Vector2(1.5f, -1.5f);
             }
-            var clockBg = UiKit.Box("Clock", tl, PanelBg).rectTransform; UiKit.At(clockBg, 0, 72, ChapterMinW, 40);
-            _clock = UiKit.Label("Text", clockBg, "", 22, UiKit.Ink, TextAnchor.MiddleCenter);
+            var clockBg = HudTheme.Plate("Clock", tl).rectTransform; UiKit.At(clockBg, 0, 72, ChapterMinW, 40);
+            _clock = HudTheme.Shadowed(UiKit.Label("Text", clockBg, "", 20, HudTheme.Text, TextAnchor.MiddleCenter));
             UiKit.Fill(_clock.rectTransform);
-            var obj = UiKit.Box("Objective", tl, PanelBg).rectTransform; UiKit.At(obj, 0, 124, 460, 230);
+            // The mission: the one thing on the HUD set in the title size. A teal bar down its left edge marks it out.
+            var obj = HudTheme.Plate("Objective", tl).rectTransform; UiKit.At(obj, 0, 124, 460, 230);
             _objective = obj.gameObject;
-            UiKit.At(UiKit.Label("Eyebrow", obj, "목표", 18, UiKit.Teal, style: FontStyle.Bold).rectTransform, 18, 12, 200, 24);
-            _objTitle = UiKit.Label("Title", obj, "", 24, UiKit.Ink, style: FontStyle.Bold); UiKit.At(_objTitle.rectTransform, 18, 38, 424, 34);
-            _objBody = UiKit.Label("Body", obj, "", 19, ObjBody); UiKit.At(_objBody.rectTransform, 18, 74, 424, 56);
-            _objSteps = UiKit.Label("Steps", obj, "", 19, UiKit.Ink); UiKit.At(_objSteps.rectTransform, 18, 130, 424, 96);
+            var accent = UiKit.Box("Accent", obj, HudTheme.Accent).rectTransform;
+            accent.anchorMin = new Vector2(0, 0); accent.anchorMax = new Vector2(0, 1); accent.pivot = new Vector2(0, 0.5f);
+            accent.offsetMin = new Vector2(0, 10); accent.offsetMax = new Vector2(4, -10);
+            UiKit.At(UiKit.Label("Eyebrow", obj, "현재 목표", HudTheme.Eyebrow, HudTheme.Accent, style: FontStyle.Bold).rectTransform, ObjX, 12, 200, 22);
+            _objTitle = HudTheme.Shadowed(UiKit.Label("Title", obj, "", HudTheme.Title, HudTheme.Text, style: FontStyle.Bold)); UiKit.At(_objTitle.rectTransform, ObjX, 34, ObjW, 38);
+            _objBody = HudTheme.Shadowed(UiKit.Label("Body", obj, "", HudTheme.Body, ObjBody)); UiKit.At(_objBody.rectTransform, ObjX, 74, ObjW, 56);
+            _objSteps = HudTheme.Shadowed(UiKit.Label("Steps", obj, "", HudTheme.Body, HudTheme.Text)); UiKit.At(_objSteps.rectTransform, ObjX, 130, ObjW, 96);
             // The amber border that flashes twice when the goal changes (style.css .hud-objective.flash).
             var fl = UiKit.Rect("Flash", obj); UiKit.Fill(fl, -3, -3);
             _objFlash = fl.gameObject.AddComponent<CanvasGroup>(); _objFlash.alpha = 0; _objFlash.blocksRaycasts = false;
@@ -221,7 +242,7 @@ namespace AiOn.UI
             _bagFill.rectTransform.offsetMin = _bagFill.rectTransform.offsetMax = Vector2.zero;
             _batteryChip.SetActive(false); _bagChip.SetActive(false);
             // The torch glyph left of the battery chip while the phone light is on (SetTorch).
-            var torch = UiKit.Box("Torch", _hud, PanelBg).rectTransform;
+            var torch = HudTheme.Plate("Torch", _hud).rectTransform;
             torch.anchorMin = torch.anchorMax = torch.pivot = new Vector2(1, 1); torch.anchoredPosition = new Vector2(-206, -24); torch.sizeDelta = new Vector2(44, 44);
             var ti = UiKit.Icon("Glyph", torch, "\U0001F526", 22, UiKit.Amber); UiKit.Fill(ti.rectTransform, 8, 8);
             _torchChip = torch.gameObject;
@@ -233,27 +254,29 @@ namespace AiOn.UI
             var v = _toasts.gameObject.AddComponent<VerticalLayoutGroup>();
             v.spacing = 8; v.childAlignment = TextAnchor.UpperRight; v.childControlHeight = true; v.childControlWidth = true; v.childForceExpandHeight = false;
 
-            // Bottom-left: condition bars.
-            var st = UiKit.Box("Stats", _hud, PanelBg).rectTransform;
-            st.anchorMin = st.anchorMax = st.pivot = new Vector2(0, 0); st.anchoredPosition = new Vector2(28, 28); st.sizeDelta = new Vector2(300, 150);
-            _stats = st.gameObject;
-            for (int i = 0; i < StatRows.Length; i++)
+            // Bottom-left: vitals. Health and stamina as meters, smoke exposure only while there is smoke, then the slow
+            // needs (thirst, fatigue, tension) as coloured words.
+            var st = HudTheme.Plate("Stats", _hud).rectTransform;
+            st.anchorMin = st.anchorMax = st.pivot = new Vector2(0, 0); st.anchoredPosition = new Vector2(HudTheme.Edge, HudTheme.Edge);
+            _stats = st.gameObject; _statsRt = st;
+            _healthRow = Meter(st, "Health", "체력");
+            _staminaRow = Meter(st, "Stamina", "기력");
+            _staminaRow.Fill.color = StaminaOk;
+            _staminaFill = _staminaRow.Fill;
+            _exposureRow = Meter(st, "Exposure", "연기 노출");
+            _statsRule = UiKit.Box("Rule", st, HudTheme.Hairline).rectTransform;
+            for (int i = 1; i < StatRows.Length; i++)
             {
-                var (key, label, _) = StatRows[i];
-                float y = 14 + i * 33;
-                UiKit.At(UiKit.Label(label, st, label, 18, UiKit.Dim).rectTransform, 16, y, 60, 26);
-                var track = UiKit.Box(key + "Track", st, new Color(1, 1, 1, 0.1f)).rectTransform; UiKit.At(track, 76, y + 8, 140, 10);
-                var fill = UiKit.Box("Fill", track, UiKit.Teal);
-                fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = new Vector2(1, 1); fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
-                var word = UiKit.Label(key + "Word", st, "", 17, UiKit.Ink); UiKit.At(word.rectTransform, 226, y, 64, 26);
-                _statBars[key] = (fill, word);
+                var t = UiKit.Label(StatRows[i].key, st, "", HudTheme.Eyebrow, HudTheme.Muted, TextAnchor.MiddleLeft);
+                _miniStats[StatRows[i].key] = t;
             }
+            LayoutVitals(false);
 
             BuildMapParts();
             BuildBanner();
 
             // Caption: bottom centre, above the prompt.
-            var cap = UiKit.Box("Caption", _root, new Color(0.04f, 0.06f, 0.07f, 0.82f)).rectTransform;
+            var cap = HudTheme.Plate("Caption", _root, dense: true).rectTransform;
             cap.anchorMin = cap.anchorMax = cap.pivot = new Vector2(0.5f, 0); cap.anchoredPosition = new Vector2(0, 300); cap.sizeDelta = new Vector2(1100, 86);
             _caption = cap.gameObject;
             _captionSpeaker = UiKit.Label("Speaker", cap, "", 20, UiKit.Amber, style: FontStyle.Bold); UiKit.At(_captionSpeaker.rectTransform, 24, 10, 1052, 26);
@@ -262,7 +285,7 @@ namespace AiOn.UI
             _caption.SetActive(false);
 
             // The smoke escape's key hint (original hud.js smokeHint): why to get low, while the smoke grade is up.
-            var hint = UiKit.Box("SmokeHint", _hud, new Color(0.04f, 0.06f, 0.07f, 0.82f)).rectTransform;
+            var hint = HudTheme.Plate("SmokeHint", _hud, dense: true).rectTransform;
             hint.anchorMin = hint.anchorMax = hint.pivot = new Vector2(0.5f, 0); hint.anchoredPosition = new Vector2(0, 164); hint.sizeDelta = new Vector2(400, 48);
             var hintKey = UiKit.Box("Key", hint, new Color(1, 1, 1, 0.14f)).rectTransform; UiKit.At(hintKey, 12, 8, 32, 32);
             UiKit.Fill(UiKit.Label("K", hintKey, "C", 20, UiKit.Ink, TextAnchor.MiddleCenter, FontStyle.Bold).rectTransform);
@@ -310,20 +333,9 @@ namespace AiOn.UI
             }
             _mapRoot.gameObject.SetActive(false);
 
-            // Stamina (기력): bottom centre under the interact prompt, only while it is not full or you are winded.
-            var sr = UiKit.Box("Stamina", _hud, new Color(0.04f, 0.06f, 0.07f, 0.72f)).rectTransform; // a dark pill: readable on a pale floor
-            sr.anchorMin = sr.anchorMax = sr.pivot = new Vector2(0.5f, 0); sr.anchoredPosition = new Vector2(0, 124); sr.sizeDelta = new Vector2(300, 32);
-            var sl = UiKit.Label("Label", sr, "기력", 17, UiKit.Ink, TextAnchor.MiddleLeft, FontStyle.Bold); UiKit.At(sl.rectTransform, 16, 0, 52, 32);
-            var track = UiKit.Box("Track", sr, new Color(1, 1, 1, 0.16f)).rectTransform; UiKit.At(track, 68, 12, 214, 8);
-            _staminaFill = UiKit.Box("Fill", track, StaminaOk);
-            _staminaFill.rectTransform.anchorMin = Vector2.zero; _staminaFill.rectTransform.anchorMax = Vector2.one;
-            _staminaFill.rectTransform.offsetMin = _staminaFill.rectTransform.offsetMax = Vector2.zero;
-            _stamina = sr.gameObject;
-            _stamina.SetActive(false);
-
             // The key strip (hud-keys): bottom right on a dark rounded plate, from the one key table (UiKeys). It fades
             // after 20 s of roaming and comes back for 8 s on H and on each level entry.
-            var plate = UiKit.Box("Keys", _hud, new Color(0.04f, 0.06f, 0.07f, 0.6f));
+            var plate = UiKit.Box("Keys", _hud, HudTheme.Slate);
             plate.sprite = HudDraw.RoundedSprite; plate.type = Image.Type.Sliced;
             var pr = plate.rectTransform; pr.anchorMin = pr.anchorMax = pr.pivot = new Vector2(1, 0); pr.anchoredPosition = new Vector2(-28, 24);
             var ph = plate.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -336,6 +348,70 @@ namespace AiOn.UI
             _keysGroup = plate.gameObject.AddComponent<CanvasGroup>(); _keysGroup.alpha = 0; _keysGroup.blocksRaycasts = false;
             _keys = plate.gameObject;
             _keys.SetActive(false);
+        }
+
+        const float VitalsW = 304, VitalsPad = 14, MeterH = 26, MeterGap = 2;
+
+        MeterRow Meter(RectTransform parent, string name, string label)
+        {
+            var row = UiKit.Rect(name, parent);
+            float w = VitalsW - VitalsPad * 2;
+            UiKit.At(HudTheme.Shadowed(UiKit.Label("Label", row, label, HudTheme.Label, HudTheme.Muted, TextAnchor.MiddleLeft)).rectTransform, 0, 0, 84, MeterH);
+            var track = UiKit.Box("Track", row, HudTheme.Track).rectTransform; UiKit.At(track, 88, 10, w - 88 - 62, 6);
+            var trail = UiKit.Box("Trail", track, new Color(1, 1, 1, 0.6f));
+            var fill = UiKit.Box("Fill", track, HudTheme.Accent);
+            fill.sprite = HudTheme.GradientSprite;
+            foreach (var im in new[] { trail, fill })
+            {
+                im.rectTransform.anchorMin = Vector2.zero; im.rectTransform.anchorMax = Vector2.one;
+                im.rectTransform.offsetMin = im.rectTransform.offsetMax = Vector2.zero;
+            }
+            var word = UiKit.Label("Word", row, "", HudTheme.Label, HudTheme.Text, TextAnchor.MiddleRight, FontStyle.Bold); // no shadow: it smears small bold text
+            UiKit.At(word.rectTransform, w - 58, 0, 58, MeterH);
+            return new MeterRow { Root = row, Fill = fill, Trail = trail, Word = word };
+        }
+
+        /// <summary>Stacks the vitals rows; the exposure meter takes a row only while there is smoke.</summary>
+        void LayoutVitals(bool exposure)
+        {
+            float w = VitalsW - VitalsPad * 2, y = 12;
+            foreach (var row in new[] { _healthRow, _staminaRow, _exposureRow })
+            {
+                bool on = row != _exposureRow || exposure;
+                SetActive(row.Root.gameObject, on);
+                if (!on) continue;
+                UiKit.At(row.Root, VitalsPad, y, w, MeterH);
+                y += MeterH + MeterGap;
+            }
+            y += 4;
+            UiKit.At(_statsRule, VitalsPad, y, w, 1);
+            y += 7;
+            int i = 0;
+            foreach (var t in _miniStats.Values) UiKit.At(t.rectTransform, VitalsPad + i++ * (w / 3f), y, w / 3f, 24);
+            _statsRt.sizeDelta = new Vector2(VitalsW, y + 24 + 10);
+        }
+
+        static void SetMeter(MeterRow row, float k, Color color, string word)
+        {
+            k = Mathf.Clamp01(k);
+            if (k < row.Shown - 0.004f) row.LossAt = Time.unscaledTime; // the trail holds, then drains
+            if (k > row.TrailK) row.TrailK = k;
+            row.Shown = k;
+            row.Fill.rectTransform.anchorMax = new Vector2(k, 1);
+            row.Fill.color = color;
+            if (row.Word.text != word) row.Word.text = word;
+            row.Word.color = color;
+        }
+
+        void PlayHeart(float volume)
+        {
+            if (!_heart)
+            {
+                _heart = gameObject.AddComponent<AudioSource>();
+                _heart.playOnAwake = false; _heart.spatialBlend = 0; _heart.priority = 40;
+            }
+            float v = volume * AiOn.Settings.AudioBus.Effects;
+            if (v > 0.001f) _heart.PlayOneShot(AiOn.Story.ProceduralAudio.Heartbeat(), v);
         }
 
         static void SetActive(GameObject go, bool on) { if (go.activeSelf != on) go.SetActive(on); }
@@ -376,9 +452,9 @@ namespace AiOn.UI
 
         GameObject Chip(string name, float x, float y, float w, out Text text)
         {
-            var c = UiKit.Box(name, _hud, PanelBg).rectTransform;
+            var c = HudTheme.Plate(name, _hud).rectTransform;
             c.anchorMin = c.anchorMax = c.pivot = new Vector2(1, 1); c.anchoredPosition = new Vector2(x, -y); c.sizeDelta = new Vector2(w, 44);
-            text = UiKit.Label("Text", c, "", 20, UiKit.Ink, TextAnchor.MiddleCenter);
+            text = HudTheme.Shadowed(UiKit.Label("Text", c, "", HudTheme.Value, HudTheme.Text, TextAnchor.MiddleCenter));
             UiKit.Fill(text.rectTransform, 10, 4);
             return c.gameObject;
         }
@@ -412,15 +488,16 @@ namespace AiOn.UI
         public void SetStats(Stats s)
         {
             if (s == null) return;
-            foreach (var (key, _, worse) in StatRows)
+            _health = (float)s.Health;
+            string hw = GameRules.StatWord("health", s.Health); // the one word table, shared with the cards and the debrief
+            SetMeter(_healthRow, _health / 100f, HudTheme.StatColor(hw), hw);
+            foreach (var (key, label, _) in StatRows)
             {
-                double v = key switch { "health" => s.Health, "thirst" => s.Thirst, "fatigue" => s.Fatigue, _ => s.Tension };
-                double good = worse ? 100 - v : v;
-                var (fill, word) = _statBars[key];
-                fill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01((float)good / 100f), 1);
-                string w = GameRules.StatWord(key, v); // the one word table, shared with the cards and the debrief
-                Color c = w == "좋음" ? UiKit.Teal : w == "보통" ? UiKit.Amber : Red;
-                fill.color = c; word.text = w; word.color = c;
+                if (!_miniStats.TryGetValue(key, out var t)) continue;
+                double v = key switch { "thirst" => s.Thirst, "fatigue" => s.Fatigue, _ => s.Tension };
+                string w = GameRules.StatWord(key, v);
+                string text = $"{label}  <b><color=#{ColorUtility.ToHtmlStringRGB(HudTheme.StatColor(w))}>{w}</color></b>";
+                if (t.text != text) t.text = text;
             }
         }
 
@@ -459,8 +536,13 @@ namespace AiOn.UI
         {
             float k = Mathf.Clamp01((float)amount01);
             _staminaWanted = k <= 0.995f || winded;
-            if (Mathf.Abs(k - _staminaShown) > 0.002f) { _staminaShown = k; _staminaFill.rectTransform.anchorMax = new Vector2(k, 1); }
-            if (winded != _windedShown) { _windedShown = winded; _staminaFill.color = winded ? StaminaWinded : StaminaOk; }
+            if (Mathf.Abs(k - _staminaShown) > 0.002f) { _staminaShown = k; _staminaFill.rectTransform.anchorMax = new Vector2(k, 1); _staminaRow.Trail.rectTransform.anchorMax = new Vector2(k, 1); }
+            if (winded != _windedShown)
+            {
+                _windedShown = winded;
+                _staminaFill.color = winded ? StaminaWinded : StaminaOk;
+                _staminaRow.Word.text = winded ? "숨참" : ""; _staminaRow.Word.color = StaminaWinded;
+            }
         }
         public void Prompt(string label) { } // the interact prompt is GameHud's
 
@@ -488,7 +570,7 @@ namespace AiOn.UI
             for (int i = 0; i < _toasts.childCount; i++) _toastLabels.Add(_toasts.GetChild(i).name);
             int evict = ToastQueue.EvictIndex(_toastLabels, key);
             if (evict >= 0) Detach(_toasts.GetChild(evict));
-            var bg = UiKit.Box(key, _toasts, new Color(0.05f, 0.07f, 0.08f, 0.94f));
+            var bg = HudTheme.Plate(key, _toasts, dense: true);
             var fit = bg.gameObject.AddComponent<VerticalLayoutGroup>();
             fit.padding = new RectOffset(16, 16, 10, 12); fit.spacing = 2; fit.childControlHeight = true; fit.childControlWidth = true; fit.childForceExpandHeight = false;
             UiKit.Label("Tag", bg.transform, tagText, 16, tagColor, style: FontStyle.Bold);
@@ -529,8 +611,8 @@ namespace AiOn.UI
             float bodyH = string.IsNullOrEmpty(_objBody.text) ? 0 : Mathf.Ceil(_objBody.preferredHeight);
             float stepsH = string.IsNullOrEmpty(_objSteps.text) ? 0 : Mathf.Ceil(_objSteps.preferredHeight);
             float y = 74 + bodyH + (bodyH > 0 ? 8 : 0);
-            UiKit.At(_objBody.rectTransform, 18, 74, 424, Mathf.Max(1, bodyH));
-            UiKit.At(_objSteps.rectTransform, 18, y, 424, Mathf.Max(1, stepsH));
+            UiKit.At(_objBody.rectTransform, ObjX, 74, ObjW, Mathf.Max(1, bodyH));
+            UiKit.At(_objSteps.rectTransform, ObjX, y, ObjW, Mathf.Max(1, stepsH));
             UiKit.At((RectTransform)_objective.transform, 0, 124, 460, y + stepsH + 16);
             // A new goal or a step ticked: the plate's border flashes amber twice (hud.js .flash).
             var key = string.IsNullOrEmpty(title) ? null : title + "\n" + _objSteps.text;
@@ -690,11 +772,43 @@ namespace AiOn.UI
         {
             float now = Time.unscaledTime, dt = Time.unscaledDeltaTime;
             _hurtLevel = Mathf.MoveTowards(_hurtLevel, 0, dt * 0.8f);
-            _hurt.color = new Color(0.8f, 0.05f, 0.05f, _hurtLevel * 0.6f);
+            _hurt.color = new Color(HurtTint.r, HurtTint.g, HurtTint.b, _hurtLevel * 0.55f);
             // Tension edge: a muted, capped red — at 0.45 a saturated maroon swallowed the dark blackout scenes.
-            _vignette.color = new Color(0.18f, 0.05f, 0.05f, Mathf.Min(_tension * 0.3f, 0.25f));
             bool smoke = AiOn.Levels.EnvironmentController.SmokeActive && !_hidden;
             if (_smokeHint.activeSelf != smoke) _smokeHint.SetActive(smoke);
+
+            // Danger (tension, low health, smoke): the red edge beats with a heartbeat that quickens as it rises. One
+            // signal, two channels (sight and sound); under reduce-motion the edge holds steady instead of pulsing.
+            bool reduceFx = AiOn.Rendering.AtmosphereDirector.ReduceMotion;
+            bool quiet = _hidden || _cinematic || UiScreen.OpenCount > 0;
+            _danger = HudMotion.Approach(_danger, quiet ? 0 : DangerMath.Level(_tension, _health, AiOn.Levels.EnvironmentController.SmokeLevel), 2f, dt);
+            _sinceBeat += dt;
+            if (_danger > DangerMath.HeartFrom && !quiet)
+            {
+                if (_sinceBeat >= _beatEvery)
+                {
+                    _sinceBeat = 0;
+                    _beatEvery = 60f / DangerMath.Bpm(_danger);
+                    PlayHeart(DangerMath.HeartVolume(_danger));
+                }
+            }
+            else _beatEvery = 0; // the next one lands as soon as the danger is back
+            _vignette.color = new Color(0.18f, 0.05f, 0.05f, DangerMath.EdgeAlpha(_tension, _danger, DangerMath.Beat(_sinceBeat), reduceFx));
+
+            // Vitals: the exposure meter while there is smoke, the health trail draining after a loss.
+            if (smoke != _exposureOn) { _exposureOn = smoke; LayoutVitals(smoke); }
+            if (smoke)
+            {
+                float lv = AiOn.Levels.EnvironmentController.SmokeLevel;
+                SetMeter(_exposureRow, lv, lv > 0.66f ? HudTheme.Danger : lv > 0.33f ? HudTheme.Warn : HudTheme.Muted, lv > 0.66f ? "위험" : lv > 0.33f ? "주의" : "낮음");
+                _exposureRow.Trail.rectTransform.anchorMax = new Vector2(lv, 1);
+            }
+            float trail = HudMotion.Trail(_healthRow.TrailK, _healthRow.Shown, now - _healthRow.LossAt, dt);
+            if (trail != _healthRow.TrailK || _healthRow.Trail.rectTransform.anchorMax.x != trail)
+            {
+                _healthRow.TrailK = trail;
+                _healthRow.Trail.rectTransform.anchorMax = new Vector2(trail, 1);
+            }
 
             // Under a modal window the roaming HUD fades out (0.15 s) and comes back after; the talk box and captions stay.
             float layer = HudVisibility.LayerAlpha(UiScreen.OpenCount);
@@ -721,13 +835,12 @@ namespace AiOn.UI
                 _toasts.anchoredPosition = new Vector2(-28, -(map ? MapTop + MapSize + 18 : ToastTop)); // toasts go under the map
             }
             if (map && _mapDirty && _lastMap != null && (level == null || (string)_lastMap["level"] == level)) DrawMap(_lastMap);
-            SetActive(_stamina, HudVisibility.Part(_staminaWanted, _hidden, _cinematic));
 
             // The key strip: free roam only (a dialog or menu has its own keys), for a while after start, H and level entry.
             var kb = Keyboard.current;
             if (kb != null && kb.hKey.wasPressedThisFrame) _keyTimer.Show(KeyStripTimer.Again);
             bool roaming = up && _compassWanted && !InputGate.Blocked;
-            bool keys = HudVisibility.KeyStrip(up, roaming, _keyTimer.Tick(roaming, dt));
+            bool keys = HudVisibility.KeyStrip(up, roaming, _keyTimer.Tick(roaming, dt)) && !UiKeys.StripSuppressed;
             float ka = Mathf.MoveTowards(_keysGroup.alpha, keys ? 1 : 0, dt / (keys ? 0.25f : 0.8f));
             if (ka != _keysGroup.alpha) _keysGroup.alpha = ka;
             SetActive(_keys, keys || ka > 0);
@@ -777,6 +890,9 @@ namespace AiOn.UI
         // a Button tint multiplier: ChoiceBg (0.12, 0.17, 0.19) becomes about (0.24, 0.2, 0.13), a warm amber-brown
         static readonly Color ChoiceHover = new(2.0f, 1.2f, 0.68f, 1f);
 
+        /// <summary>The speaker name the story gives a choice the player makes alone, under pressure.</summary>
+        public static bool IsJudgement(string speaker) => speaker == "판단";
+
         /// <summary>The talk box sized to its line (140 to 300 px), at the bottom: the centre stays free for the speaker.</summary>
         async Task<string> TalkBody(TalkOptions o)
         {
@@ -785,6 +901,8 @@ namespace AiOn.UI
             if (lines.Count == 0) lines.Add("…");
             bool hasChoices = o.Choices != null && o.Choices.Count > 0;
             using var modal = new ModalScope(this, hasChoices);
+            // A judgement under pressure: time slows and the world blurs behind the choices (DecisionMoment).
+            using var moment = hasChoices && IsJudgement(o.Speaker) ? DecisionMoment.Begin() : null;
             var box = UiKit.Box("Talk", _root, new Color(0.04f, 0.06f, 0.07f, 0.97f)).rectTransform;
             box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, 0); box.anchoredPosition = new Vector2(0, TalkBottom); box.sizeDelta = new Vector2(TalkWidth, TalkMinH);
             try
@@ -869,9 +987,11 @@ namespace AiOn.UI
                 trig.triggers.Add(exit);
                 widest = Mathf.Max(widest, t.preferredWidth + 40);
                 texts.Add(t); buttons.Add(b);
+                UiAppear.On(b.gameObject, 0.05f + i * 0.06f, slide: false, duration: 0.2f); // the choices come in one after another
             }
             float colW = Mathf.Clamp(Mathf.Ceil(widest) + 8, ChoiceMinW, ChoiceMaxW);
             list.sizeDelta = new Vector2(colW, 10);
+            UiAppear.On(list.gameObject, 0f, slide: true, duration: 0.28f).from = new Vector2(0, -18);
             for (int i = 0; i < texts.Count; i++)
             {
                 var t = texts[i];
@@ -923,12 +1043,14 @@ namespace AiOn.UI
             bool decision = o.Kind == "decision";
             bool hints = actions.Exists(a => !string.IsNullOrEmpty(a.Hint));
             using var modal = new ModalScope(this, true, counts: true);
+            using var moment = decision ? DecisionMoment.Begin() : null;
             var shade = UiKit.Box("CardShade", _root, UiKit.ModalShade, raycast: true).rectTransform; UiKit.Fill(shade);
             var box = UiKit.Box("Card", shade, new Color(0.07f, 0.1f, 0.11f, 0.98f)).rectTransform;
             box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, 0.5f); box.sizeDelta = new Vector2(900, 10);
             var col = box.gameObject.AddComponent<VerticalLayoutGroup>();
             col.padding = new RectOffset(40, 40, 32, 32); col.spacing = 14; col.childControlHeight = true; col.childControlWidth = true; col.childForceExpandHeight = false;
             box.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            UiAppear.On(box.gameObject, 0f, slide: true, duration: decision ? 0.3f : 0.22f); // every card fades and slides up
             if (!string.IsNullOrEmpty(o.Kind)) UiKit.Label("Kind", box, KindLabel(o.Kind), 18, decision ? UiKit.Teal : UiKit.Amber, style: FontStyle.Bold);
             UiKit.Label("Title", box, o.Title ?? "", decision ? 42 : 34, UiKit.Ink, style: FontStyle.Bold);
             if (!string.IsNullOrEmpty(o.Meta)) UiKit.Label("Meta", box, o.Meta, 20, UiKit.Dim);
@@ -1123,7 +1245,6 @@ namespace AiOn.UI
         sealed class ModalScope : IDisposable
         {
             readonly bool _cursor, _counts;
-            readonly bool _wasLocked;
             readonly StoryOverlay _owner;
             bool _done;
             /// <summary>counts: a card or time skip, which the HUD fades under like a UiScreen (UiScreen.PushModal).</summary>
@@ -1135,8 +1256,7 @@ namespace AiOn.UI
                 _counts = counts;
                 InputGate.Hold();
                 if (_counts) UiScreen.PushModal();
-                _wasLocked = Cursor.lockState == CursorLockMode.Locked;
-                if (_cursor) PlayerInputReader.SetCursorLocked(false);
+                if (_cursor) PlayerInputReader.HoldPointer(); // choices and cards are clicked
             }
             /// <summary>Once only: the await's using, or the overlay's OnDestroy when that await never resumes.</summary>
             public void Dispose()
@@ -1146,7 +1266,7 @@ namespace AiOn.UI
                 _owner._scopes.Remove(this);
                 InputGate.Release();
                 if (_counts) UiScreen.PopModal();
-                if (_cursor && _wasLocked) PlayerInputReader.SetCursorLocked(true);
+                if (_cursor) PlayerInputReader.ReleasePointer();
             }
         }
     }

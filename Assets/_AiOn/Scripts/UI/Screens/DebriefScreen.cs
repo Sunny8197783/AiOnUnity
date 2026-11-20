@@ -368,6 +368,7 @@ namespace AiOn.UI
             var buttons = new List<(string, bool, bool, Action)>();
             Button copy = null;
             if (!string.IsNullOrEmpty(_v.Share)) buttons.Add(("결과 복사", false, false, () => Copy(copy)));
+            buttons.Add(("학습 리포트", false, false, () => { if (Ready && Time.unscaledTime - OpenedAt >= Hold) _ = ReportScreen.Open(null); }));
             buttons.Add(("인쇄하기", false, false, Print));
             buttons.Add(("메인 메뉴", false, false, () => Go("menu")));
             buttons.Add(("처음부터 다시", true, true, () => Go("restart")));

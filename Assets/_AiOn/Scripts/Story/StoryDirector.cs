@@ -4,8 +4,8 @@
 // settings and experience profiles, and the global keys while roaming (as public methods too).
 //
 // What stays in the host (Unity) because the contract has no member for it: rendering (minimap walk/solids, the
-// stamina bar, footsteps, the pointer-lock hint), engine/actions.js (fists, throwing: the host calls OnHit / Hurt /
-// DropHeld), audio volumes and buses, graphics quality, text scale and mouse sensitivity (ApplyHostSettings hook),
+// stamina bar, footsteps, the pointer-lock hint), engine/actions.js (picking up and setting down: the host calls Hurt /
+// DropHeld; the competition upgrade took the fists and the throw out), audio volumes and buses, graphics quality, text scale and mouse sensitivity (ApplyHostSettings hook),
 // speech for the low-vision profile (Speak hook) and reloading the scene for "menu" (MenuRequested hook).
 //
 // Screens open through IStoryUi.Open with the original's option object. Functions that took a positional argument get
@@ -41,7 +41,7 @@ namespace AiOn.Story
     /// <summary>The danger system (danger.js createDanger) as the director uses it.</summary>
     public interface IStoryDanger
     {
-        /// <summary>A looter: hitting it is self-defence, not violence.</summary>
+        /// <summary>The stranger the danger layer spawned (the talk facing reads it; nobody hits anyone).</summary>
         bool IsHostile(IStoryPerson person);
         /// <summary>Force an event now: 'boom' (x, z, size), 'blast', 'shell', 'collapse', 'looter'.</summary>
         void Trigger(string kind, double x, double z, double size);
@@ -56,6 +56,8 @@ namespace AiOn.Story
         void Resume();
         void Death(string why);
         Task Chalk();
+        /// <summary>A prepared-state run (scene select, teacher mode) holds the recording: no trail of it in the player's own record.</summary>
+        void Hold(bool on) { }
     }
 
     /// <summary>A chapter: its id (prologue, prep, dday, endure, crossroads, evac, ending) and its entry.</summary>
@@ -106,7 +108,7 @@ namespace AiOn.Story
             MakeEcho = (c, store) =>
             {
                 var e = Echo.Create(c, store.Get, store.Set);
-                return new FnEcho(() => e.Begin(), () => e.Resume(), why => e.Death(why), () => e.Chalk());
+                return new FnEcho(() => e.Begin(), () => e.Resume(), why => e.Death(why), () => e.Chalk(), on => e.Held = on);
             },
         };
     }
@@ -124,12 +126,13 @@ namespace AiOn.Story
     /// <summary>IStoryEcho from delegates.</summary>
     public sealed class FnEcho : IStoryEcho
     {
-        readonly Action _begin, _resume; readonly Action<string> _death; readonly Func<Task> _chalk;
-        public FnEcho(Action begin, Action resume, Action<string> death, Func<Task> chalk) { _begin = begin; _resume = resume; _death = death; _chalk = chalk; }
+        readonly Action _begin, _resume; readonly Action<string> _death; readonly Func<Task> _chalk; readonly Action<bool> _hold;
+        public FnEcho(Action begin, Action resume, Action<string> death, Func<Task> chalk, Action<bool> hold = null) { _begin = begin; _resume = resume; _death = death; _chalk = chalk; _hold = hold; }
         public void Begin() => _begin?.Invoke();
         public void Resume() => _resume?.Invoke();
         public void Death(string why) => _death?.Invoke(why);
         public Task Chalk() => _chalk?.Invoke() ?? Task.CompletedTask;
+        public void Hold(bool on) => _hold?.Invoke(on);
     }
 
     /// <summary>An experience profile (체험 모드): how the body moves. Speed multiplies the story's speed.</summary>
@@ -172,13 +175,11 @@ namespace AiOn.Story
         public const string LoadingText = "장면을 준비하는 중…", LockHintText = "화면을 한 번 클릭하면 마우스만 움직여 둘러볼 수 있습니다",
             BootErrorText = "문제가 생겨 게임을 계속할 수 없습니다. 새로고침해 주세요.";
 
-        public static readonly string[] Ouch ={ "“아악! 왜 이래요!”", "“뭐 하는 거야!”", "“사람 살려요!”", "“그만해요, 제발!”", "“미쳤어?!”" };
-
         public static readonly (string key, string text)[] Keys =
         {
             ("W A S D · 방향키", "이동"), ("마우스", "둘러보기 — 화면을 한 번 클릭하면 마우스만 움직여도 시점이 돕니다 (Esc로 커서 되찾기)"),
             ("Shift", "달리기 (기력이 줄어듭니다. 가방이 무거우면 더 빨리 지칩니다)"), ("Space", "점프 · 낮은 담/차/난간 앞에서 누르면 넘거나 올라감"),
-            ("클릭 · Q", "주먹 (손에 든 게 있으면 던지기)"), ("G", "바닥의 돌·병 줍기 / 던지기"), ("C", "엎드리기/웅크리기 (폭발·파편 피해가 줄어듭니다. Space로 일어서기)"), ("X", "구급함 쓰기"),
+            ("G", "바닥의 물건 줍기 / 내려놓기"), ("Q", "손에 든 물건 내려놓기"), ("C", "엎드리기/웅크리기 (폭발·파편 피해가 줄어듭니다. Space로 일어서기)"), ("X", "구급함 쓰기"),
             ("B", "분필로 바닥에 적기 — 다음 회차의 내가 보게 됩니다"), ("E · Enter", "살피기 · 대화 · 사용"),
             ("F", "손전등 켜기/끄기 (정전 후)"), ("V", "1인칭 / 3인칭 전환"), ("P", "휴대폰 (문자 · FM 라디오)"), ("Tab", "수첩"), ("I", "소지품"), ("M", "지도"), ("H", "이 조작법 다시 보기"), ("Esc", "일시정지 · 설정"),
         };
@@ -231,6 +232,16 @@ namespace AiOn.Story
         public Action MenuRequested;
         /// <summary>Errors the original only logged (console.error).</summary>
         public Action<string, Exception> Log;
+        /// <summary>A prepared save's JSON by moment id (SceneSelect; Resources/Demo/&lt;id&gt;.json), or null when there is none.</summary>
+        public Func<string, string> PreparedSave;
+
+        /// <summary>
+        /// A run started from a prepared state (scene select, teacher mode): it saves under SceneSelect.SaveKey (never the
+        /// main save or the host's mirror), and records no ending, challenge or echo death.
+        /// </summary>
+        public bool DemoRun { get; private set; }
+        /// <summary>The key the running game saves under.</summary>
+        public string ActiveSaveKey => DemoRun ? SceneSelect.SaveKey : SaveKey;
 
         double _frameMs;
         double _pausedMs;
@@ -411,50 +422,40 @@ namespace AiOn.Story
             try { Speak?.Invoke(text); } catch { /* no voice */ }
         }
 
-        // ------------------------------------------------------------------ the body: falls, fights
+        // ------------------------------------------------------------------ the body: falls
 
-        /// <summary>Damage to the player (falls, blasts, a looter); why becomes the death cause.</summary>
+        /// <summary>Health off (falls, blasts, debris, fire); why becomes the fail card's cause.</summary>
         public void Hurt(double n, string why)
         {
             if (G == null || !(n > 0)) return;
             Ctx.DeathCause = why; Ctx.Stat("health", -n); Hud.Hurt(n / 40);
         }
 
-        /// <summary>engine/actions.js hit someone (how: punch, throw, debris; ko: knocked down).</summary>
-        public void OnHit(IStoryPerson person, string how, bool ko)
-        {
-            if (G == null || (_danger != null && _danger.IsHostile(person)) || how == "debris") return; // self-defence against a looter is not counted
-            var karma = G.Extra.TryGetValue("karma", out var k) && k != null && (k.Type == JTokenType.Integer || k.Type == JTokenType.Float) ? (double)k : 0;
-            G.Extra["karma"] = karma - (ko ? 3 : 1);
-            Ctx.Event("violence", new JObject { ["how"] = how, ["ko"] = ko });
-            var who = person?.Name;
-            if (who != null && G.Rel.TryGetValue(who, out var rel) && rel != null) rel.Trust -= 2;
-            Ctx.Toast(ko ? "상대가 바닥에 쓰러졌다." : Ouch[(int)Math.Floor(Random() * Ouch.Length)], "site", 2600);
-        }
-
         void OnLand(double drop)
         {
             Audio.Cue("hit", new JObject { ["kind"] = "land" });
             if (G == null || drop < 3.2) return;
-            if (drop > 5.5 && !HasLeg)
-            {
-                (G.Injury ??= new List<string>()).Add("leg"); ApplySettings(); Ctx.Event("injury", new JObject { ["part"] = "leg", ["drop"] = Num.JsRound(drop) });
-                Ctx.Toast("착지하는 순간 다리가 꺾였다. 뼈가 부러진 것 같다 — 이제 달릴 수 없다.", "self", 6500);
-            }
+            // Port change (competition upgrade, no injury scenes): the original broke a leg on a drop over 5.5 m (no more
+            // running, G.Injury "leg"). Now a hard landing only costs health and says so calmly; old saves keep their leg.
+            if (drop > 5.5) Ctx.Toast(HardLandingLine, "self", 5000);
             Hurt(drop > 10 ? 200 : Num.JsRound((drop - 3) * 15), "fall");
         }
 
-        /// <summary>X: the first-aid kit (in the bag, or at home) patches you up; a broken leg stays broken.</summary>
+        public const string HardLandingLine = "착지가 거칠었다. 숨을 고르자. 높은 곳에서는 계단이나 사다리로 내려가자.";
+
+        /// <summary>X: the first-aid kit (in the bag, or at home) helps you recover some health.</summary>
         public void FirstAid()
         {
             if (G == null) return;
             G.Items.TryGetValue("first_aid", out var e);
             bool atHome = Engine.LevelId == "apartment";
             if (e == null || !(e.Bag > 0 || (atHome && e.Home > 0))) { Ctx.Toast("쓸 수 있는 구급함이 없다."); return; }
-            if (G.Stats.Health >= 95) { Ctx.Toast("지금은 처치할 상처가 없다."); return; }
+            if (G.Stats.Health >= 95) { Ctx.Toast(FirstAidNotNeeded); return; }
             if (e.Bag > 0) e.Bag--; else e.Home--;
-            e.Used++; Ctx.Stat("health", 35); Ctx.Event("first_aid", new JObject()); Ctx.Toast("상처를 소독하고 붕대를 감았다. 조금 낫다.", "self");
+            e.Used++; Ctx.Stat("health", 35); Ctx.Event("first_aid", new JObject()); Ctx.Toast(FirstAidUsed, "self");
         }
+
+        public const string FirstAidNotNeeded = "지금은 구급함이 필요하지 않다.", FirstAidUsed = "구급함을 열어 몸을 살피고 잠시 쉬었다. 조금 낫다.";
 
         // ------------------------------------------------------------------ global keys
 
@@ -463,6 +464,7 @@ namespace AiOn.Story
         {
             if (G == null || !Engine.ControlsEnabled || code == null) return;
             var k = code.StartsWith("Key", StringComparison.Ordinal) && code.Length == 4 ? code.Substring(3) : code;
+            if (Ctx.HandsFull && (k == "V" || k == "B" || k == "X")) return; // the extinguisher in both hands, first person
             if (k == "F") ToggleFlashlight();
             else if (k == "V") ToggleView();
             else if (!Ctx.Roaming) return;
@@ -470,7 +472,7 @@ namespace AiOn.Story
             else if (k == "I") await OpenInventory();
             else if (k == "H") await Ctx.Modal(() => ControlsCard());
             else if (k == "X") FirstAid();
-            else if (k == "B") { if (_echo != null) await _echo.Chalk(); }
+            else if (k == "B") { if (_echo != null && !DemoRun) await _echo.Chalk(); } // a prepared-state run leaves no marks in the player's own record
             else if (k == "P") await Ctx.Modal(() => OpenPhone());
             else if (k == "M") await OpenMap();
             else if (k == "Escape") await OpenPause();
@@ -573,9 +575,15 @@ namespace AiOn.Story
             if (pick == "lounge") await Ctx.Modal(() => OpenLounge());
             _pausedMs += NowMs() - p0;
             if (pick == "settings") { var r = await Ctx.Modal(() => Ui.Open("settings", (JObject)Settings.DeepClone())); UpdateSettings(r); }
-            else if (pick == "save") { if (G?.Checkpoint != null) SaveNow(); Ctx.Toast("마지막 체크포인트를 저장했습니다."); }
-            else if (pick == "menu") MenuRequested?.Invoke();
+            else if (pick == "save")
+            {
+                if (DemoRun) { Ctx.Toast(DemoNoSaveText); return; } // a prepared run's slot is wiped when it ends: keeping nothing, say so
+                if (G?.Checkpoint != null) SaveNow(); Ctx.Toast("마지막 체크포인트를 저장했습니다.");
+            }
+            else if (pick == "menu") { if (DemoRun) Store.Set(SceneSelect.SaveKey, ""); MenuRequested?.Invoke(); }
         }
+
+        public const string DemoNoSaveText = "장면 바로가기와 교사용 모드에서는 저장되지 않습니다.";
 
         /// <summary>The lounge; the best run is what "내 최고 기록 알리기" posts.</summary>
         public Task<JToken> OpenLounge()
@@ -857,17 +865,32 @@ namespace AiOn.Story
         public void SaveNow()
         {
             if (G == null) return;
-            Store.Set(SaveKey, new JObject { ["index"] = Index, ["G"] = JObject.Parse(SaveCodec.Save(G)), ["snap"] = Ctx.Snap?.DeepClone() ?? JValue.CreateNull() }.ToString(Formatting.None));
+            Store.Set(ActiveSaveKey, new JObject { ["index"] = Index, ["G"] = JObject.Parse(SaveCodec.Save(G)), ["snap"] = Ctx.Snap?.DeepClone() ?? JValue.CreateNull() }.ToString(Formatting.None));
         }
 
         /// <summary>persist.checkpoint: a retry point (game copy + runtime snapshot), saved at once.</summary>
         public void Checkpoint(string key)
         {
             SaveCodec.MakeCheckpoint(G, key); Ctx.Snap = Snapshot(); SaveNow();
-            _hostPersist?.Checkpoint(key);
+            if (!DemoRun) _hostPersist?.Checkpoint(key);
         }
 
-        public void Save() { SaveNow(); _hostPersist?.Save(); }
+        public void Save() { SaveNow(); if (!DemoRun) _hostPersist?.Save(); }
+
+        /// <summary>The teacher route's stop for the moment playing (a StoryContext.Reached mark), or null to play the chapter out.</summary>
+        string _stopAt;
+
+        /// <summary>persist.reached: a story mark. During a teacher-mode moment that ends here, the moment is over.</summary>
+        public void Reached(string mark)
+        {
+            if (DemoRun && _stopAt != null && mark == _stopAt) throw new MomentDone(mark);
+        }
+
+        /// <summary>Thrown by Reached at the teacher route's stop; RunChapters returns MomentResult.</summary>
+        public sealed class MomentDone : Exception { public MomentDone(string mark) : base("moment:" + mark) { } }
+
+        /// <summary>What RunChapters returns when a teacher-mode moment reached its stop.</summary>
+        public const string MomentResult = "moment";
 
         // ------------------------------------------------------------------ resets
 
@@ -900,6 +923,7 @@ namespace AiOn.Story
         /// </summary>
         public void RecordRun()
         {
+            if (DemoRun) return; // a run from a prepared state is not this player's run: no gallery, records or challenges
             try
             {
                 var fr = Challenges.FinishRun(G, Store.Get(GalleryKey), Store.Get(RecordsKey), Today(), Facts.SourceId);
@@ -917,9 +941,10 @@ namespace AiOn.Story
         /// back to the last checkpoint and replays the chapter (ctx.Resume = that key unless it is the chapter start);
         /// anything else returns 'menu'. Returns the ending's result (e.g. 'restart'), or null past the last chapter.
         /// </summary>
-        public async Task<string> RunChapters(int start, string resumeKey)
+        public async Task<string> RunChapters(int start, string resumeKey, int end = -1)
         {
-            for (int i = start; i < Chapters.Count; i++)
+            int stop = end < 0 || end > Chapters.Count ? Chapters.Count : end; // teacher mode plays one chapter at a time
+            for (int i = start; i < stop; i++)
             {
                 var ch = Chapters[i];
                 Index = i;
@@ -947,8 +972,13 @@ namespace AiOn.Story
                         break;
                     }
                     catch (StoryFail err) { fail = err; }
+                    catch (MomentDone)
+                    {
+                        Engine.SetControls(false); Audio.Loop("siren", false); Audio.Loop("fire", false); Hud.SetCinematic(false);
+                        return MomentResult;
+                    }
 
-                    if (fail.Type == "dead") _echo?.Death(JsText(fail.Detail?["why"]));
+                    if (fail.Type == "dead" && !DemoRun) _echo?.Death(JsText(fail.Detail?["why"]));
                     Engine.SetControls(false); Audio.Loop("siren", false); Audio.Loop("fire", false); Hud.SetCinematic(false);
                     var card = Debrief.FailDebrief(Rules, G, fail.Type, fail.Detail, Facts.Text, Facts.SourceId);
                     var o = JObject.FromObject(card);
@@ -975,6 +1005,13 @@ namespace AiOn.Story
             catch (StoryFail) { throw; }
             catch (Exception err) { Log?.Invoke("[cine] opening failed", err); }
             Engine.SetControls(false);
+            await ProfileCard();
+            Ctx.After(1.5, () => Hud.Toast("조작법은 언제든 H 키로 볼 수 있습니다.", "self", 5000));
+        }
+
+        /// <summary>The experience-mode card (a new game's intro and the teacher mode's start).</summary>
+        public async Task ProfileCard()
+        {
             var pick = await Ui.Card(new CardOptions
             {
                 Kind = "info", Title = "체험 모드", Meta = "설정(Esc)에서 언제든 바꿀 수 있습니다",
@@ -992,7 +1029,6 @@ namespace AiOn.Story
                 if (pick == "deaf") Settings["captions"] = true;
                 ApplySettings();
             }
-            Ctx.After(1.5, () => Hud.Toast("조작법은 언제든 H 키로 볼 수 있습니다.", "self", 5000));
         }
 
         /// <summary>Loads the town behind the title screen (a failure only moves the load to the opening).</summary>
@@ -1016,6 +1052,9 @@ namespace AiOn.Story
         /// </summary>
         public async Task<string> TitleOnce()
         {
+            // a prepared run left through the pause menu's reload (or a closed app) never reached its cleanup
+            if (!string.IsNullOrEmpty(Store.Get(SceneSelect.SaveKey))) Store.Set(SceneSelect.SaveKey, "");
+            RestoreTeacherSettings();
             var saved = SafeParse(Store.Get(SaveKey));
             var seen = Endings.GalleryView(Store.Get(GalleryKey));
             var rec = Challenges.ReadRecords(Store.Get(RecordsKey));
@@ -1028,7 +1067,143 @@ namespace AiOn.Story
             if (pick == "lounge") { await OpenLounge(); return pick; }
             if (pick == "settings") { UpdateSettings(await Ui.Open("settings", (JObject)Settings.DeepClone())); return pick; }
             if (pick == "about") { await Ui.Open("about", new JObject { ["sources"] = JArray.FromObject(Facts.Sources) }); return pick; }
+            if (pick == "scenes")
+            {
+                var id = Str(await Ui.Open("sceneSelect", SceneSelect.ScreenOptions(HasPrepared)));
+                var m = SceneSelect.Get(id);
+                if (m == null || !m.Ready) return pick;
+                return await StartMoment(m);
+            }
+            if (pick == "teacher") return await StartTeacher();
             return await StartRun(pick == "continue", saved);
+        }
+
+        // ------------------------------------------------------------------ judge entry: scene select, teacher mode
+
+        bool HasPrepared(string id)
+        {
+            try { return !string.IsNullOrEmpty(PreparedSave?.Invoke(id)); }
+            catch (Exception) { return false; }
+        }
+
+        /// <summary>The prepared save of a moment, checked (SceneSelect.Prepare); null (logged) when it is missing or bad.</summary>
+        PreparedStart Prepared(DemoMoment m)
+        {
+            try { return SceneSelect.Prepare(m, PreparedSave?.Invoke(m.Id), Chapters.Select(c => c.Id).ToList(), Rules.Db); }
+            catch (Exception e) { Log?.Invoke($"[scenes] prepared save '{m?.Id}'", e); return null; }
+        }
+
+        /// <summary>
+        /// Plays from a prepared state: loads it like a continued save but under the demo save key, then runs the chapters
+        /// from its chapter to `end` (exclusive; -1 = to the ending). Returns the run's result, or "menu" when the state
+        /// could not be loaded. The player's main save, the gallery and the records are never touched.
+        /// </summary>
+        public async Task<string> PlayPrepared(DemoMoment m, int end = -1, string stopAt = null)
+        {
+            var p = Prepared(m);
+            if (p == null) { await Ui.Card(new CardOptions { Kind = "notice", Title = "장면을 열 수 없습니다", Body = { "준비된 상태를 읽지 못했습니다." } }); return "menu"; }
+            DemoRun = true; _stopAt = stopAt;
+            _echo?.Hold(true);
+            try
+            {
+                G = SaveCodec.Load(p.Saved["G"].ToString(Formatting.None), Rules.Db);
+                SaveCodec.Restore(G);
+                Store.Set(SceneSelect.SaveKey, p.Saved.ToString(Formatting.None));
+                ResetRun(p.Saved["snap"]);
+                Engine.SetView(View);
+                Hud.Show();
+                string result;
+                try { result = await RunChapters(p.Index, p.Resume, end); }
+                finally { Hud.Hide(); }
+                return result;
+            }
+            finally
+            {
+                Store.Set(SceneSelect.SaveKey, "");
+                DemoRun = false; _stopAt = null;
+                _echo?.Hold(false);
+                G = null; Ctx.Rate = 0;
+            }
+        }
+
+        /// <summary>장면 바로가기: one moment, played on to the ending (or until the player goes back to the title).</summary>
+        public Task<string> StartMoment(DemoMoment m) => PlayPrepared(m);
+
+        /// <summary>
+        /// 교사용 30분 모드: the intro card (and the experience mode), then each moment of SceneSelect.TeacherRoute played to
+        /// its stop (TeacherStep.StopAt, else the end of its chapter) with a lesson card (one sourced fact) after it; the last
+        /// runs to the ending document, then its lesson and a summary card that lists the lessons. Returns the last run's
+        /// result ("menu" when a step was left). The experience mode picked here is the class's: the player's own profile
+        /// setting comes back afterwards.
+        /// </summary>
+        public async Task<string> StartTeacher()
+        {
+            var go = await Ui.Card(new CardOptions
+            {
+                Kind = "info", Title = SceneSelect.TeacherTitle, Meta = SceneSelect.TeacherMeta, Body = SceneSelect.TeacherIntro.ToList(),
+                Actions = new List<CardAction> { new("start", "시작하기", true), new("back", "돌아가기") },
+            });
+            if (go != "start") return "teacher";
+            // the player's own experience mode, kept until the class is over (also across a menu reload or a closed app)
+            Store.Set(SceneSelect.TeacherRestoreKey, new JObject { ["profile"] = Settings["profile"]?.DeepClone(), ["captions"] = Settings["captions"]?.DeepClone() }.ToString(Formatting.None));
+            try
+            {
+                await ProfileCard();
+                var ids = Chapters.Select(c => c.Id).ToList();
+                var route = SceneSelect.TeacherRoute;
+                string result = null;
+                for (int i = 0; i < route.Count; i++)
+                {
+                    var m = SceneSelect.Get(route[i].Moment);
+                    bool last = i == route.Count - 1;
+                    int end = last ? -1 : ids.IndexOf(m.Chapter) + 1;
+                    result = await PlayPrepared(m, end, last ? null : route[i].StopAt);
+                    if (result == "menu" && !last) return result; // the fail card's 'menu' or a missing state: back to the title
+                    await LessonCard(i);
+                }
+                await TeacherSummary();
+                return result;
+            }
+            finally { RestoreTeacherSettings(); }
+        }
+
+        /// <summary>The class's experience mode was for the class: puts the player's own profile and captions back (once).</summary>
+        void RestoreTeacherSettings()
+        {
+            var o = SafeParse(Store.Get(SceneSelect.TeacherRestoreKey));
+            if (!o.HasValues) return;
+            foreach (var k in new[] { "profile", "captions" })
+            {
+                if (o[k] == null || o[k].Type == JTokenType.Null) Settings.Remove(k); else Settings[k] = o[k].DeepClone();
+            }
+            Store.Set(SceneSelect.TeacherRestoreKey, "");
+            ApplySettings();
+        }
+
+        Task<string> TeacherSummary()
+        {
+            var route = SceneSelect.TeacherRoute;
+            return Ui.Card(new CardOptions
+            {
+                Kind = "info", Title = SceneSelect.TeacherSummaryTitle, Meta = SceneSelect.TeacherTitle,
+                Body = route.Select(s => $"{s.LessonTitle} — {Facts.Text(s.Fact)}").ToList(),
+                Actions = new List<CardAction> { new("ok", "처음 화면으로", true) },
+            });
+        }
+
+        /// <summary>The card between two teacher-mode moments: one sourced line and where it comes from.</summary>
+        Task<string> LessonCard(int i)
+        {
+            var step = SceneSelect.TeacherRoute[i];
+            var src = Facts.Source(Facts.SourceId(step.Fact));
+            var body = new List<string> { Facts.Text(step.Fact) };
+            if (src != null) body.Add($"출처: {src.Publisher}");
+            bool last = i == SceneSelect.TeacherRoute.Count - 1;
+            return Ui.Card(new CardOptions
+            {
+                Kind = "info", Title = step.LessonTitle, Meta = SceneSelect.LessonMeta(i), Body = body,
+                Actions = new List<CardAction> { new("next", last ? "정리 보기" : "다음 장면으로", true) },
+            });
         }
 
         /// <summary>Starts a run: continue the saved one (if it loads) or a new game; plays it and clears the game after.</summary>

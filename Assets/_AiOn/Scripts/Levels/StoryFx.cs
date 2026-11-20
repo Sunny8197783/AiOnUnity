@@ -83,21 +83,29 @@ namespace AiOn.Levels
     public class FireFx : MonoBehaviour
     {
         ParticleSystem _flames, _embers;
+        float _flameRate;
         Light _light;
         float _level, _scale = 1;
 
         public float Level => _level;
+        /// <summary>Scales the fire's light (the 3D extinguisher brings the view close: less glare on the boxes).</summary>
+        public float LightScale = 1f;
 
         public void Build(float scale)
         {
             _scale = scale;
-            _flames = Make("Flames", StoryFx.FlameMat, 120 * scale);
+            // many small, short-lived, see-through flames: additive light piles up into a white blur otherwise
+            _flameRate = 220 * scale;
+            _flames = Make("Flames", StoryFx.FlameMat, _flameRate);
             var main = _flames.main;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.9f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f * scale, 1.2f * scale);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.35f * scale, 0.7f * scale);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.55f, 0.15f, 0.9f), new Color(1f, 0.8f, 0.3f, 0.8f));
-            var shape = _flames.shape; shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 0.3f * scale; shape.rotation = new Vector3(-90, 0, 0);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.55f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.6f * scale, 1.2f * scale);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.16f * scale, 0.32f * scale);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.45f, 0.08f, 0.5f), new Color(1f, 0.72f, 0.22f, 0.42f));
+            // a cone pointing up (a flat circle would send them sideways along the floor, under whatever burns), drawn
+            // stretched along their rise so they read as tongues of flame, not round glows
+            var shape = _flames.shape; shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 8f; shape.radius = 0.3f * scale; shape.rotation = new Vector3(-90, 0, 0);
+            var fr = _flames.GetComponent<ParticleSystemRenderer>(); fr.renderMode = ParticleSystemRenderMode.Stretch; fr.velocityScale = 0.3f; fr.lengthScale = 1.3f;
             var col = _flames.colorOverLifetime; col.enabled = true;
             var g = new Gradient();
             g.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.85f, 0.4f), 0), new GradientColorKey(new Color(1f, 0.35f, 0.05f), 0.6f), new GradientColorKey(new Color(0.3f, 0.1f, 0.05f), 1) },
@@ -112,7 +120,7 @@ namespace AiOn.Levels
             em.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.05f);
             em.startColor = new Color(1f, 0.6f, 0.2f, 1f);
             em.gravityModifier = -0.15f;
-            var es = _embers.shape; es.shapeType = ParticleSystemShapeType.Circle; es.radius = 0.4f * scale; es.rotation = new Vector3(-90, 0, 0);
+            var es = _embers.shape; es.shapeType = ParticleSystemShapeType.Cone; es.angle = 25f; es.radius = 0.4f * scale; es.rotation = new Vector3(-90, 0, 0);
 
             _light = new GameObject("FireLight").AddComponent<Light>();
             _light.transform.SetParent(transform, false);
@@ -132,25 +140,45 @@ namespace AiOn.Levels
             return ps;
         }
 
+        /// <summary>Recolours the flames (the 3D extinguisher's practice target is a translucent teal stand-in, not a fire).</summary>
+        public void Tint(Color a, Color b)
+        {
+            foreach (var ps in new[] { _flames, _embers })
+            {
+                if (!ps) continue;
+                var m = ps.main; m.startColor = new ParticleSystem.MinMaxGradient(a, b);
+                var col = ps.colorOverLifetime;
+                var g = new Gradient();
+                g.SetKeys(new[] { new GradientColorKey(Color.white, 0), new GradientColorKey(Color.white, 1) },
+                    new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(0.9f, 0.15f), new GradientAlphaKey(0, 1) });
+                col.color = g;
+            }
+            if (_light) _light.color = new Color(a.r, a.g, a.b);
+        }
+
         /// <summary>0 = out, 0.4 = small, 1 = large (original fire.setLevel).</summary>
         public void SetLevel(float level)
         {
             _level = Mathf.Clamp01(level);
-            foreach (var ps in new[] { _flames, _embers })
-            {
-                if (!ps) continue;
-                var e = ps.emission;
-                e.enabled = _level > 0.01f;
-                var m = ps.main; m.startSizeMultiplier = Mathf.Lerp(0.4f, 1f, _level);
-                if (_level > 0.01f && !ps.isPlaying) ps.Play();
-            }
+            Apply(_flames);
+            Apply(_embers);
+        }
+
+        void Apply(ParticleSystem ps)
+        {
+            if (!ps) return;
+            var e = ps.emission;
+            e.enabled = _level > 0.01f;
+            if (ps == _flames && _flameRate > 0) e.rateOverTime = _flameRate * Mathf.Lerp(0.35f, 1f, _level); // a smaller fire is thinner too
+            var m = ps.main; m.startSizeMultiplier = Mathf.Lerp(0.4f, 1f, _level);
+            if (_level > 0.01f && !ps.isPlaying) ps.Play();
         }
 
         void Update()
         {
             if (!_light) return;
             float flicker = 0.75f + 0.25f * Mathf.PerlinNoise(Time.time * 9f, 0.3f);
-            _light.intensity = 12f * _scale * _level * flicker;
+            _light.intensity = 12f * _scale * _level * flicker * LightScale;
             _light.enabled = _level > 0.01f;
         }
     }

@@ -84,6 +84,7 @@ namespace AiOn.EditorTools
             var session = systems.AddComponent<GameSession>();
             session.items = AssetDatabase.LoadAssetAtPath<ItemDatabase>("Assets/_AiOn/Data/ItemDatabase.asset");
             session.factsJson = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_AiOn/Data/Source/facts.json");
+            session.factsExtJson = AssetDatabase.LoadAssetAtPath<TextAsset>(FactsExtWiring.ExtPath);
             var hudGo = new GameObject("HUD");
             hudGo.transform.SetParent(systems.transform, false);
             var hud = hudGo.AddComponent<GameHud>();

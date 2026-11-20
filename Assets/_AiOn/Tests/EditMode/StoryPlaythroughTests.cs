@@ -21,7 +21,7 @@ namespace AiOn.Tests
         static readonly string[] Ids = { "prologue", "prep", "dday", "endure", "crossroads", "evac", "ending" };
 
         /// <summary>The host's persist, checking at every checkpoint that the save just written loads back to the same game.</summary>
-        sealed class CheckingPersist : IStoryPersist
+        internal sealed class CheckingPersist : IStoryPersist
         {
             public FakeStoryHost Host; public MemoryStoryStore Store; public StoryDirector D;
             public readonly List<string> Keys = new();
@@ -56,7 +56,7 @@ namespace AiOn.Tests
             public void Save() => Host.Save();
         }
 
-        sealed class Rig
+        internal sealed class Rig
         {
             public FakeStoryHost Host = new FakeStoryHost { MaxIdleFrames = 30 * 60 * 3 };
             public MemoryStoryStore Store = new MemoryStoryStore();
@@ -240,11 +240,13 @@ namespace AiOn.Tests
             Assert.That(h.Log.Where(c => c.Kind == "chapter").Select(c => c.Text).Distinct().Count(), Is.GreaterThanOrEqualTo(6), "the chapter titles");
         }
 
-        /// <summary>The default run: the first enabled choice everywhere, the primary card action, and the scripted roams.</summary>
-        [Test]
-        public void DefaultAnswers_NewGameToTheEndingDocument()
+        /// <summary>
+        /// The default run's rig, every step queued (the caller plays it): the first enabled choice everywhere, the primary
+        /// card action, and the scripted roams. SceneSelectTests takes its prepared states (장면 바로가기) from this run.
+        /// </summary>
+        internal static Rig DefaultRun(string name)
         {
-            var r = new Rig { Name = "default" };
+            var r = new Rig { Name = name };
             var h = r.Host;
             r.In("prologue");
             // Prologue: the first choice everywhere; desk, lead, window, exit.
@@ -264,29 +266,63 @@ namespace AiOn.Tests
                 "store:storeCounter", "store:storeExit", "town:home", "apartment:elevator", "apartment:homeDoor",
                 "apartment:homePlanner", "apartment:homeBag",
                 "apartment:homeSink", "apartment:homeBed");
-            r.In("dday");
-            // D-day: wait for the alert, out of the door, down the stairs, the manager, the lobby; shelter A after the strike.
-            r.When(() => r.D.Ctx.Roaming && r.D.G.Events.Any(e => e.Type == "alert"), _ => { }, "wait for the alert");
-            r.Press("apartment:homeExitDoor");
-            r.When(() => r.Roam("apartment") && h.PlayerY > 4, x => { x.MoveTo(5, 0.9, 0); x.RunFrame(); }, "downstairs");
-            r.Press("apartment:managerWindow", "apartment:lobbyExit");
-            r.When(() => r.Roam("town") && r.D.G.Knows("strikeSeen"), x => x.Press("shelterA"), "shelterA after the strike");
-            r.Press("shelter:reception", "shelter:spot");
-            // 서연's part (the real SeoyeonRelay inside D-day): the notice board, then the C ramp.
-            r.Press("town:shelterNotice", "town:shelterC");
-            r.In("endure");
-            // Endure: the helper's day (EndureTests "helper" roams).
-            r.Steps("press apartment:homeFridge", "press apartment:homeStock", "press apartment:seoyeonDoor", "press apartment:lobbyNotice", "press apartment:homePlanner",
-                "press apartment:homeExitDoor", "door apartment:lobbyExit", "press town:water", "door town:home", "y 5.6", "press apartment:seoyeonDoor",
-                "door apartment:lobbyExit", "door town:store", "press store:storeCounter", "door store:storeExit", "door town:home", "press apartment:homeBed",
-                "press apartment:extinguisher");
-            r.In("crossroads");
-            // Crossroads: feel the door handle, then stay in and call 119 (after the handle, the first choice is the extinguisher run).
-            r.Before["crossroads"] = x => x.AnswerSpeaker("판단", "handle").AnswerSpeaker("판단", "stay");
-            r.In("evac");
-            // Evacuation: out of the door and the lobby to the assembly point (the bus).
-            r.Press("apartment:homeExitDoor", "apartment:lobbyExit", "town:assembly");
+            DefaultFrom(r, "dday", null);
+            DefaultFrom(r, "endure", null);
+            DefaultFrom(r, "crossroads", null);
+            DefaultFrom(r, "evac", null);
+            return r;
+        }
 
+        /// <summary>
+        /// The default run's steps for one chapter, from its start (resume null) or from a resume key ("shelter" and "fire"
+        /// skip the steps before them): what a scene-select start of that moment needs. teacherStop: the teacher mode ends
+        /// the moment at its stop (SceneSelect.TeacherRoute), so the steps after it are not queued.
+        /// </summary>
+        internal static void DefaultFrom(Rig r, string chapter, string resume, bool teacherStop = false)
+        {
+            var h = r.Host;
+            r.In(chapter);
+            switch (chapter)
+            {
+                case "dday":
+                    if (resume != DDay.ShelterResume && resume != DDay.CprResume)
+                    {
+                        // D-day: wait for the alert, out of the door, down the stairs, the manager, the lobby; shelter A after the strike.
+                        r.When(() => r.D.Ctx.Roaming && r.D.G.Events.Any(e => e.Type == "alert"), _ => { }, "wait for the alert");
+                        r.Press("apartment:homeExitDoor");
+                        r.When(() => r.Roam("apartment") && h.PlayerY > 4, x => { x.MoveTo(5, 0.9, 0); x.RunFrame(); }, "downstairs");
+                        r.Press("apartment:managerWindow", "apartment:lobbyExit");
+                        r.When(() => r.Roam("town") && r.D.G.Knows("strikeSeen"), x => x.Press("shelterA"), "shelterA after the strike");
+                    }
+                    if (resume != DDay.CprResume) r.Press("shelter:reception", "shelter:spot");
+                    // 서연's part (the real SeoyeonRelay inside D-day): the notice board, then the C ramp.
+                    if (!teacherStop) r.Press("town:shelterNotice", "town:shelterC");
+                    break;
+                case "endure":
+                    // Endure: the helper's day (EndureTests "helper" roams), then the night fire.
+                    if (resume != "fire")
+                        r.Steps("press apartment:homeFridge", "press apartment:homeStock", "press apartment:seoyeonDoor", "press apartment:lobbyNotice", "press apartment:homePlanner",
+                            "press apartment:homeExitDoor", "door apartment:lobbyExit", "press town:water", "door town:home", "y 5.6", "press apartment:seoyeonDoor",
+                            "door apartment:lobbyExit", "door town:store", "press store:storeCounter", "door store:storeExit", "door town:home", "press apartment:homeBed");
+                    r.Steps("press apartment:extinguisher");
+                    break;
+                case "crossroads":
+                    // Crossroads: feel the door handle, then stay in and call 119 (after the handle, the first choice is the extinguisher run).
+                    r.Before["crossroads"] = x => x.AnswerSpeaker("판단", "handle").AnswerSpeaker("판단", "stay");
+                    break;
+                case "evac":
+                    // Evacuation: out of the door and the lobby to the assembly point (the bus).
+                    r.Press("apartment:homeExitDoor", "apartment:lobbyExit", "town:assembly");
+                    break;
+            }
+        }
+
+        /// <summary>The default run: the first enabled choice everywhere, the primary card action, and the scripted roams.</summary>
+        [Test]
+        public void DefaultAnswers_NewGameToTheEndingDocument()
+        {
+            var r = DefaultRun("default");
+            var h = r.Host;
             var result = r.Play();
 
             Assert.That(r.Fails, Is.Empty, "no fail card");

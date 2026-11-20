@@ -30,11 +30,21 @@ namespace AiOn.UI
             {
                 if (_itemPrompt == value) return;
                 _itemPrompt = value;
-                const string key = "G · ";
-                _itemPromptText = string.IsNullOrEmpty(value) ? null : value.StartsWith(key, StringComparison.Ordinal) ? $"<color=#3cc6b5><b>G</b></color>   {value.Substring(key.Length)}" : value;
+                (_itemKey, _itemPromptText) = SplitKey(value);
             }
         }
-        string _itemPrompt, _itemPromptText, _promptLabel;
+        string _itemPrompt, _itemPromptText, _itemKey, _promptLabel;
+
+        /// <summary>The loose thing the hands' prompt is about (outlined and bracketed like a point); null when none.</summary>
+        public Transform ItemTarget { get; set; }
+
+        /// <summary>"G · 빈 병 줍기" -> ("G", "빈 병 줍기"); no key part -> ("", text); empty -> (null, null).</summary>
+        public static (string key, string label) SplitKey(string prompt)
+        {
+            if (string.IsNullOrEmpty(prompt)) return (null, null);
+            int i = prompt.IndexOf(" · ", StringComparison.Ordinal);
+            return i > 0 && i <= 3 ? (prompt.Substring(0, i), prompt.Substring(i + 3)) : ("", prompt);
+        }
         AiOn.Interaction.InteractionPoint _promptFor;
         public string PromptText => _prompt && _prompt.gameObject.activeSelf ? _prompt.text : null;
         public string DialogLine => DialogOpen ? _line.text : null;
@@ -49,7 +59,16 @@ namespace AiOn.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() { Cinematic = false; }
         string _promptSized;
-        Text _prompt, _speaker, _role, _line, _counter, _toast;
+        Text _prompt, _promptKey, _speaker, _role, _line, _counter, _toast;
+        HudCrosshair _cross;
+        HudTargetMarker _marker;
+        CanvasGroup _promptGroup;
+        RectTransform _keyCap;
+        float _appear;          // 0..1 since the current target came into reach
+        Vector2 _promptPos;
+        object _shownFor;
+        readonly List<MeshFilter> _itemMeshes = new();
+        Transform _itemMeshesFor;
         GameObject _dialog, _dot;
         readonly List<string> _lines = new();
         int _index;
@@ -90,22 +109,29 @@ namespace AiOn.UI
             _group = gameObject.AddComponent<CanvasGroup>(); // fades out under modal windows
             _group.blocksRaycasts = false; _group.interactable = false;
 
-            _dot = Panel("Dot", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(6, 6), new Color(1, 1, 1, 0.7f)).gameObject;
+            // Reticle: a dot that opens into a ring over something usable; brackets close in on the thing itself.
+            _marker = Widget<HudTargetMarker>("TargetMarker", 160);
+            _marker.gameObject.SetActive(false);
+            _cross = Widget<HudCrosshair>("Crosshair", 64);
+            _dot = _cross.gameObject;
 
-            // A pill (hud.js .hud-prompt: dark, teal edge) sized to its words. Third person: just clear of the character's
-            // head, not across its back; first person: low (the original's bottom 20 %), off the thing under the dot.
-            // The plate is the teal edge, an opaque dark fill sits 2 px inside it: an Outline effect under a translucent
-            // fill showed through as a teal box.
-            var promptBg = Panel("Prompt", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, PromptYThird), new Vector2(PromptMinWidth, 54), new Color(0.24f, 0.78f, 0.71f, 0.6f));
-            var pimg = promptBg.GetComponent<Image>(); pimg.sprite = HudDraw.RoundedSprite; pimg.type = Image.Type.Sliced;
-            var pfill = Panel("Fill", promptBg, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.04f, 0.06f, 0.07f, 1f));
-            Stretch(pfill, 2, 2);
-            var fimg = pfill.GetComponent<Image>(); fimg.sprite = HudDraw.RoundedSprite; fimg.type = Image.Type.Sliced;
+            // The prompt: a slate pill with a key cap, by the thing it is about (first person) or just clear of the
+            // character's head (third person). Sized to its words.
+            var promptBg = Panel("Prompt", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, PromptYThird), new Vector2(PromptMinWidth, 48), HudTheme.Slate);
+            HudTheme.Round(promptBg.GetComponent<Image>());
             _promptBg = promptBg;
-            _prompt = Label("Text", promptBg, 26, TextAnchor.MiddleCenter, Color.white);
-            Stretch(_prompt.rectTransform, PromptPad, 0);
+            _promptGroup = promptBg.gameObject.AddComponent<CanvasGroup>();
+            _promptGroup.blocksRaycasts = false; _promptGroup.interactable = false;
+            _prompt = HudTheme.Shadowed(Label("Text", promptBg, 22, TextAnchor.MiddleLeft, HudTheme.Text));
+            _prompt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _prompt.rectTransform.anchorMin = Vector2.zero; _prompt.rectTransform.anchorMax = Vector2.one;
+            _prompt.rectTransform.offsetMin = new Vector2(PromptTextX, 0); _prompt.rectTransform.offsetMax = new Vector2(-PromptPad, 0);
+            _keyCap = Panel("Key", promptBg, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(10, 0), new Vector2(30, 30), HudTheme.Accent);
+            HudTheme.Round(_keyCap.GetComponent<Image>());
+            _promptKey = Label("K", _keyCap, 18, TextAnchor.MiddleCenter, new Color(0.03f, 0.07f, 0.1f));
+            _promptKey.fontStyle = FontStyle.Bold;
+            Stretch(_promptKey.rectTransform, 0, 0);
             promptBg.gameObject.SetActive(false);
-            _prompt = promptBg.GetComponentInChildren<Text>(true);
 
             var toastBg = Panel("Toast", transform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -120), new Vector2(1100, 90), new Color(0.05f, 0.08f, 0.09f, 0.82f));
             _toast = Label("Text", toastBg, 26, TextAnchor.MiddleCenter, new Color(0.93f, 0.95f, 0.96f));
@@ -167,6 +193,18 @@ namespace AiOn.UI
             return t;
         }
 
+        T Widget<T>(string name, float size) where T : Graphic
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(transform, false);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(size, size);
+            var g = go.AddComponent<T>();
+            g.raycastTarget = false;
+            return g;
+        }
+
         static void Stretch(RectTransform rt, float padX, float padY)
         {
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
@@ -180,7 +218,7 @@ namespace AiOn.UI
             rt.sizeDelta = size;
         }
 
-        const float PromptMinWidth = 280, PromptMaxWidth = 900, PromptPad = 24, PromptYThird = -44, PromptYFirst = -305;
+        const float PromptMinWidth = 140, PromptMaxWidth = 900, PromptPad = 18, PromptTextX = 52, PromptYThird = -44, PromptYFirst = -305;
 
         /// <summary>Cutscene on / off: the dot and the prompt stay off while it runs (the same static flag for every HUD).</summary>
         public void SetCinematic(bool on) => Cinematic = on;
@@ -189,7 +227,11 @@ namespace AiOn.UI
         {
             if (ReferenceEquals(_promptSized, _prompt.text)) return;
             _promptSized = _prompt.text;
-            float w = Mathf.Clamp(Mathf.Ceil(_prompt.preferredWidth) + PromptPad * 2 + 4, PromptMinWidth, PromptMaxWidth);
+            bool key = !string.IsNullOrEmpty(_promptKey.text);
+            if (_keyCap.gameObject.activeSelf != key) _keyCap.gameObject.SetActive(key);
+            float x = key ? PromptTextX : PromptPad;
+            _prompt.rectTransform.offsetMin = new Vector2(x, 0);
+            float w = Mathf.Clamp(Mathf.Ceil(_prompt.preferredWidth) + x + PromptPad + 2, PromptMinWidth, PromptMaxWidth);
             _promptBg.sizeDelta = new Vector2(w, _promptBg.sizeDelta.y);
         }
 
@@ -255,20 +297,76 @@ namespace AiOn.UI
             if (plate.activeSelf != (showPrompt || showItem)) plate.SetActive(showPrompt || showItem);
             if (showPrompt)
             {
-                if (!ReferenceEquals(p, _promptFor) || p.label != _promptLabel) { _promptFor = p; _promptLabel = p.label; _prompt.text = $"<color=#3cc6b5><b>E</b></color>   {p.label}"; }
+                if (!ReferenceEquals(p, _promptFor) || p.label != _promptLabel) { _promptFor = p; _promptLabel = p.label; _prompt.text = p.label; _promptKey.text = "E"; }
             }
-            else if (showItem && _prompt.text != _itemPromptText) { _prompt.text = _itemPromptText; _promptFor = null; }
-            if (showPrompt || showItem)
+            else if (showItem && (_prompt.text != _itemPromptText || _promptFor != null)) { _prompt.text = _itemPromptText; _promptKey.text = _itemKey ?? ""; _promptFor = null; }
+            if (_dot.activeSelf != pointer) _dot.SetActive(pointer);
+
+            // ---- the reticle, the brackets and the prompt's place and pop ----
+            float dt = Time.unscaledDeltaTime;
+            var host = AiOn.Story.UnityStoryHost.Instance;
+            bool reduce = host && host.ReduceMotion;
+            bool first = host && host.View == "first";
+            object aim = showPrompt ? p : showItem ? (object)(ItemTarget ? ItemTarget : this) : null;
+            if (!ReferenceEquals(aim, _shownFor)) { _shownFor = aim; _appear = 0; }
+            _appear = aim == null ? 0 : reduce ? 1 : Mathf.MoveTowards(_appear, 1, dt / 0.16f);
+            _cross.Target = aim != null;
+            if (showPrompt && interactor && interactor.UsedFrame == Time.frameCount) _cross.Press();
+            if (pointer) _cross.Tick(dt, reduce);
+
+            bool marked = false;
+            if (aim != null)
             {
                 SizePrompt();
-                var host = AiOn.Story.UnityStoryHost.Instance;
-                float py = host && host.View == "first" ? PromptYFirst : PromptYThird;
-                if (_promptBg.anchoredPosition.y != py) _promptBg.anchoredPosition = new Vector2(0, py);
+                Vector2 want = new Vector2(0, first ? PromptYFirst : PromptYThird);
+                var cam = interactor && interactor.cameraRig && interactor.cameraRig.cam ? interactor.cameraRig.cam : Camera.main;
+                // A point sits on the floor in front of its fixture: the brackets go at waist height. A thing with an outline
+                // of its own (a door) needs no brackets.
+                var outlined = showPrompt ? AiOn.Rendering.OutlineHighlight.MeshesOf(p) : null;
+                Vector3? world = showPrompt ? (outlined.Length > 0 ? (Vector3?)null : p.Position + Vector3.up * 1.0f) : ItemTarget ? ItemTarget.position : (Vector3?)null;
+                if (cam && world.HasValue && ToCanvas(cam, world.Value, out var at, out float dist))
+                {
+                    float size = HudMotion.ProjectedSize(0.5f, dist, cam.fieldOfView, referenceHeight, 44f, 150f);
+                    marked = true;
+                    _marker.rectTransform.anchoredPosition = at;
+                    _marker.Set(size, _appear);
+                    // first person: the prompt hangs under the thing, inside the middle of the view
+                    if (first) want = new Vector2(Mathf.Clamp(at.x, -620f, 620f), Mathf.Clamp(at.y - size * 0.5f - 46f, -290f, 330f));
+                }
+                _promptPos = _appear <= 0.02f || reduce ? want : Vector2.Lerp(_promptPos, want, 1f - Mathf.Exp(-14f * dt));
+                _promptBg.anchoredPosition = _promptPos;
+                _promptGroup.alpha = HudMotion.OutCubic(_appear);
+                float sc = reduce ? 1f : Mathf.Lerp(0.92f, 1f, HudMotion.OutBack(_appear));
+                _promptBg.localScale = new Vector3(sc, sc, 1);
+
+                // the outline: the point's door or prop, or the loose thing
+                float pulse = reduce ? 1f : 0.8f + 0.2f * Mathf.Sin(Time.unscaledTime * 4f);
+                if (showPrompt) AiOn.Rendering.OutlineHighlight.Draw(outlined, HudTheme.Accent, _appear * pulse);
+                else if (ItemTarget)
+                {
+                    if (_itemMeshesFor != ItemTarget) { _itemMeshesFor = ItemTarget; AiOn.Rendering.OutlineHighlight.MeshesOf(ItemTarget, _itemMeshes); }
+                    AiOn.Rendering.OutlineHighlight.Draw(_itemMeshes, HudTheme.Accent, _appear * pulse);
+                }
             }
-            if (_dot.activeSelf != pointer) _dot.SetActive(pointer);
+            if (_marker.gameObject.activeSelf != marked) _marker.gameObject.SetActive(marked);
 
             if (_toast.transform.parent.gameObject.activeSelf && Time.unscaledTime > _toastUntil)
                 _toast.transform.parent.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// A world position in this canvas' centre-anchored units. False when it is behind the camera or well off screen.
+        /// </summary>
+        bool ToCanvas(Camera cam, Vector3 world, out Vector2 at, out float distance)
+        {
+            var sp = cam.WorldToScreenPoint(world);
+            distance = sp.z;
+            at = default;
+            if (sp.z <= 0.05f) return false;
+            float k = referenceHeight / (float)Mathf.Max(1, cam.pixelHeight);
+            at = new Vector2((sp.x - cam.pixelWidth * 0.5f) * k, (sp.y - cam.pixelHeight * 0.5f) * k);
+            float halfW = cam.pixelWidth * 0.5f * k, halfH = referenceHeight * 0.5f;
+            return Mathf.Abs(at.x) < halfW * 0.95f && Mathf.Abs(at.y) < halfH * 0.95f;
         }
 
         static bool AdvancePressed()

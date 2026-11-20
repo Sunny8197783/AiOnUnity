@@ -22,6 +22,7 @@ namespace AiOn.UI
             host.Screens["pause"] = PauseScreen.Open;
             host.Screens["settings"] = SettingsScreen.Open;
             host.Screens["about"] = AboutScreen.Open;
+            SceneSelectScreen.Register(host); // the judge entry's 장면 바로가기
         }
     }
 
@@ -101,6 +102,12 @@ namespace AiOn.UI
                 var b = MenuBits.Btn(Window, mb.Label, mb.Primary, mb.Ghost, () => { MenuBits.Cue(); Finish(id); }, mb.Ghost ? 22 : 28);
                 var rt = (RectTransform)b.transform;
                 if (!mb.Primary) b.GetComponent<Image>().color = new Color(0.03f, 0.05f, 0.07f, ScreenDecor.A(mb.Ghost ? 0.75f : 0.85f)); // dark fill: the skyline never reads through
+                if (id == "scenes" || id == "teacher")
+                {
+                    // the judge / classroom entry reads as its own pair: a teal-tinted fill and teal text
+                    b.GetComponent<Image>().color = new Color(0.05f, 0.13f, 0.13f, ScreenDecor.A(0.85f));
+                    var t = b.GetComponentInChildren<Text>(); if (t) t.color = MenuBits.Hex("#6fe0d2");
+                }
                 if (mb.Ghost) { UiKit.At(rt, 120 + (ghost % 3) * 300, 664 + (ghost / 3) * 70, 284, 58); ghost++; }
                 else { UiKit.At(rt, 120 + big * 320, 568, 300, 76); big++; }
                 _ring.Add(b);

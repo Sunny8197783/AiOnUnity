@@ -1559,6 +1559,16 @@ MonoBehaviour:
     reach: 0
     host: 
     enabled: 1
+  - id: homePartition
+    label: "\uBCA0\uB780\uB2E4 \uB05D \uBCBD (\uACBD\uB7C9\uCE78\uB9C9\uC774)"
+    kind: inspect
+    x: -7.05
+    y: 5.67
+    z: 8.4
+    r: 1.3
+    reach: 0
+    host: 
+    enabled: 1
   - id: elder304
     label: "304\uD638 \uC5B4\uB974\uC2E0"
     kind: npc

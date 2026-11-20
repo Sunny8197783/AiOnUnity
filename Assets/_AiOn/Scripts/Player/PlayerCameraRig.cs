@@ -110,6 +110,18 @@ namespace AiOn.Player
 
         // ---------------------------------------------------------------- frame
 
+        float _breath, _breathPhase;
+
+        /// <summary>
+        /// How hard the player is breathing, 0..1: winded is all of it, stamina under 55 % up to three quarters, breathed
+        /// smoke up to 0.6 (pure; tested).
+        /// </summary>
+        public static float BreathAmount(float stamina, bool winded, float smoke)
+        {
+            if (winded) return 1f;
+            return Mathf.Max(Mathf.Clamp01((0.55f - stamina) / 0.55f) * 0.75f, Mathf.Clamp01(smoke) * 0.6f);
+        }
+
         void LateUpdate()
         {
             float dt = Time.deltaTime;
@@ -143,10 +155,18 @@ namespace AiOn.Player
             _fov = Mathf.Lerp(_fov, fov + (player.Running && !reduceMotion ? runFovBoost : 0f), 1f - Mathf.Exp(-5f * dt));
             float fovNow = _fov;
 
+            // Breathing: out of breath (low stamina, winded) or in smoke, the view rises and falls with each breath,
+            // faster the harder it is. Not under reduce-motion.
+            float wantBreath = reduceMotion ? 0f : BreathAmount(player.Stamina, player.Winded, AiOn.Levels.EnvironmentController.SmokeLevel);
+            _breath += (wantBreath - _breath) * (1f - Mathf.Exp(-2.5f * dt));
+            _breathPhase += dt * Mathf.Lerp(0.35f, 1.15f, _breath) * Mathf.PI * 2f;
+            if (_breathPhase > Mathf.PI * 2f) _breathPhase -= Mathf.PI * 2f;
+            float breathe = Mathf.Sin(_breathPhase) * _breath;
+
             var eye = p + Vector3.up * player.EyeHeight;
             var right = rot * Vector3.right;
-            var fpPos = eye + Vector3.up * (Mathf.Sin(_phase * 2f) * 0.028f * _bob) + right * (Mathf.Sin(_phase) * 0.018f * _bob);
-            var fpRot = rot * Quaternion.Euler(0, 0, Mathf.Sin(_phase) * 0.23f * _bob);
+            var fpPos = eye + Vector3.up * (Mathf.Sin(_phase * 2f) * 0.028f * _bob + breathe * 0.013f) + right * (Mathf.Sin(_phase) * 0.018f * _bob);
+            var fpRot = rot * Quaternion.Euler(-breathe * 0.5f, 0, Mathf.Sin(_phase) * 0.23f * _bob);
 
             Vector3 pos; Quaternion look;
             bool hideBody = forceBodyHidden;

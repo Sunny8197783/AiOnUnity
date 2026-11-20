@@ -2068,6 +2068,11 @@ MonoBehaviour:
   staminaUse: 1
   lookSensitivity: 0.1375
   pitchLimit: 80
+  sensitivity: 1
+  canRun: 1
+  canJump: 1
+  canStairs: 1
+  eye: 1.62
   startSpawn: entry
 --- !u!114 &405935143
 MonoBehaviour:
@@ -5901,6 +5906,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: AiOn.Runtime::AiOn.Game.GameSession
   items: {fileID: 11400000, guid: ab87db87444433f4694ef32b48eb2ce0, type: 2}
   factsJson: {fileID: 4900000, guid: b01205c8e9f0b0340a4390f05d46e88c, type: 3}
+  factsExtJson: {fileID: 4900000, guid: 86763d1f972f10c4199e443977458403, type: 3}
   seed: 0
   power: 1
 --- !u!4 &1158744785
@@ -7162,18 +7168,27 @@ MonoBehaviour:
   cam: {fileID: 1360768590}
   body: {fileID: 894122587}
   thirdPerson: 1
+  reduceMotion: 0
+  hostOwnsView: 0
   overrideActive: 0
   overridePosition: {x: 0, y: 0, z: 0}
   overrideTarget: {x: 0, y: 0, z: 0}
   overrideFov: 50
   shakeStrength: 0
   shakeUntil: 0
+  forceBodyHidden: 0
+  bodyCastsShadow: 1
   fov: 70
   runFovBoost: 4
   distance: 3.2
   height: 1.95
   shoulder: 0.7
   probeRadius: 0.2
+  indoorDistance: 1.8
+  indoorHeight: 1.7
+  indoorShoulder: 0.45
+  indoorProbe: 1.2
+  firstPersonBelow: 0.9
   obstacles:
     serializedVersion: 2
     m_Bits: 4294967291
@@ -8600,6 +8615,8 @@ MonoBehaviour:
       map: {fileID: 0}
       emissiveMap: {fileID: 0}
   emissionGain: 1
+  nightAmount: 1
+  poolGain: 1
 --- !u!114 &1438132884
 MonoBehaviour:
   m_ObjectHideFlags: 0

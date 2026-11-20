@@ -127,7 +127,14 @@ namespace AiOn.Game
             (c => c.Has("looter_gave"), c => "먹을 것을 나눠 준 그 사람을 몇 주 뒤 배급소에서 다시 만났다. 그는 고개를 숙여 인사했다."),
             (c => c.Has("knock_helped"), c => "그날 밤 문 너머로 물을 청하던 사람을, 며칠 뒤 조끼를 입은 자원봉사자로 다시 만났다."),
             (c => c.Has("looter_escaped"), c => "골목에서 물러섰던 날을 가끔 떠올린다. 물러선 것을 후회하지 않는다."),
-            (c => c.Has("looter_fought"), c => "골목에서 주먹을 휘둘렀던 날의 기억은 오래 꿈에 나왔다."),
+            // added by the port (competition upgrade): the stranger's other answers
+            (c => c.Has("looter_reported"), c => "골목에서 112에 차분히 알렸던 날을 가끔 떠올린다. 말하길 잘했다."),
+            (c => c.Has("looter_neighbors"), c => "골목에서 곁에 서 주었던 두 주민과는 지금도 오가며 인사를 나눈다."),
+            (c => c.Has("looter_argued"), c => "골목에서 언성을 높였던 날을 가끔 떠올린다. 다르게 말할 수도 있었다."),
+            // added by the port: the bystander CPR in the shelter (it always ended with the paramedics taking over)
+            (c => c.Has("cpr_helped"), c => "대피소에서 쓰러졌던 할아버지의 가족이 고맙다는 쪽지를 관리사무소에 맡겨 두었다."),
+            // old saves only (nobody fights any more); port change: the original said 주먹을 휘둘렀던
+            (c => c.Has("looter_fought"), c => "골목에서 시비가 붙었던 날의 기억은 오래 꿈에 나왔다."),
             (c => c.Has("shelter_water_received"), c => "대피소에서 물을 건네받았던 일을 기억한다. 급수 줄에서, 이번에는 내가 물을 건넸다."),
             (c => c.Has("shelter_water_given"), c => "대피소 옆자리 아이의 가족이 급수 줄에서 먼저 알아보고 손을 흔들었다."),
             (c => c.Has("mart_share"), c => "마트에서 생수를 나눠 드린 할머니를 급수 줄에서 다시 만났다."),

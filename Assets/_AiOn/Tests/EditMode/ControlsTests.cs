@@ -178,35 +178,12 @@ namespace AiOn.Tests
         }
 
         [Test]
-        public void Punch_ReachesTheClosestPersonInFront()
-        {
-            var people = new List<(double, double, double)> { (0, 0, 1.2), (0, 0, 0.8), (0.9, 0, 0), (0, 0, -0.5), (0, 1.5, 0.5), (0, 0, 1.6) };
-            Assert.AreEqual(1, LooseThings.PunchTarget(0, 0, 0, 0, 1, people));
-            Assert.AreEqual(3, LooseThings.PunchTarget(0, 0, 0, 0, -1, people), "turned round");
-            Assert.AreEqual(-1, LooseThings.PunchTarget(0, 0, 0, -1, 0, people), "nobody to the left");
-        }
-
-        [Test]
         public void Throw_StrikesAPersonOnThePath()
         {
             Assert.IsTrue(LooseThings.Strikes(0, 1.2, 0, 0, 1.1, 1, 0.2, 0, 0.5));
             Assert.IsFalse(LooseThings.Strikes(0, 1.2, 0, 0, 1.1, 1, 0.6, 0, 0.5), "beside the line");
             Assert.IsFalse(LooseThings.Strikes(0, 2.2, 0, 0, 2.1, 1, 0.1, 0, 0.5), "over the head");
             Assert.IsFalse(LooseThings.Strikes(0, 1.2, 0, 0, 1.1, 1, 0.1, 0, 2.0), "beyond where it stopped");
-        }
-
-        [Test]
-        public void Hits_KnockDownAfterThreePoints()
-        {
-            double hp = LooseThings.HitPoints;
-            Assert.IsFalse(LooseThings.TakeHit(ref hp, 1));
-            Assert.IsFalse(LooseThings.TakeHit(ref hp, 1));
-            Assert.IsTrue(LooseThings.TakeHit(ref hp, 1));
-            Assert.AreEqual(3, hp, "back up again");
-            Assert.IsTrue(LooseThings.TakeHit(ref hp, 2) == false && LooseThings.TakeHit(ref hp, 2), "a brick twice");
-            Assert.AreEqual(8, LooseThings.HitBackDamage(0));
-            Assert.AreEqual(14, LooseThings.HitBackDamage(0.9999));
-            Assert.AreEqual(11, LooseThings.HitBackDamage(0.5));
         }
 
         [Test]

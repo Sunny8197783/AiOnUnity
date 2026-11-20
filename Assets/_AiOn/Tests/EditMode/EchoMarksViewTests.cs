@@ -134,6 +134,17 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void Ghost_melts_away_near_the_camera_and_the_player()
+        {
+            Assert.That(EchoMarksView.GhostVisibility(0.5f, 10f), Is.EqualTo(0f), "at the lens: gone");
+            Assert.That(EchoMarksView.GhostVisibility(10f, 0.3f), Is.EqualTo(0f), "on the player's spot: gone");
+            Assert.That(EchoMarksView.GhostVisibility(10f, 10f), Is.EqualTo(1f));
+            Assert.That(EchoMarksView.GhostVisibility(2f, 10f), Is.GreaterThan(0f).And.LessThan(1f));
+            Assert.That(EchoMarksView.GhostVisibility(2.5f, 10f), Is.GreaterThan(EchoMarksView.GhostVisibility(2f, 10f)));
+            Assert.That(EchoMarksView.GhostAlpha, Is.LessThanOrEqualTo(0.25f), "a faint trace, not a solid figure");
+        }
+
+        [Test]
         public void GhostWalksThePathAndStartsOver()
         {
             var pts = new List<(double X, double Z)> { (0, 0), (0, -3), (0, -6), (0, -9), (0, -12) };

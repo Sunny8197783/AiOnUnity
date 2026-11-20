@@ -23,7 +23,7 @@ namespace AiOn.Story
             var host = GetComponent<UnityStoryHost>();
             var session = FindFirstObjectByType<GameSession>();
             if (!session || !host.overlay) { Debug.LogError("[StoryRunner] the Boot scene needs a GameSession and a StoryOverlay"); return; }
-            var facts = Facts.Load(session.factsJson ? session.factsJson.text : "{}");
+            var facts = session.FactsData; // facts.json + facts-ext.json (Facts.Empty when the session has none)
             StoryScreens.Register(host, session);
 
             // The host-side visuals the story drives: blasts, fires, rubble, debris (danger layer) and cutscene letterbox, titles, missiles.
@@ -36,13 +36,18 @@ namespace AiOn.Story
             host.getState = () => Director.G;
             // The Director itself listens to host.Key / host.Blocked (its engine is this host); subscribing here as well ran every key twice.
             Director.Log = (what, e) => Debug.LogError($"[StoryRunner] {what}: {e}");
-            // The hands (engine/actions.js): fists, picking up and throwing; the director counts the violence and the damage.
+            // 장면 바로가기 / 교사용 30분 모드: the prepared states shipped in Resources/Demo/<id>.json
+            Director.PreparedSave = id =>
+            {
+                var asset = Resources.Load<TextAsset>(SceneSelect.ResourceFolder + "/" + id);
+                return asset != null ? asset.text : null;
+            };
+            // The hands (engine/actions.js): picking up and setting down loose things (no punch, nothing thrown at people).
             if (!TryGetComponent(out PlayerHands hands)) hands = gameObject.AddComponent<PlayerHands>(); // not ??: a missing component is a fake null in the Editor
             hands.host = host; hands.dangerFx = dangerFx;
-            hands.OnHit = Director.OnHit; hands.OnHurt = Director.Hurt;
             hands.Random = () => rng.NextDouble();
             Director.DropHeld = hands.Drop;
-            dangerFx.SpawnLoose = hands.Spawn; // blast bricks / rocks and the looter's can become loose things (actions.spawn)
+            dangerFx.SpawnLoose = hands.Spawn; // blast bricks and rocks become loose things (actions.spawn)
 
             // The settings the host owns (app.js applySettings): sound, sensitivity, graphics tier and its governor, text
             // scale, reduced motion, the experience profile's body and senses; and the pause menu's way back to the title.

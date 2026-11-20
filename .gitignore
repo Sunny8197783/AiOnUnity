@@ -23,3 +23,10 @@
 *.dmp
 Thumbs.db
 .DS_Store
+
+# player builds (AiOn → Build) and MCP screenshots
+/[Bb]uilds/
+/Captures/
+
+# Python caches from agent skill scripts
+__pycache__/

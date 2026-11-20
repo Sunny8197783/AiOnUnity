@@ -587,7 +587,7 @@ namespace AiOn.Tests
                 Assert.AreEqual("쓸 수 있는 구급함이 없다.", r.Host.Toasts.Last());
                 g.Items["first_aid"] = new ItemEntry(0) { Bag = 1 };
                 r.Host.PressKey("KeyX"); await r.Host.Settle();
-                Assert.AreEqual("지금은 처치할 상처가 없다.", r.Host.Toasts.Last());
+                Assert.AreEqual(StoryDirector.FirstAidNotNeeded, r.Host.Toasts.Last());
                 g.Stats.Health = 50;
                 r.Host.PressKey("KeyX"); await r.Host.Settle();
                 Assert.AreEqual(85, g.Stats.Health);
@@ -599,7 +599,8 @@ namespace AiOn.Tests
         // ------------------------------------------------------------------ the body
 
         [Test]
-        public void FallsHurtAndABadOneBreaksALeg()
+        // Port change (competition upgrade, no injury scenes): the original broke a leg on a drop over 5.5 m.
+        public void FallsCostHealth_AndAHardLandingBreaksNothing()
         {
             Roaming(async r =>
             {
@@ -610,34 +611,12 @@ namespace AiOn.Tests
                 r.Host.LandFrom(4); Assert.AreEqual(85, g.Stats.Health); Assert.AreEqual("fall", r.D.Ctx.DeathCause);
                 r.Host.LandFrom(6);
                 Assert.AreEqual(40, g.Stats.Health);
-                CollectionAssert.AreEqual(new[] { "leg" }, g.Injury);
-                var inj = g.Events.Single(e => e.Type == "injury");
-                Assert.AreEqual(6, (int)inj.Details["drop"]);
-                Assert.IsFalse(body.Run, "a broken leg ends running");
-                Assert.Contains("착지하는 순간 다리가 꺾였다. 뼈가 부러진 것 같다 — 이제 달릴 수 없다.", r.Host.Toasts);
-                r.Host.LandFrom(5.6); Assert.AreEqual(1, g.Injury.Count, "one break"); Assert.AreEqual(1, g.Stats.Health);
-                await Task.Yield();
-            });
-        }
-
-        [Test]
-        public void HittingSomeoneCostsKarmaAndTrustButNotALooter()
-        {
-            Roaming(async r =>
-            {
-                var g = r.D.G;
-                g.Rel["minsu"] = new Relation { Trust = 5 };
-                r.D.OnHit(new FakePerson("minsu", "crowd", 0, 0, 0, 0, true), "punch", false);
-                Assert.AreEqual(-1, (double)g.Extra["karma"]);
-                Assert.AreEqual(3, g.Rel["minsu"].Trust);
-                Assert.AreEqual("“사람 살려요!”", r.Host.Toasts.Last());
-                r.D.OnHit(new FakePerson("x", "crowd", 0, 0, 0, 0, true), "throw", true);
-                Assert.AreEqual(-4, (double)g.Extra["karma"]);
-                Assert.AreEqual("상대가 바닥에 쓰러졌다.", r.Host.Toasts.Last());
-                r.D.OnHit(new FakePerson("looter", "crowd", 0, 0, 0, 0, true), "punch", true);
-                r.D.OnHit(new FakePerson("x", "crowd", 0, 0, 0, 0, true), "debris", true);
-                Assert.AreEqual(-4, (double)g.Extra["karma"]);
-                Assert.AreEqual(2, g.Events.Count(e => e.Type == "violence"));
+                Assert.That(g.Injury == null || g.Injury.Count == 0, "no injury");
+                Assert.That(g.Events.Any(e => e.Type == "injury"), Is.False);
+                Assert.That(body == null || body.Run, "running is not taken away");
+                Assert.Contains(StoryDirector.HardLandingLine, r.Host.Toasts);
+                Assert.That(r.Host.Toasts.Any(t => t.Contains("접질") || t.Contains("부러") || t.Contains("달릴 수 없")), Is.False, "no leg injury, nothing broken");
+                r.Host.LandFrom(5.6); Assert.AreEqual(1, g.Stats.Health);
                 await Task.Yield();
             });
         }

@@ -413,7 +413,8 @@ namespace AiOn.Tests
         {
             CollectionAssert.AreEqual(Golden["failTypes"].Select(x => (string)x), Debrief.FailTypes);
             GoldenRuns.AssertGolden(Debrief.People, Golden["people"]);
-            GoldenRuns.AssertGolden(Debrief.Prep, Golden["prep"]);
+            // the competition upgrade's prep ids (Ripples.PortAdded, e.g. the balcony partition) come after the original's
+            GoldenRuns.AssertGolden(Debrief.Prep.Where(kv => !Ripples.PortAdded.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value), Golden["prep"]);
         }
 
         /// <summary>

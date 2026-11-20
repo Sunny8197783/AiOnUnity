@@ -251,6 +251,9 @@ namespace AiOn.Game
                 w += e.Bag * d.weightKg;
                 v += e.Bag * d.volumeL;
             }
+            // the experience mode's own things packed on the bag screen (none in the original's runs)
+            var (aidKg, aidL) = BagHand.AidLoad(g);
+            w += aidKg; v += aidL;
             double weightKg = Num.Round2(w), volumeL = Num.Round2(v);
             // The real room limit is the cell grid: litres alone never reach 25 L before the grid is full.
             return new BagLoad(weightKg, volumeL, weightKg > Db.bagLimitKg, volumeL > Db.bagLimitL || !BagCells(g).Fits);

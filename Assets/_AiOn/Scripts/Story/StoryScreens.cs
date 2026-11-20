@@ -9,7 +9,7 @@ namespace AiOn.Story
 {
     /// <summary>
     /// The IStoryUi screens built so far, each taking the original ui/*.js option object and returning its result:
-    /// bag (ui/bag.js: { mode, context, limit, items, goals, tips } -> { bag: { id: n } }).
+    /// bag (ui/bag.js: { mode, context, limit, items, goals, tips, tidy?, timer?, profile?, layout?, aids? } -> { bag: { id: n }, layout, aids, score, tidied, elapsed, timedOut }).
     /// </summary>
     public static class StoryScreens
     {
@@ -44,6 +44,11 @@ namespace AiOn.Story
             PromptScreen.Register(host);       // prompt ({ text, max } -> string | null)
             RadioScreen.Register(host);        // radio
             ExtinguisherScreen.Register(host); // extinguisher
+            ExtGaugeScreen.Register(host);     // extgauge (1장 소화기 압력계 점검)
+            ExtinguisherScene.View = (ctx, logic, place) => HeldExtinguisher.Begin(host, logic, place); // the 3D extinguisher in hand
+            ExtinguisherScene.Available = ctx => host != null; // the host's own story (a destroyed host is false)
+            CprScreen.Register(host);          // cpr (2장 대피소 심폐소생술)
+            LookFirstScreen.Register(host);    // lookfirst (3장 불나면 살펴서 대피, 119 신고)
             PlannerScreen.Register(host);      // planner
             DocsScreen.Register(host);         // docs
             RoutemapScreen.Register(host);     // routemap
@@ -51,6 +56,7 @@ namespace AiOn.Story
             MenuScreens.Register(host);        // landing, pause, settings, about
             NotebookScreens.Register(host);     // notebook, inventory
             ShopScreen.Register(host);         // shop
+            GuideScreen.Register(host);        // guide (K), report
         }
 
         static Task<JToken> Bag(JObject o, GameSession session)
@@ -88,14 +94,19 @@ namespace AiOn.Story
             var tips = (o["tips"] as JArray ?? new JArray()).Select(t => (string)t).ToList();
             var limit = o["limit"] as JObject;
             var tcs = new TaskCompletionSource<JToken>();
-            BagScreen.Open(new BagPackingModel(items, db), (string)o["context"] ?? "alert", (string)o["mode"] ?? "guided",
-                (double?)limit?["weightKg"] ?? db.bagLimitKg, (double?)limit?["volumeL"] ?? db.bagLimitL, goals, tips,
-                result =>
-                {
-                    var bag = new JObject();
-                    foreach (var (id, n) in result) bag[id] = n;
-                    tcs.TrySetResult(new JObject { ["bag"] = bag });
-                });
+            // 직접 놓기: the grid as the player left it last time, the experience mode's own things (BagHand.AddOptions)
+            var profile = (string)o["profile"] ?? "";
+            var model = new ManualBagModel(items, db, BagAids.For(profile), BagHand.AidsFrom(o["aids"]), (string)o["layout"]);
+            var facts = session.FactsData;
+            BagScreen.Open(model, new BagScreenOptions
+            {
+                Context = (string)o["context"] ?? "alert", Mode = (string)o["mode"] ?? "guided",
+                LimitKg = (double?)limit?["weightKg"] ?? db.bagLimitKg, LimitL = (double?)limit?["volumeL"] ?? db.bagLimitL,
+                Goals = goals, Tips = tips, TidyCost = (string)o["tidy"]?["cost"],
+                TimerSeconds = (double?)o["timer"] ?? 0, TidySeconds = BagHand.TidySeconds,
+                Profile = profile, ReduceMotion = o["reduceMotion"]?.Type == JTokenType.Boolean && (bool)o["reduceMotion"],
+                Cite = id => facts?.Cite(id),
+            }, result => tcs.TrySetResult(result.ToJson()));
             return tcs.Task;
         }
     }

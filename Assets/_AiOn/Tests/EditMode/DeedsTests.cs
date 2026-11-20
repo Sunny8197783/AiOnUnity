@@ -25,7 +25,8 @@ namespace AiOn.Tests
         public void Table_has_64_deeds_in_order_with_known_chapters_axes_and_facts_and_Korean_text()
         {
             var all = Deeds.Table;
-            Assert.AreEqual(64, all.Count);
+            Assert.AreEqual(64 + Deeds.PortAdded.Count, all.Count, "the original's 64 and the port's additions after them");
+            CollectionAssert.AreEqual(Deeds.PortAdded, all.Skip(64).Select(d => d.Id));
             for (int i = 0; i < all.Count; i++)
             {
                 var d = all[i];
@@ -81,10 +82,43 @@ namespace AiOn.Tests
             Assert.AreEqual("check", (string)Deeds.Of(g)[1].Details["after"]);
         }
 
+        // Competition upgrade: the stranger's answers each leave their own deed (the original had gave / escaped / fought).
+        [TestCase("give", "gave", "looter_gave")]
+        [TestCase("back", "escaped", "looter_escaped")]
+        [TestCase("neighbors", "escaped", "looter_neighbors")]
+        [TestCase("report", "escaped", "looter_reported")]
+        [TestCase("argue", "argued", "looter_argued")]
+        public void Each_answer_to_the_stranger_is_its_own_deed(string how, string result, string deed)
+        {
+            var g = Fresh();
+            g.Chapter = "endure";
+            Rec(g, "looter", $"{{\"result\":\"{result}\",\"how\":\"{how}\"}}");
+            CollectionAssert.AreEqual(new[] { deed }, Ids(g));
+            var old = Fresh(); old.Chapter = "endure";
+            Rec(old, "looter", "{\"result\":\"escaped\"}");
+            CollectionAssert.AreEqual(new[] { "looter_escaped" }, Ids(old), "an old save's event (no how) is still stepping back");
+            var left = Fresh(); left.Chapter = "endure";
+            Rec(left, "looter", "{\"result\":\"left\",\"how\":\"walked_on\"}");
+            Assert.That(Ids(left), Is.Empty, "a stranger who gave up and walked off is no deed");
+        }
+
+        [Test]
+        public void The_port_rows_read_calmly_and_cite_real_facts()
+        {
+            foreach (var id in Deeds.PortAdded)
+            {
+                var d = Deeds.Get(id);
+                Assert.AreEqual("event", d.Src, id);
+                Assert.That(d.Facts.All(f => GoldenRuns.Fact(f) != null), id);
+                foreach (var s in new[] { d.Short, d.Line }) Assert.That(s, Does.Not.Contain("시비").And.Not.Contain("주먹"), id);
+            }
+            Assert.That(Deeds.Get("looter_argued").W["town"], Is.LessThan(0), "raising your voice costs the town's trust");
+        }
+
         [Test]
         public void Every_event_derived_deed_comes_from_its_event_alone()
         {
-            var eventIds = Deeds.Table.Where(d => d.Src == "event" && d.Id != "signals_clear").Select(d => d.Id).OrderBy(x => x, StringComparer.Ordinal).ToList();
+            var eventIds = Deeds.Table.Where(d => d.Src == "event" && d.Id != "signals_clear" && !Deeds.PortAdded.Contains(d.Id)).Select(d => d.Id).OrderBy(x => x, StringComparer.Ordinal).ToList();
             CollectionAssert.AreEqual(eventIds, GoldenRuns.RawIds.OrderBy(x => x, StringComparer.Ordinal).ToList());
             foreach (var id in eventIds)
             {
@@ -223,7 +257,7 @@ namespace AiOn.Tests
             CollectionAssert.AreEqual(((JObject)Golden["neighbours"]).Properties().Select(p => p.Name), Deeds.NeighbourIds);
             CollectionAssert.AreEqual(Golden["newDeeds"].Select(x => (string)x), Deeds.NewIds);
             var table = (JArray)Golden["table"];
-            Assert.AreEqual(table.Count, Deeds.Table.Count);
+            Assert.AreEqual(table.Count + Deeds.PortAdded.Count, Deeds.Table.Count, "the original table, then the port's rows (갈라짐 기록)");
             for (int i = 0; i < table.Count; i++)
             {
                 var row = (JObject)GoldenRuns.Js(Deeds.Table[i]);

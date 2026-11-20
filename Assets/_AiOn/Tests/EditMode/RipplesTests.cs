@@ -119,11 +119,11 @@ namespace AiOn.Tests
         public void The_tables_are_the_original_ones_in_the_original_order()
         {
             var prep = (JObject)Golden["prep"];
-            CollectionAssert.AreEqual(prep.Properties().Select(p => p.Name), Ripples.Prep.Keys);
+            CollectionAssert.AreEqual(prep.Properties().Select(p => p.Name), Ripples.Prep.Keys.Except(Ripples.PortAdded));
             foreach (var p in prep.Properties()) Assert.AreEqual((string)p.Value, Ripples.Prep[p.Name], p.Name);
 
             var causes = (JObject)Golden["causes"];
-            CollectionAssert.AreEqual(causes.Properties().Select(p => p.Name), Ripples.Causes.Keys);
+            CollectionAssert.AreEqual(causes.Properties().Select(p => p.Name), Ripples.Causes.Keys.Except(Ripples.PortAdded));
             foreach (var p in causes.Properties())
             {
                 var rules = Ripples.Causes[p.Name];

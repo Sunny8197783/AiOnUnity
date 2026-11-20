@@ -1,0 +1,292 @@
+{
+ "note": "경진대회 업그레이드에서 더한 사실. 원작 facts.json(95개·출처 54개)은 그대로 두고, 이 파일은 실행 중에 그 뒤에 이어 붙는다(Facts.Load(json, extJson)). 문장마다 출처 url과 확인일(checkedAt: 그 날 실제로 페이지를 열어 문장을 대조한 날)을 둔다. 쓰지 않는 문구: '2분마다 교대', 1337, 111, 113, 경량칸막이 등의 세부 수치, 소화기 방사 시간 수치, 출처 페이지에 없는 장소(예: 욕실).",
+ "facts": [
+  {
+   "id": "cpr_depth_rate",
+   "topic": "cpr",
+   "sourceId": "ext_kdca_cpr2025",
+   "text": "성인 가슴압박은 약 5cm 깊이로, 분당 100~120회 속도로 합니다."
+  },
+  {
+   "id": "cpr_ratio",
+   "topic": "cpr",
+   "sourceId": "ext_kdca_healthinfo_cpr",
+   "text": "가슴압박 30회와 인공호흡 2회를 번갈아 합니다(30:2). 인공호흡을 못하겠다면 가슴압박만 계속합니다."
+  },
+  {
+   "id": "cpr_point",
+   "topic": "cpr",
+   "sourceId": "ext_kdca_cpr2025",
+   "text": "주변 사람 가운데 한 명을 정확히 지목해 119 신고와 자동심장충격기(AED)를 부탁합니다."
+  },
+  {
+   "id": "cpr_aed_child",
+   "topic": "cpr",
+   "sourceId": "ext_kdca_cpr2025",
+   "text": "일반인도 1세 이상 소아에게 자동심장충격기(AED)를 사용합니다."
+  },
+  {
+   "id": "cpr_fatigue",
+   "topic": "cpr",
+   "sourceId": "ext_ochoa1998",
+   "text": "지치기 전에 교대를 요청합니다."
+  },
+  {
+   "id": "cpr_fatigue_why",
+   "topic": "cpr",
+   "sourceId": "ext_ochoa1998",
+   "text": "압박의 질은 1분쯤부터 떨어지지만, 지친 느낌은 3분쯤 지나서야 옵니다."
+  },
+  {
+   "id": "cpr_check",
+   "topic": "cpr",
+   "sourceId": "ext_incheon_cpr",
+   "text": "어깨를 가볍게 두드리며 \"괜찮으세요?\" 하고 불러 반응을 확인합니다."
+  },
+  {
+   "id": "cpr_breath",
+   "topic": "cpr",
+   "sourceId": "ext_incheon_cpr",
+   "text": "얼굴과 가슴을 10초 이내로 살펴 호흡이 있는지 확인합니다."
+  },
+  {
+   "id": "cpr_gasp",
+   "topic": "cpr",
+   "sourceId": "ext_korea_collapse",
+   "text": "호흡이 없거나 헐떡이는 등 정상적으로 숨 쉬지 않으면 심장정지를 의심하고 가슴압박을 시작합니다."
+  },
+  {
+   "id": "cpr_aed_steps",
+   "topic": "cpr",
+   "sourceId": "ext_korea_collapse",
+   "text": "자동심장충격기(AED)가 오면 전원을 켜고 음성 안내에 따라 패드를 붙입니다."
+  },
+  {
+   "id": "cpr_aed_clear",
+   "topic": "cpr",
+   "sourceId": "ext_korea_collapse",
+   "text": "분석과 충격 중에는 아무도 환자에게 닿지 않게 하고, 충격 후에는 바로 가슴압박을 다시 시작합니다."
+  },
+  {
+   "id": "cpr_practice",
+   "topic": "cpr",
+   "sourceId": "ext_kdca_cpr2025",
+   "text": "심폐소생술은 비대면 교육보다 실습 교육을 함께 받으며 익히는 것이 좋습니다."
+  },
+  {
+   "id": "alert_levels",
+   "topic": "alert",
+   "sourceId": "ext_mois_civildefense",
+   "text": "경계경보는 사이렌 없이 음성방송으로 알리고, 공습경보는 사이렌을 1분 동안 울리며 음성방송을 함께 합니다."
+  },
+  {
+   "id": "report_object",
+   "topic": "report",
+   "sourceId": "ext_mois_leaflet",
+   "text": "정체를 알 수 없는 물체나 전단을 발견하면 군부대(주민신고망 1338)나 가까운 경찰서에 신고합니다."
+  },
+  {
+   "id": "fire_look",
+   "topic": "fire",
+   "sourceId": "ext_nfa_lookfirst",
+   "text": "아파트에서 불이 나면 무조건 뛰어나가기보다, 불이 난 곳과 불길, 연기를 살펴서 대피합니다."
+  },
+  {
+   "id": "fire_own_home",
+   "topic": "fire",
+   "sourceId": "ext_nfa_guide",
+   "text": "우리 집에 불이 났고 나갈 수 있다면, 낮은 자세로 계단을 통해 지상층으로 대피하고 나가면서 출입문을 닫습니다."
+  },
+  {
+   "id": "fire_own_trapped",
+   "topic": "fire",
+   "sourceId": "ext_nfa_guide",
+   "text": "나갈 수 없다면 대피공간, 경량칸막이, 하향식피난구가 있는 곳으로 피합니다."
+  },
+  {
+   "id": "fire_seal",
+   "topic": "fire",
+   "sourceId": "ext_nfa_guide",
+   "text": "피할 곳도 없다면 화염과 연기에서 멀리 떨어져 문을 닫고, 젖은 수건 등으로 틈새를 막은 뒤 119에 위치와 상황을 알립니다."
+  },
+  {
+   "id": "fire_other_smoke",
+   "topic": "fire",
+   "sourceId": "ext_nfa_guide",
+   "text": "다른 집 불로 연기가 들어올 때, 복도와 계단에 화염·연기가 없으면 대피하고, 있어서 대피가 어려우면 구조를 요청합니다."
+  },
+  {
+   "id": "fire_report",
+   "topic": "fire",
+   "sourceId": "ext_nfa_guide",
+   "text": "119에는 불이 난 장소를 정확히 알리고(주소를 모르면 주변 큰 건물이나 상호), 불의 규모와 상황을 말하며, 전화가 끊기지 않게 합니다."
+  },
+  {
+   "id": "fire_partition",
+   "topic": "fire",
+   "sourceId": "ext_incheon_partition",
+   "text": "경량칸막이는 불이 났을 때 옆 세대로 피하도록 석고보드로 만든 간이 벽으로, 발로 차서 부수고 이웃집으로 대피할 수 있습니다."
+  },
+  {
+   "id": "fire_partition_clear",
+   "topic": "fire",
+   "sourceId": "ext_incheon_partition",
+   "text": "경량칸막이 앞에 수납장을 두거나 물건을 쌓지 말고, 불이 나면 바로 피난할 수 있게 평소에 관리합니다."
+  },
+  {
+   "id": "ext_gauge",
+   "topic": "fire",
+   "sourceId": "ext_korea_extinguisher",
+   "text": "소화기 압력계 바늘이 녹색 구간에 있어야 정상 압력입니다. 오래되면 압력이 조금씩 빠져 바늘이 왼쪽으로 가고, 오른쪽으로 가 있으면 압력이 너무 높은 상태입니다."
+  },
+  {
+   "id": "ext_gauge_bad",
+   "topic": "fire",
+   "sourceId": "ext_seoul_extinguisher",
+   "text": "압력계 바늘이 빨간색·노란색 영역에 있는 소화기는 폐기해야 합니다."
+  },
+  {
+   "id": "ext_manage",
+   "topic": "fire",
+   "sourceId": "ext_korea_extinguisher",
+   "text": "아파트 소화기가 제대로 점검·관리되지 않으면 관리 주체(관리사무소 등)에 이야기해야 합니다."
+  },
+  {
+   "id": "ext_cover",
+   "topic": "fire",
+   "sourceId": "ext_nfa_apt",
+   "text": "노즐을 잡고 불 쪽으로 가까이 다가가, 분말이 골고루 불을 덮을 수 있도록 쏩니다."
+  },
+  {
+   "id": "bag_list",
+   "topic": "bag",
+   "sourceId": "ext_seoul_emergency",
+   "text": "생존배낭에는 생수, 간편식, 손전등, 상비약, 라디오와 건전지, 화장지와 물티슈, 화생방 방독면 마스크나 고무 장갑, 장화, 비닐봉투 등을 미리 챙겨 놓습니다."
+  },
+  {
+   "id": "bag_personal",
+   "topic": "bag",
+   "sourceId": "gangdong_bag",
+   "text": "생존배낭에는 안경 등 개인별 필수용품도 함께 넣어 둡니다."
+  },
+  {
+   "id": "aid_battery",
+   "topic": "bag",
+   "sourceId": "ext_incheon_disability",
+   "text": "보조기기를 사용한다면 여분용 배터리를 구비하고, 보조기기의 장비를 점검하여 비상상황에 대비합니다."
+  },
+  {
+   "id": "aid_comm",
+   "topic": "bag",
+   "sourceId": "ext_incheon_disability",
+   "text": "청각·언어장애인은 의사소통 보조기기를 챙겨둡니다."
+  }
+ ],
+ "sources": [
+  {
+   "id": "ext_kdca_cpr2025",
+   "publisher": "대한민국 정책브리핑(질병관리청)",
+   "title": "[건강 브리핑] 제3회 심폐소생술 가이드라인 개정 발간 소개(2026.1.29)",
+   "url": "https://www.korea.kr/news/policyNewsView.do?newsId=156742024",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_kdca_healthinfo_cpr",
+   "publisher": "질병관리청 국가건강정보포털",
+   "title": "심폐소생술",
+   "url": "https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=6226",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_ochoa1998",
+   "publisher": "Resuscitation 학술지 (보조 자료)",
+   "title": "The effect of rescuer fatigue on the quality of chest compressions (Ochoa 외, 1998)",
+   "url": "https://read.qxmd.com/read/9715774",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_incheon_cpr",
+   "publisher": "인천광역시",
+   "title": "심폐소생술",
+   "url": "https://www.incheon.go.kr/safe/SAFE020304",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_korea_collapse",
+   "publisher": "대한민국 정책브리핑(질병관리청·대한심폐소생협회)",
+   "title": "쿵! 갑자기 쓰러진 사람, 어떻게 도와야 할까?",
+   "url": "https://www.korea.kr/multi/visualNewsView.do?newsId=148975186",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_mois_civildefense",
+   "publisher": "행정안전부",
+   "title": "민방위 제도 운영",
+   "url": "https://mois.go.kr/frt/sub/a06/b12/civildefensework/screen.do",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_mois_leaflet",
+   "publisher": "대한민국 정책브리핑(행정안전부)",
+   "title": "민방위 경보체계 보완·발전 설명자료(2024.5.29)",
+   "url": "https://m.korea.kr/briefing/actuallyView.do?newsId=148929702",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_nfa_lookfirst",
+   "publisher": "대한민국 정책브리핑(소방청)",
+   "title": "우리 가족 안전을 위한 아파트 화재대피 계획 세우기(불나면 살펴서 대피)",
+   "url": "https://m.korea.kr/news/policyNewsView.do?newsId=148924688",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_nfa_guide",
+   "publisher": "대한민국 정책브리핑(소방청)",
+   "title": "화재 대피요령 완벽 가이드(2025.4.9)",
+   "url": "https://www.korea.kr/multi/visualNewsView.do?newsId=148941490",
+   "checkedAt": "2026-11-20"
+  },
+  {
+   "id": "ext_incheon_partition",
+   "publisher": "인천광역시(인천중부소방서)",
+   "title": "'생명의 문' 아파트 경량칸막이 중요성 홍보(2021.2.8)",
+   "url": "https://www.incheon.go.kr/119/NE030401/2065613",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_korea_extinguisher",
+   "publisher": "대한민국 정책브리핑(정책기자단)",
+   "title": "배 아플 땐 소화제, 불 났을 땐 소화기 — 정책기자 취재, 소방청 전화 답변 인용(2018.3.20)",
+   "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148848734",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_seoul_extinguisher",
+   "publisher": "서울특별시",
+   "title": "소화기에도 유효기간이 있다? 폐소화기 버리는 방법",
+   "url": "https://news.seoul.go.kr/env/archives/565249",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_nfa_apt",
+   "publisher": "대한민국 정책브리핑(소방청)",
+   "title": "아파트 화재 시 국민행동요령에 대해 알려드립니다(2024.1.24)",
+   "url": "https://m.korea.kr/news/policyNewsView.do?newsId=148925135",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_seoul_emergency",
+   "publisher": "서울특별시",
+   "title": "비상사태시 국민행동요령 동영상",
+   "url": "https://news.seoul.go.kr/safe/archives/516212",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_incheon_disability",
+   "publisher": "인천광역시",
+   "title": "장애인 재난안전가이드 카드뉴스 폭염·태풍 대비(2025.7.13)",
+   "url": "https://www.incheon.go.kr/IC010601/3024726",
+   "checkedAt": "2026-11-21"
+  }
+ ]
+}

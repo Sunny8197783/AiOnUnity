@@ -148,7 +148,11 @@ namespace AiOn.Tests
             g.Items["batteries_aa"] = Item(2, 2);
             host.AnswerOpen("radio", JObject.Parse("{ official: true, noted: [] }"));
             host.QueuePresses("homeRadio", "homeRadio", "homeStock", "homeDesk", "extinguisher", "homeGas", "homeBreaker", "homePlanner");
-            host.Run(async () => { await ctx.Goto("apartment", "home"); await PrepActions.DoEquip(ctx); });
+            // the original's equip list (the competition gauge check before the practice is HeldExtinguisherTests')
+            var gauge = ExtinguisherScene.GaugePart;
+            ExtinguisherScene.GaugePart = null;
+            try { host.Run(async () => { await ctx.Goto("apartment", "home"); await PrepActions.DoEquip(ctx); }); }
+            finally { ExtinguisherScene.GaugePart = gauge; }
             Assert.That(g.Items["radio"].Checked && g.Items["flashlight"].Checked);
             Assert.That(g.Items["batteries_aa"].Home, Is.EqualTo(0));
             Assert.That((double)g.Know["radioFreq"], Is.EqualTo(102.1));
@@ -207,6 +211,8 @@ namespace AiOn.Tests
             Assert.That(host.Toasts, Does.Contain("계산대에서 계산을 마치세요."));
             Assert.That(host.Toasts, Does.Contain("현금 5만 원을 찾았다."));
             Assert.That(host.Toasts, Does.Contain(ctx.Facts.Text("home_nohoard")));
+            Assert.That(host.Toasts, Does.Contain("줄 선 이웃들이 빈 진열대와 내 바구니를 번갈아 본다. 사재기하지 않기."));
+            Assert.That(g.Rel["clerk"].Trust, Is.EqualTo(-1), "사재기 lowers the clerk's trust");
             Assert.That(host.Toasts, Does.Contain("무거워서 두 번에 나눠 옮겼다."));
             Assert.That(g.Items["water_2l"].Bought, Is.EqualTo(6));
             Assert.That(g.Items["water_2l"].Home, Is.EqualTo(2 + 6 - 1), "one shared at the till");

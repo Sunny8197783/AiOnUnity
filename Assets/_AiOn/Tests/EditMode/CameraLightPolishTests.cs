@@ -83,6 +83,7 @@ namespace AiOn.Tests
             Assert.That(e.KeyIntensity, Is.EqualTo(0.6f).Within(1e-4f));
             Color.RGBToHSV(e.KeyColor, out _, out float s, out _);
             Assert.That(s, Is.LessThan(0.1f), "a neutral daylight key, not blue moonlight");
+            Assert.That(e.FillIntensity, Is.GreaterThanOrEqualTo(0.3f), "window daylight fills the room: the morning's objectives read without a flashlight");
         }
 
         // ---------- shoulder camera

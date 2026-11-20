@@ -96,6 +96,7 @@ namespace AiOn.Story
             {
                 var d = new Vector2(p.position.x - at.x, p.position.z - at.z).magnitude;
                 _host.Shake(DangerFxMath.BlastShake(d), 1.2); // the host skips it under reduce-motion
+                AiOn.Rendering.AtmosphereDirector.Blast(d);
             }
             return rig.Crater(at, (float)crater);
         }
@@ -140,14 +141,6 @@ namespace AiOn.Story
         public override void ResetPuffs()
         {
             if (_rig) _rig.ResetPuffs();
-        }
-
-        public override void PlayerAct(string act, double seconds)
-        {
-            if (act != "hurt" || !_host || !_host.player) return;
-            var body = _host.player.GetComponent<PlayerBody>();
-            if (body && body.person && body.person.isActiveAndEnabled) body.person.Play("hurt"); // the one-shot clip_hurt
-            else _host.Shake(0.15, Math.Max(0.2, seconds));                                      // first person: a jolt
         }
     }
 

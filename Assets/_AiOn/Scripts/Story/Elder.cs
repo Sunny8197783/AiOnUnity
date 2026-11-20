@@ -216,6 +216,15 @@ namespace AiOn.Story
                 {
                     await ctx.Say("304호 어르신", new[] { "\"고마워요. 신발만 신을게요. 천천히 가요. 손잡이 쪽에 서 줘요.\"" }, null, "304호 앞");
                     ctx.Pass(3);
+                    // A bag over the limit (a game number) is felt on the stairs: one hand for the rail, one for her, and the weight
+                    // on the back. She is still helped down; it costs more (the 5장 lift is where there is no hand left at all).
+                    var load = ctx.Rules.BagLoad(G);
+                    if (G.Knows("bagOn") && load.OverWeight)
+                    {
+                        await ctx.Caption($"배낭 {BagDrill.FormatKg(load.WeightKg)}에 어깨가 짓눌린다. 한 손은 난간, 한 손은 어르신. 한 층마다 숨을 고른다. (가방 무게 — 게임 규칙)", null, 3600);
+                        ctx.Stat("fatigue", 4); ctx.Pass(1);
+                        GameRules.RecordEvent(G, "bag_heavy", new JObject { ["where"] = "stairs", ["weightKg"] = Math.Round(load.WeightKg, 2) });
+                    }
                     ctx.Toast($"어르신 걸음에 맞춰 계단으로. {ctx.Facts.Text("people_ask")}", "official", 6000);
                     follow = true; crumbs = new List<Crumb>();
                     var p = Point(); if (p != null) p.Enabled = false;

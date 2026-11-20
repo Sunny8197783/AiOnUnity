@@ -91,6 +91,7 @@ namespace AiOn.Settings
                 if (body != null) { p.canRun = body.Run; p.canJump = body.Jump; p.canStairs = body.Stairs; p.eye = (float)body.Eye; }
             }
             if (_host && _host.cameraRig) _host.cameraRig.reduceMotion = Truthy(s["reduceMotion"]);
+            AiOn.Rendering.AtmosphereDirector.ReduceMotion = Truthy(s["reduceMotion"]);
             TextScaler.Apply((float)Num(s["textScale"], 1));
 
             var tier = QualityTiers.Norm(Str(s["quality"]), null) ?? Tier ?? DetectTier();
@@ -142,6 +143,7 @@ namespace AiOn.Settings
                 data.antialiasingQuality = k.Smaa > 1 ? AntialiasingQuality.High : AntialiasingQuality.Medium;
             }
             if (_host) _host.FlashShadows = k.FlashShadows;
+            AiOn.Rendering.LevelReflections.Allowed = QualityTiers.Rank(Tier) >= QualityTiers.Rank("medium"); // live probe from medium up
             _gov.Hold(4);
         }
 

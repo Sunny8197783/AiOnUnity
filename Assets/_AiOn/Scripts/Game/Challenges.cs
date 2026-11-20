@@ -115,7 +115,8 @@ namespace AiOn.Game
             C("promises", "지킨 약속", "이웃과 약속을 두 개 이상 하고, 하나도 어기지 않기", c => c.Ps.Count >= 2 && c.Ps.All(p => p.State == "kept")),
             C("fire", "불 앞의 판단", "복도에 불이 나면 \"불이야!\" 외치고, 끌지 물러날지 판단하기", c => c.Has("fire_warned") && c.Has("fire_handled")),
             C("no_hoard", "사재기 없이", "사재기도, 값을 남기지 않고 가져온 물건도 없이 끝까지", c => !c.Has("hoard") && !c.Has("store_took")),
-            C("hands_off", "누구에게도 손대지 않고", "시비가 붙어도 맞서지 않고 자리를 피하기", c => !c.Has("violence") && !c.Has("looter_fought")),
+            // Port change (competition upgrade): nobody can be hit any more, so the challenge is about the voice
+            C("hands_off", "끝까지 차분하게", "낯선 사람이 먹을 것을 달라고 해도 언성을 높이지 않기", c => !c.Has("violence") && !c.Has("looter_fought") && !c.Has("looter_argued")),
             C("clean", "한 번에", "한 번도 다시 하지 않고 처음부터 엔딩까지", c => c.St.Complete && c.St.Retries == 0),
             C("endings3", "세 갈래 길", "서로 다른 엔딩 세 개 보기", c => c.Seen >= 3),
         };

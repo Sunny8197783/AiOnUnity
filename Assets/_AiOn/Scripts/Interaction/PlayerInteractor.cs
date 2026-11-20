@@ -18,6 +18,10 @@ namespace AiOn.Interaction
         public LayerMask blockers = ~0;
 
         public InteractionPoint Current { get; private set; }
+        /// <summary>Point ids that get no prompt for now (the 3D extinguisher mutes the fire and the extinguisher it holds).</summary>
+        public static readonly HashSet<string> Muted = new();
+        /// <summary>Frame of the last use (the HUD's reticle dips on it).</summary>
+        public int UsedFrame { get; private set; } = -1;
         public event Action<InteractionPoint> Interacted;
         public event Action<InteractionPoint> CurrentChanged;
 
@@ -52,6 +56,7 @@ namespace AiOn.Interaction
         public bool Interact()
         {
             if (Current == null) return false;
+            UsedFrame = Time.frameCount;
             Interacted?.Invoke(Current);
             return true;
         }
@@ -67,6 +72,7 @@ namespace AiOn.Interaction
         bool Hidden(IReachable r)
         {
             var p = (InteractionPoint)r;
+            if (Muted.Count > 0 && p.id != null && Muted.Contains(p.id)) return true;
             var feet = transform.position;
             var to = p.Position - feet;
             float flat = new Vector2(to.x, to.z).magnitude;

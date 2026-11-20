@@ -31,6 +31,85 @@ namespace AiOn.Story
             Cached("hit:" + name + (name == "whistle" ? ":" + seconds.ToString("0.0") : ""), () => Render(HitSamples(name, (float)seconds)));
         /// <summary>A seamless fire loop; its level (0..1) is the AudioSource volume.</summary>
         public static AudioClip FireLoop() => Cached("fire", () => Render(FireSamples()));
+        /// <summary>One heartbeat (lub-dub, 0.42 s); the HUD plays it per beat at the rate the danger sets.</summary>
+        public static AudioClip Heartbeat() => Cached("heart", () => Render(HeartbeatSamples()));
+
+        /// <summary>
+        /// The CPR metronome's click (our own 110 BPM beat, no song): a short woodblock-like tick; accent = the first beat
+        /// of a count. Played per beat with AudioSource.PlayScheduled on the dspTime grid.
+        /// </summary>
+        static AudioClip _clickHi, _clickLo;
+        /// <summary>The metronome's two clicks, kept in fields: called once per beat, so no lookup or closure per call.</summary>
+        public static AudioClip MetronomeClick(bool accent)
+        {
+            if (accent) return _clickHi ? _clickHi : _clickHi = Render(ClickSamples(true));
+            return _clickLo ? _clickLo : _clickLo = Render(ClickSamples(false));
+        }
+        /// <summary>The AED's tones: "power" (rising chime), "analyze" (two soft beeps), "charge" (rising whine), "shock" (low thump).</summary>
+        public static AudioClip AedTone(string kind) => Cached("aed:" + kind, () => Render(AedSamples(kind)));
+
+        public static float[] ClickSamples(bool accent)
+        {
+            var s = new float[(int)(0.06f * Rate)];
+            AddTone(s, accent ? 1900 : 1400, accent ? 1500 : 1100, 0.045f, 0.6f, 0, Wave.Sine);
+            AddTone(s, accent ? 3800 : 2800, 0, 0.012f, 0.15f, 0, Wave.Triangle);
+            return s;
+        }
+
+        public static float[] AedSamples(string kind)
+        {
+            switch (kind)
+            {
+                case "power":
+                {
+                    var s = new float[(int)(0.5f * Rate)];
+                    AddTone(s, 660, 0, 0.14f, 0.3f, 0, Wave.Sine);
+                    AddTone(s, 880, 0, 0.22f, 0.3f, 0.15f, Wave.Sine);
+                    return s;
+                }
+                case "charge":
+                {
+                    var s = new float[(int)(1.6f * Rate)];
+                    AddTone(s, 600, 2600, 1.5f, 0.12f, 0, Wave.Sine);
+                    return s;
+                }
+                case "shock":
+                {
+                    var s = new float[(int)(0.4f * Rate)];
+                    Thump(s, 0f, 70f, 1f);
+                    return s;
+                }
+                default: // analyze
+                {
+                    var s = new float[(int)(0.7f * Rate)];
+                    AddTone(s, 1046, 0, 0.12f, 0.25f, 0, Wave.Sine);
+                    AddTone(s, 1046, 0, 0.12f, 0.25f, 0.3f, Wave.Sine);
+                    return s;
+                }
+            }
+        }
+
+        public static float[] HeartbeatSamples()
+        {
+            var s = new float[(int)(Rate * 0.42f)];
+            Thump(s, 0f, 58f, 1f);
+            Thump(s, AiOn.UI.DangerMath.DubAfter, 48f, 0.7f);
+            return s;
+        }
+
+        // a low thud: a sine that drops in pitch over its first few milliseconds, with a fast decay
+        static void Thump(float[] s, float at, float hz, float gain)
+        {
+            int i0 = (int)(at * Rate);
+            double ph = 0;
+            for (int i = i0; i < s.Length; i++)
+            {
+                float t = (i - i0) / (float)Rate;
+                if (t > 0.22f) break;
+                ph += 2 * Math.PI * hz * (1f + 0.6f * Mathf.Exp(-t * 40f)) / Rate;
+                s[i] += (float)Math.Sin(ph) * Mathf.Min(1f, t / 0.006f) * Mathf.Exp(-t * 22f) * gain;
+            }
+        }
 
         static AudioClip Cached(string key, Func<AudioClip> make)
         {
@@ -164,13 +243,6 @@ namespace AiOn.Story
                 {
                     var s = new float[(int)((seconds + 0.1f) * Rate)];
                     AddTone(s, 2400, 500, seconds, 0.12f, 0, Wave.Sine);
-                    return s;
-                }
-                case "punch":
-                {
-                    var s = new float[(int)(0.25f * Rate)];
-                    AddBurst(s, rng, 900, 0.8f, 0.06f, 0.5f, 0, FilterKind.Band);
-                    AddTone(s, 120, 60, 0.12f, 0.25f, 0, Wave.Sine);
                     return s;
                 }
                 case "land":

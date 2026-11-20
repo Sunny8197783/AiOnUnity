@@ -567,13 +567,5 @@ namespace AiOn.Levels.Crowd
             _area = r;
             if (reapply && (_mode == "sit" || ((_mode == "stroll" || _mode == "idle") && _paths.Count == 0))) ApplyMode();
         }
-
-        /// <summary>Hit by the player: flinch, then run from (x, z); ko = knocked down for a while (PlayerHands).</summary>
-        public void Hit(int agent, double x, double z, bool ko)
-        {
-            if (agent < 0 || agent >= _agents.Count) return;
-            var a = _agents[agent];
-            a.HurtT = 0.45; a.Fx = x; a.Fz = z; if (ko) a.DownT = 14; else a.FleeT = 7;
-        }
     }
 }

@@ -32,7 +32,7 @@ namespace AiOn.Player
             ["box"] = new Kind { Id = "box", Name = "빈 상자", R = 0.12, Power = 0.5, Color = 0xb08a5a, Rough = 0.9 },
         };
 
-        public const double Gravity = 12, PickRadius = 1.5, PickDy = 1.4, Reach = 1.4, HitPoints = 3;
+        public const double Gravity = 12, PickRadius = 1.5, PickDy = 1.4, Reach = 1.4;
         public const double ThrowSpeed = 14, ThrowLift = 2.2, PunchCooldown = 0.5, PunchLands = 0.19, SwingAt = 0.09;
         public const double PickBusy = 0.8, PickClose = 0.4, ThrowBusy = 0.6, ThrowRelease = 0.3;
 
@@ -112,22 +112,6 @@ namespace AiOn.Player
         }
 
         /// <summary>
-        /// Who a punch from (x, y, z) facing (fx, fz) reaches: the closest person within 1.4 m, less than 1 m above or
-        /// below, and in front (cosine over 0.55). -1 when nobody.
-        /// </summary>
-        public static int PunchTarget(double x, double y, double z, double fx, double fz, IReadOnlyList<(double x, double y, double z)> people)
-        {
-            int best = -1; double bd = Reach;
-            for (int i = 0; i < people.Count; i++)
-            {
-                var p = people[i];
-                double dx = p.x - x, dz = p.z - z, d = Math.Sqrt(dx * dx + dz * dz);
-                if (d < bd && Math.Abs(p.y - y) < 1 && (dx * fx + dz * fz) / (d == 0 ? 1 : d) > 0.55) { bd = d; best = i; }
-            }
-            return best;
-        }
-
-        /// <summary>
         /// Does the path flown this frame (from -> to) pass through a person standing at p (feet): within 0.45 m of the
         /// line on the ground, between the feet and 1.8 m up.
         /// </summary>
@@ -138,17 +122,5 @@ namespace AiOn.Player
             double hx = fx + sx * u, hz = fz + sz * u, hy = fy + (ty - fy) * u;
             return Math.Sqrt((px - hx) * (px - hx) + (pz - hz) * (pz - hz)) < 0.45 && hy > py && hy < py + 1.8;
         }
-
-        /// <summary>A hit takes power from the person's points (3 to start); at 0 they go down and get their 3 back.</summary>
-        public static bool TakeHit(ref double hp, double power)
-        {
-            hp -= power;
-            bool ko = hp <= 0;
-            if (ko) hp = HitPoints;
-            return ko;
-        }
-
-        /// <summary>The damage a person who hits back does: 8 + round(random * 6).</summary>
-        public static int HitBackDamage(double random) => 8 + (int)Math.Round(random * 6, MidpointRounding.AwayFromZero);
     }
 }

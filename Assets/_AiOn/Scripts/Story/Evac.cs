@@ -222,7 +222,17 @@ namespace AiOn.Story
             try { if (ctx.Cine != null) shot = await Cutscenes.ShelterFireShot(ctx, fx, fz, fireLine); } catch (Exception) { shot = null; }
             if (shot == null) await ctx.Caption(fireLine, null, 4200);
             await StoryCommon.FactCard(ctx, "대피소에서는", new[] { "shelter_rules" });
-            var res = await ctx.Modal(() => ctx.Ui.Open("extinguisher", new JObject { ["mode"] = Drills.LadderStage(G, "extinguisher"), ["fire"] = "large" }));
+            JToken res;
+            if (ExtinguisherScene.Use3D(ctx))
+            {
+                // competition upgrade: the 3D extinguisher (the 2D screen below stays the accessible alternative)
+                var pick = await ctx.Say("정민", new[] { "기둥 옆에 소화기가 걸려 있다. 불길은 벌써 천장 배관에 닿았다." },
+                    Choices(("fight", "소화기를 들고 다가간다"), ("retreat", "물러나 알리고 대피한다 (계단 · 119)")), "대피소");
+                if (pick == "fight")
+                    res = await ExtinguisherScene.Run3D(ctx, ExtinguisherScene.Setup(ctx, Drills.LadderStage(G, "extinguisher"), "large", ExtinguisherScene.Shelter), ExtinguisherScene.Shelter);
+                else res = new JObject { ["sequence"] = new JArray("retreat") };
+            }
+            else res = await ctx.Modal(() => ctx.Ui.Open("extinguisher", new JObject { ["mode"] = Drills.LadderStage(G, "extinguisher"), ["fire"] = "large" }));
             var seq = (res as JObject)?["sequence"] is JArray a ? a.Select(x => (string)x).ToList() : new List<string>();
             var ev = Drills.EvalExtinguisher(seq, "large");
             Drills.RecordEncounter(G, "extinguisher", ev.Result);
@@ -230,7 +240,7 @@ namespace AiOn.Story
             ctx.SetLevelState("shelter", "phase", "calm");
             if (ev.Result == "escalated") ctx.Fail("fire", new JObject { ["scene"] = "shelter" });
             await StoryCommon.FactCard(ctx, "물러서는 것도 성공입니다", new[] { "fire_big", "fire_shout", "fire_119" });
-            ctx.Payoff("judgement", "천장까지 닿은 불 앞에서 물러나 알리고 대피했다");
+            if (ev.Correct) ctx.Payoff("judgement", "천장까지 닿은 불 앞에서 물러나 알리고 대피했다"); // not after trying to fight it first
             var report = await ctx.Say("대피소 관리자", new[] { "소방대가 왔어요. 처음 본 분 계세요? 어떻게 된 건지 말씀해 주세요." },
                 Choices(("precise", "\"19시 반쯤 주차장 구석, 버너에서 상자로 옮겨 붙었어요. 다친 사람은 못 봤어요.\""), ("vague", "\"저쪽에서 불났어요, 큰일 날 뻔했어요!\"")), "대피소");
             if (report == "precise") ctx.Remember("fire_report");
@@ -266,11 +276,15 @@ namespace AiOn.Story
                 var db = ctx.Rules.Db;
                 var items = BagDrill.BagItems(G, db, id => ctx.Facts.Text(id), withTips: false);
                 var mode = Drills.LadderStage(G, "bag");
-                var res = await ctx.Modal(() => ctx.Ui.Open("bag", new JObject
+                var res = await ctx.Modal(() => ctx.Ui.Open("bag", BagHand.AddOptions(new JObject
                 {
                     ["mode"] = mode, ["context"] = "evac", ["limit"] = new JObject { ["weightKg"] = db.bagLimitKg, ["volumeL"] = db.bagLimitL },
                     ["items"] = new JArray(items.Select(BagItemJson)), ["goals"] = new JArray(Drills.BagGoals["evac"].Select(GoalJson)), ["tips"] = new JArray(),
-                }));
+                    ["tidy"] = new JObject { ["cost"] = "1분" },
+                }, G, ctx.Settings?.Profile, ctx.Settings?.ReduceMotion ?? false)));
+                if ((res as JObject)?["tidied"] is JValue tv && (tv.Type == JTokenType.Integer || tv.Type == JTokenType.Float))
+                    for (int i = 0; i < (int)(double)tv; i++) ctx.Pass(1);
+                BagHand.Remember(G, res as JObject, "evac");
                 BagDrill.ApplyBag(ctx.Rules, G, BagTarget((res as JObject)?["bag"]));
                 ApplyPocket(ctx.Rules, G, (res as JObject)?["pocket"]);
                 var ev = Drills.EvalBag(ctx.Rules, G, "evac");
@@ -354,6 +368,9 @@ namespace AiOn.Story
             ctx.SetLevelState("town", "notices", "evac");
             await ctx.Goto("apartment", "home", "interiorDark");
             ctx.Refresh();
+            var packed = ctx.Rules.BagLoad(G);
+            if (G.Knows("bagOn") && packed.OverWeight)
+                ctx.Toast($"배낭을 메 보니 {BagDrill.FormatKg(packed.WeightKg)}. 걸음이 무거워진다.", "self", 4200);
             // After the 'depart' checkpoint, so a retry asks again: "the closed road is open, a shortcut" (always false).
             string road = Rumors.Rumor("evac_shortcut").Road(G), shortcut = RoadName(road);
             var claim = await ctx.Modal(() => RumorScene.HearClaim(ctx, "evac_shortcut", new[] { "나가려는데 휴대폰이 울린다. 동네 단체방에 새 글이 올라왔다." }));
@@ -540,8 +557,19 @@ namespace AiOn.Story
                 return;
             }
             GameRules.RecordEvent(G, "arrived_assembly", new JObject { ["minute"] = G.Minute });
-            var lift = await ctx.Say("집결지", new[] { "리프트 앞 어르신 짐이 무겁다." }, Choices(("ask", "\"들어 드릴까요?\" 먼저 여쭌다"), ("line", "줄을 선다")), "임시 집결지");
-            if (lift == "ask")
+            // A bag over the limit (a game number) is felt here: the walk was slower (SpeedMul), and there is no hand left.
+            var load = ctx.Rules.BagLoad(G);
+            bool heavy = G.Knows("bagOn") && load.OverWeight;
+            var lift = await ctx.Say("집결지", heavy ? new[] { "리프트 앞 어르신 짐이 무겁다.", $"내 배낭도 {BagDrill.FormatKg(load.WeightKg)}, 어깨가 벌써 저려 온다." } : new[] { "리프트 앞 어르신 짐이 무겁다." },
+                Choices(("ask", "\"들어 드릴까요?\" 먼저 여쭌다"), ("line", "줄을 선다")), "임시 집결지");
+            if (lift == "ask" && heavy)
+            {
+                await ctx.Say("어르신", new[] { "\"아이고, 젊은이 가방도 무거워 보이는데. 괜찮아요, 저기 안내하는 분한테 부탁할게.\"", "(배낭이 무거워 어르신 짐까지 들 수 없었다. 안내 요원을 불러 드렸다.)" }, null, "버스 리프트 앞");
+                ctx.Stat("fatigue", 4); ctx.Pass(2);
+                GameRules.RecordEvent(G, "bag_heavy", new JObject { ["where"] = "lift", ["weightKg"] = Math.Round(load.WeightKg, 2) });
+                ctx.Toast($"가방이 {BagDrill.FormatKg(ctx.Rules.Db.bagLimitKg)}을 넘으면 걸음이 느려지고, 남을 도울 손이 모자란다. (게임 규칙)", "self", 5200);
+            }
+            else if (lift == "ask")
             {
                 await ctx.Say("어르신", new[] { "고마워요. 그 가방만 버스 안까지 올려 줘요. 나머진 내가 들게." }, null, "버스 리프트 앞");
                 ctx.Stat("fatigue", 4); ctx.Pass(3); ctx.Remember("bus_helped");

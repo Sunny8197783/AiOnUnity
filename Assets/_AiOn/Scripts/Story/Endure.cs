@@ -11,6 +11,19 @@ namespace AiOn.Story
 {
     public static class Endure
     {
+        /// <summary>The story mark after the corridor fire (ctx.Reached): the teacher mode's fire moment ends here.</summary>
+        public const string FireDoneMark = "fire_done";
+        /// <summary>The resume key of the scene-select "살펴서 대피" start (the fire's evening, a prepared save only).</summary>
+        public const string LookResume = "look";
+        /// <summary>The resume key of the scene-select "소화기" start: the same evening, straight into the corridor (no look step).</summary>
+        public const string ExtResume = "ext";
+
+        /// <summary>
+        /// The "살펴서 대피" judgement before the corridor fire (LookFirstScene.Run; a port addition, not in the original
+        /// chapter). A test seam like DDay.CprPart: the tests that compare this chapter with the original set it to null.
+        /// </summary>
+        public static Func<StoryContext, bool, Task<LookFirstLogic.Outcome>> LookPart = (ctx, knocked) => LookFirstScene.Run(ctx, knocked);
+
         static int Count(GameState g, string id) => g.Items.TryGetValue(id, out var e) && e != null ? e.Home + e.Bag : 0;
         static string WaterId(GameState g) => new[] { "water_500", "water_2l" }.FirstOrDefault(id => Count(g, id) > 0);
         static ItemEntry Entry(GameState g, string id)
@@ -68,7 +81,7 @@ namespace AiOn.Story
             ctx.SetLevelState("apartment", "elder304", "off");
             g.SetKnow("bagOn", false); // at home the bag sits by the door (older saves may still have it on)
             ctx.Refresh();
-            if (ctx.Resume != "fire")
+            if (ctx.Resume != "fire" && ctx.Resume != LookResume && ctx.Resume != ExtResume)
             {
                 await ctx.Skip("D-day 금 밤", "D+1 토 07:00", new[] { "전기는 밤새 돌아오지 않았다. 아침에는 수도꼭지에서도 물이 나오지 않았다." });
                 g = ctx.G;
@@ -83,7 +96,8 @@ namespace AiOn.Story
                 await ctx.Skip("D+1 토 밤", "D+2 일 21:40", new[] { "하루가 더 지났다. 낮에는 물을 아껴 마시며 집에서 버텼다." });
                 ctx.Checkpoint("fire");
             }
-            await CorridorFire(ctx);
+            await CorridorFire(ctx, ctx.Resume == ExtResume);
+            ctx.Reached(FireDoneMark);
             await DayThree(ctx);
             var sum = Debrief.ChapterSummary(ctx.Rules, ctx.G, "endure");
             await ctx.Modal(() => ctx.Ui.Open("chapterCard", new JObject
@@ -391,7 +405,8 @@ namespace AiOn.Story
         }
 
         /// <summary>D+2 night: a candle left burning by 304 tipped onto parcel boxes. Encounter 2 for the extinguisher.</summary>
-        static async Task CorridorFire(StoryContext ctx)
+        /// <param name="inCorridor">The scene-select "소화기" start: 정민 is already out in the corridor (no look step).</param>
+        static async Task CorridorFire(StoryContext ctx, bool inCorridor = false)
         {
             var g = ctx.G;
             g.Day = 2; g.Minute = 21 * 60 + 40;
@@ -399,7 +414,7 @@ namespace AiOn.Story
             ctx.SetLevelState("apartment", "windowView", "blackout");
             ctx.SetLevelState("apartment", "hallFire", "small");
             ctx.SetLevelState("apartment", "smoke", 0.25);
-            await ctx.Goto("apartment", "home", "interiorDark");
+            await ctx.Goto("apartment", inCorridor ? "corridor3F" : "home", "interiorDark");
             ctx.Refresh();
             FireSound(ctx, 0.4);
             // Butterfly (Elder): if 어르신 came down with someone on D-day, she knocks the moment it starts.
@@ -411,6 +426,7 @@ namespace AiOn.Story
             }
             else await ctx.Caption("복도에서 타는 냄새가 난다. 문틈으로 주황빛이 흔들린다.", null, 3200);
             string size = "small", resolved = null;
+            bool fighting = false;
             double t = 0;
             bool shouted = knocked;
             double growAt = knocked ? 45 : 28;
@@ -422,7 +438,28 @@ namespace AiOn.Story
                     ctx.Toast("불이 상자 더미로 번졌다. 천장까지 닿을 것 같다.", "site");
                 }
             }
-            ctx.Objective("복도의 불", "판단하세요. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다.", Array.Empty<ObjectiveStep>());
+            // Competition upgrade: look first (handle, gap, sound, broadcast), say where it is, then leave / stay / partition.
+            bool looked = false;
+            string lookAct = null;
+            if (LookPart != null && !inCorridor)
+            {
+                var look = await LookPart(ctx, knocked);
+                looked = look != null && look.Played;
+                lookAct = looked ? look.Act : null;
+                if (looked && look.Size == "large") Grow();
+                if (looked && (look.Act == "stay" || look.Act == "partition"))
+                {
+                    resolved = look.Act;
+                    await LookFirstScene.WaitForRescue(ctx, look, knocked);
+                    FireSound(ctx, 0);
+                    GameRules.Adjust(g, "tension", 10);
+                    return;
+                }
+            }
+            // Chose to leave: the stairs (or simply walking down them) start the smoke escape; the extinguisher stays on the way.
+            bool leaving = looked && lookAct == "leave";
+            void ShowObjective() => ctx.Objective("복도의 불", looked ? "몸을 낮추고 계단으로. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다. 엘리베이터는 쓰지 않습니다." : "판단하세요. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다.", Array.Empty<ObjectiveStep>());
+            ShowObjective();
 
             // Leaving is a short walk down through the smoke (Escape), then 박 소장 in the lobby.
             async Task<JToken> Retreat()
@@ -431,11 +468,15 @@ namespace AiOn.Story
                 GameRules.RecordEvent(g, "fire_retreat", new JObject { ["size"] = size });
                 await StoryCommon.FactCard(ctx, "대피하며 알리기", new[] { "fire_shout", "fire_119", "fire_lift", "fire_big" });
                 ctx.Engine.SetControls(true); // the escape is its own roam, inside this handler's dialog pause
-                await Escape.SmokeEscape(ctx, size, () => { ctx.SetLevelState("apartment", "hallFire", "large"); ctx.SetLevelState("apartment", "smoke", 0.75); FireSound(ctx, 0.9); });
+                await Escape.SmokeEscape(ctx, size, () => { ctx.SetLevelState("apartment", "hallFire", "large"); ctx.SetLevelState("apartment", "smoke", 0.75); FireSound(ctx, 0.9); }, neighbour: looked);
                 ctx.Engine.SetControls(false);
                 FireSound(ctx, 0);
                 ctx.SetLevelState("apartment", "hallFire", "out"); ctx.SetLevelState("apartment", "smoke", 0.1);
-                await ctx.Ui.Talk(new TalkOptions { Speaker = "박영수 소장", Role = "1층", Lines = { "다들 내려왔죠? 119에 신고했어요. 소방대가 금방 껐대요. 304호 어르신도 무사하시고요." } });
+                // after looking first, 정민 makes the 119 call from the lobby (신고는 하되, 대피가 먼저: fire_119)
+                bool reported = looked && await LookFirstScene.Report(ctx, "lobby", size);
+                await ctx.Ui.Talk(new TalkOptions { Speaker = "박영수 소장", Role = "1층", Lines = { reported
+                    ? "다들 내려왔죠? 신고 잘했어요. 소방대가 금방 껐대요. 304호 어르신도 무사하시고요."
+                    : "다들 내려왔죠? 119에 신고했어요. 소방대가 금방 껐대요. 304호 어르신도 무사하시고요." } });
                 return "retreat";
             }
 
@@ -443,27 +484,55 @@ namespace AiOn.Story
             {
                 var mode = Drills.LadderStage(g, "extinguisher");
                 var fire = size; // judged on the fire the player saw when they chose
-                var res = await ctx.Ui.Open("extinguisher", new JObject { ["mode"] = mode, ["fire"] = fire });
+                // competition upgrade: an extinguisher whose gauge nobody read in 1장 has lost its pressure (ExtinguisherCheck)
+                bool low = ExtinguisherScene.GaugePart != null && ExtinguisherCheck.IsLow(g);
+                JToken res;
+                if (ExtinguisherScene.Use3D(ctx))
+                {
+                    // the 3D extinguisher in hand (the 2D screen stays the accessible alternative); its own roam has the
+                    // controls on, so this roam's clock and stairs check stand aside meanwhile (fighting)
+                    var setup = ExtinguisherScene.Setup(ctx, mode, fire, ExtinguisherScene.Corridor, low: low, shouted: shouted);
+                    fighting = true;
+                    try { res = await ExtinguisherScene.Run3D(ctx, setup, ExtinguisherScene.Corridor, Grow); }
+                    finally { fighting = false; }
+                }
+                else
+                {
+                    var opts = new JObject { ["mode"] = mode, ["fire"] = fire };
+                    if (low) opts["low"] = true;
+                    res = await ctx.Ui.Open("extinguisher", opts);
+                }
                 var seq = (res as JObject)?["sequence"] is JArray a ? a.Select(x => x.Type == JTokenType.String ? (string)x : null).ToList() : new List<string>();
+                if (seq.Contains("shout")) shouted = true;
                 var ev = Drills.EvalExtinguisher(seq, fire);
                 Drills.RecordEncounter(g, "extinguisher", ev.Result);
                 if (ev.Result == "out")
                 {
                     resolved = "out"; ctx.SetLevelState("apartment", "hallFire", "out"); ctx.SetLevelState("apartment", "smoke", 0.1); FireSound(ctx, 0);
                     if (g.Knows("extinguisherLocated")) ctx.Payoff("extinguisher", "소화기 위치와 순서를 알고 있어 작은 불을 바로 껐다");
+                    if (ExtinguisherScene.GaugePart != null && !low && ExtinguisherCheck.Checked(g)) ctx.Payoff(ExtinguisherCheck.Prep, "1장에 압력계를 보고 알려 둔 덕에 소화기가 제대로 나왔다");
                     return "out";
                 }
+                if (low) ExtinguisherScene.LowNote(ctx);
                 if (ev.Result == "retreat-ok") return await Retreat();
                 if (ev.Result == "escalated") { FireSound(ctx, 0); ctx.Fail("fire"); }
                 Grow();
+                ShowObjective();
                 return Undefined;
             }
 
             // The fire spreads only while the player is free to act; dialogs and the drill have their own pace.
-            await ctx.Roam(new RoamOptions
+            var roam = new RoamOptions
             {
                 Rate = 0,
-                Tick = dt => { if (resolved == null && ctx.Engine.ControlsEnabled && (t += dt) > growAt) Grow(); return null; },
+                Tick = dt =>
+                {
+                    if (fighting) return null; // the 3D extinguisher keeps its own pace
+                    if (resolved == null && ctx.Engine.ControlsEnabled && (t += dt) > growAt) Grow();
+                    // leaving after looking: walking down the stairs without a word is leaving too
+                    if (leaving && resolved == null && ctx.Engine.LevelId == "apartment" && ctx.Engine.PlayerY < 4) return "down";
+                    return null;
+                },
                 On =
                 {
                     ["homeExitDoor"] = H(async () => { await ctx.Goto("apartment", "corridor3F"); }),
@@ -492,8 +561,13 @@ namespace AiOn.Story
                         return await Retreat();
                     }),
                     ["extinguisher"] = _ => Fight(),
+                    // a neighbour stops 정민 at the elevator (a correction, not a punishment); not in the original chapter
+                    ["elevator"] = H(async () => { if (looked) await LookFirstScene.ElevatorStop(ctx); else ctx.Toast(ctx.Facts.Text("fire_lift"), "official", 5000); }),
                 },
-            });
+            };
+            if (leaving) roam.On["stairs3F"] = _ => Retreat();
+            var how = await ctx.Roam(roam);
+            if (how?.Type == JTokenType.String && (string)how == "down") await ctx.Modal(() => Retreat());
             FireSound(ctx, 0);
             GameRules.Adjust(g, "tension", 10);
         }
@@ -523,7 +597,8 @@ namespace AiOn.Story
             _ = en.FadeTo(0, 0.4); // the card skip (no time-lapse) leaves the black in place
             ctx.Refresh();
             if (g.Stats.Tension > 55) await StoryCommon.FactCard(ctx, "긴장이 높을 때", new[] { "mind_breath", "mind_call" });
-            var pick = await ctx.Say("오서연", new[] { "어젯밤 괜찮으셨어요? 저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요.", "앞으로 저녁마다 들은 걸 정리해서 문 앞에 붙여 둘게요. 필요하면 보세요." },
+            bool crossed = g.Events.Any(e => e.Type == "lookfirst" && e.Details?["act"]?.Type == JTokenType.String && (string)e.Details["act"] == "partition");
+            var pick = await ctx.Say("오서연", new[] { (crossed ? "어젯밤에 베란다 벽을 넘어 301호로 피하셨다면서요? 다행이에요. " : "어젯밤 괜찮으셨어요? ") + "저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요.", "앞으로 저녁마다 들은 걸 정리해서 문 앞에 붙여 둘게요. 필요하면 보세요." },
                 new List<TalkChoice> { new("thanks", "고마워요. 저는 급수소 소식을 전해 드릴게요"), new("ok", "네, 볼게요") }, "303호 앞");
             if (pick == "thanks")
             {

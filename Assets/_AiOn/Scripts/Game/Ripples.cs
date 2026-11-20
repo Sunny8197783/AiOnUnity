@@ -52,7 +52,12 @@ namespace AiOn.Game
             ["flashlight"] = "손전등 건전지", ["judgement"] = "화재 상황 판단", ["powerbank"] = "보조배터리 충전", ["radio"] = "라디오 주파수·건전지",
             ["route"] = "경로 확인", ["tub"] = "받아 둔 물", ["water_jug"] = "접이식 물통", ["curtain"] = "암막 커튼", ["towel"] = "젖은 수건", ["elder"] = "304호 어르신과 함께",
             ["gas"] = "가스 밸브 위치",
+            ["partition"] = "경량칸막이 앞 비우기", // port addition (PortAdded)
+            ["extgauge"] = "소화기 압력계 점검", // port addition (PortAdded)
         };
+
+        /// <summary>Prep ids this port added after the original's (the competition upgrade): the golden table test skips them.</summary>
+        public static readonly IReadOnlyList<string> PortAdded = new[] { "partition", "extgauge" };
 
         /// <summary>Label for a prep id that has a cause but no name (the original's fallback).</summary>
         const string UnnamedPrep = "준비";
@@ -98,6 +103,8 @@ namespace AiOn.Game
             },
             ["towel"] = new[] { Rule("tub_filled", "큰 통에 물을 받아 두었다") },
             ["gas"] = new[] { Rule("gas_checked", "주방 가스 중간 밸브 위치를 확인해 두었다") },
+            ["partition"] = new[] { Rule("partition_cleared", "베란다 경량칸막이 앞 상자를 치워 두었다") },
+            ["extgauge"] = new[] { Rule("ext_gauge", "복도 소화기 압력계를 보고 관리사무소에 알렸다", d => Is(d, "action", "report")) },
         };
 
         static string DayText(int d) => d == 0 ? "D-day" : d < 0 ? "D" + d.ToString(CultureInfo.InvariantCulture) : "D+" + d.ToString(CultureInfo.InvariantCulture);

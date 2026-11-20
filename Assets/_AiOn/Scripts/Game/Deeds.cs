@@ -175,7 +175,10 @@ namespace AiOn.Game
             Row("stairs_asked", "dday", W(("seoyeon", 3)), "서연은", F("people_ask"), "계단에서 먼저 물었다", "대피소 계단에서 어떻게 도울지 서연에게 먼저 묻고 보행기를 들었다.", Help("ask", w => w.Contains("먼저 묻고"))),
             Row("stairs_carried", "dday", W(("seoyeon", 1)), null, F(), "계단에서 보행기를 들어 주었다", "대피소 계단에서 서연의 보행기를 옆에서 들어 주었다.", Help("carry", w => w.StartsWith("계단에서 보행기", StringComparison.Ordinal))),
             Row("looter_gave", "endure", W(("town", 2)), null, F("people_order"), "낯선 사람에게 먹을 것을 내줬다", "먹을 것을 달라는 낯선 사람에게 가진 것을 내주었다.", Ev("looter", d => JsSem.Is(d["result"], "gave"))),
-            Row("looter_escaped", "endure", W(), null, F(), "시비를 피해 자리를 떴다", "시비가 붙자 맞서지 않고 자리를 피했다.", Ev("looter", d => JsSem.Is(d["result"], "escaped"))),
+            // Port change (competition upgrade): escaped now means the polite 'back' only (old saves carry no how); 112 and
+            // the neighbours have their own rows at the end of the table.
+            Row("looter_escaped", "endure", W(), null, F(), "낯선 사람의 부탁을 정중히 거절했다", "먹을 것을 달라는 낯선 사람에게 정중히 거절하고 물러섰다.",
+                Ev("looter", d => JsSem.Is(d["result"], "escaped") && (JsSem.Nullish(d["how"]) || JsSem.Is(d["how"], "back")))),
             Row("looter_fought", "endure", W(), null, F(), "덤벼든 사람에게 맞섰다", "덤벼드는 사람에게서 몸을 지키려 맞섰다.", Ev("looter", d => JsSem.Is(d["result"], "fought"))),
             Row("violence", "dday", W(("harm", 1)), null, F("people_order"), "먼저 사람에게 손을 댔다", "시비도 없던 사람에게 먼저 손을 댔다.", Ev("violence"), each: true),
             Row("water_for_seoyeon", "endure", W(("seoyeon", 3)), "서연은", F("water_point"), "서연 몫의 물을 날라 주었다", "급수소에서 물 한 통을 받아 3층 서연의 집까지 날라 주었다.", Ev("water_fetched", d => JsSem.IsTrue(d["forSeoyeon"]))),
@@ -193,7 +196,8 @@ namespace AiOn.Game
                 (e, g) => (e.Type == "knock" && (JsSem.Is(Det(e)["pick"], "give") || JsSem.Is(Det(e)["pick"], "info"))) || (e.Type == "help" && JsSem.Is(Det(e)["who"], "stranger"))),
             Row("fire_warned", "endure", W(("elder", 2), ("town", 1)), "304호 어르신은", F("fire_shout"), "\"불이야!\" 외쳐 이웃을 깨웠다", "복도에 불이 나자 \"불이야!\" 외쳐 이웃들을 깨웠다.", Ev("fire_shout")),
             Row("fire_handled", "endure", W(("manager", 1), ("town", 1)), null, F("fire_small", "fire_big"), "복도 불 앞에서 판단해 움직였다", "복도 불 앞에서 끌지 물러날지 판단해 움직였다.",
-                (e, g) => e.Type == "fire_retreat" || (Ext(e) && e.Chapter == "endure" && (Res(Det(e)["result"]) == "out" || Res(Det(e)["result"]) == "retreat-ok"))),
+                // port addition (competition upgrade): staying in or crossing the partition after looking first (fire_waited) is a judgement too
+                (e, g) => e.Type == "fire_retreat" || e.Type == "fire_waited" || (Ext(e) && e.Chapter == "endure" && (Res(Det(e)["result"]) == "out" || Res(Det(e)["result"]) == "retreat-ok"))),
             Row("elder_visit", "endure", W(("elder", 1)), "304호 어르신은", F(), "304호 어르신께 안부를 여쭸다", "불이 난 다음 날, 304호에 들러 어르신께 안부를 여쭸다."),
             Row("notes_exchange", "endure", W(("seoyeon", 2), ("info", 1)), null, F("shelter_share"), "서연과 라디오 메모를 나눴다", "서연과 라디오 메모와 급수소 소식을 서로 나누기로 했다.", Help("memo", w => w.StartsWith("라디오 메모", StringComparison.Ordinal))),
             Row("seoyeon_note_reply", "crossroads", W(("seoyeon", 1), ("info", 1)), "서연은", F("info_scope"), "서연 메모에 급수 시간을 적었다", "서연의 메모에 급수 시간과 그 말을 들은 곳을 덧붙여 적었다."),
@@ -212,7 +216,22 @@ namespace AiOn.Game
             Row("bus_helped", "evac", W(("town", 1)), "그분은", F("people_order"), "리프트 앞 어르신 짐을 들어 드렸다", "버스 리프트 앞에서 어르신께 먼저 여쭌 뒤 짐을 들어 드렸다."),
             Row("volunteered", "evac", W(("town", 2)), null, F("water_point"), "급수 자원봉사에 이름을 적었다", "버스 대신 행정복지센터 급수 자원봉사에 이름을 적었다.", Ev("path", d => JsSem.Is(d["path"], "volunteer"))),
             Row("stayed", "evac", W(("manager", 1)), null, F(), "박 소장과 단지에 남았다", "버스 대신 박 소장과 함께 단지에 남기로 했다.", Ev("path", d => JsSem.Is(d["path"], "stay"))),
+            // ---- added by the port (competition upgrade; not in the original table): the stranger's other answers ----
+            Row("looter_reported", "endure", W(("info", 1)), null, F("comms_112"), "112에 상황을 차분히 알렸다", "먹을 것을 달라는 낯선 사람을 만나 112에 지금 있는 곳과 상황을 차분히 알렸다.",
+                Ev("looter", d => JsSem.Is(d["how"], "report"))),
+            Row("looter_neighbors", "endure", W(("town", 1)), null, F("people_order"), "근처 주민에게 함께 있어 달라고 했다", "먹을 것을 달라는 낯선 사람 앞에서 근처 주민에게 곁에 있어 달라고 부탁했다.",
+                Ev("looter", d => JsSem.Is(d["how"], "neighbors"))),
+            Row("looter_argued", "endure", W(("town", -1)), null, F("people_order"), "낯선 사람에게 언성을 높였다", "먹을 것을 달라는 낯선 사람에게 언성을 높여 따졌다.",
+                Ev("looter", d => JsSem.Is(d["result"], "argued"))),
+            // ---- added by the port (competition upgrade): the bystander CPR in the shelter (Story/CprScene.cs "cpr" event) ----
+            Row("cpr_helped", "dday", W(("town", 2)), "할아버지의 가족은", F(), "쓰러진 할아버지 곁을 지켰다", "대피소에서 쓰러진 할아버지의 가슴을 누르며 구급대가 올 때까지 곁을 지켰다.",
+                Ev("cpr", d => JsSem.IsTrue(d["played"]))),
+            Row("cpr_relay", "dday", W(("town", 1)), null, F(), "이웃을 지목해 교대를 부탁했다", "가슴압박을 하다 옆 사람을 지목해 교대를 부탁했다.",
+                Ev("cpr", d => JsSem.IsTrue(d["played"]) && d["swaps"] != null && d["swaps"].Type == JTokenType.Integer && (int)d["swaps"] > 0)),
         };
+
+        /// <summary>Rows the port appended after the original table (DeedsTests checks the original part against its golden).</summary>
+        public static readonly IReadOnlyList<string> PortAdded = new[] { "looter_reported", "looter_neighbors", "looter_argued", "cpr_helped", "cpr_relay" };
 
         static readonly Dictionary<string, DeedDef> ById = Index();
 

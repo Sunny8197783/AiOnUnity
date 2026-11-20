@@ -158,13 +158,17 @@ namespace AiOn.Story.Testing
         }
 
         static readonly Dictionary<string, Facts> FactsCache = new();
-        /// <summary>facts.json from the data folder (cached per folder).</summary>
+        /// <summary>facts.json from the data folder with facts-ext.json merged in when it is there, as the game reads them (cached per folder).</summary>
         public static Facts LoadFacts(string dataDir = null)
         {
             var dir = dataDir ?? ResolveDataDir();
             lock (FactsCache)
             {
-                if (!FactsCache.TryGetValue(dir, out var f)) FactsCache[dir] = f = Facts.Load(File.ReadAllText(Path.Combine(dir, "facts.json")));
+                if (!FactsCache.TryGetValue(dir, out var f))
+                {
+                    var ext = Path.Combine(dir, "facts-ext.json");
+                    FactsCache[dir] = f = Facts.Load(File.ReadAllText(Path.Combine(dir, "facts.json")), File.Exists(ext) ? File.ReadAllText(ext) : null);
+                }
                 return f;
             }
         }

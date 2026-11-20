@@ -81,6 +81,50 @@ namespace AiOn.Game
             return new Facts(facts.ToObject<List<FactEntry>>(), sources.ToObject<List<FactSource>>());
         }
 
+        /// <summary>
+        /// facts.json with Data/Source/facts-ext.json (the facts added after the port, same shape) appended. The original
+        /// keeps its order and wording: an extension fact or source whose id the original already has is dropped (see
+        /// <see cref="Skipped"/>). A null or blank extJson gives the original alone, so a scene not wired to the extension
+        /// still runs.
+        /// </summary>
+        public static Facts Load(string json, string extJson)
+        {
+            var baseFacts = Load(json);
+            return string.IsNullOrWhiteSpace(extJson) ? baseFacts : Merge(baseFacts, Load(extJson));
+        }
+
+        /// <summary>The original followed by the extension's new facts and sources (original ids win; pure; tested).</summary>
+        public static Facts Merge(Facts baseFacts, Facts ext)
+        {
+            if (ext == null || (ext.All.Count == 0 && ext.Sources.Count == 0)) return baseFacts;
+            var facts = new List<FactEntry>(baseFacts.All);
+            var sources = new List<FactSource>(baseFacts.Sources);
+            var skipped = new List<string>();
+            var seenFacts = new HashSet<string>();
+            foreach (var f in baseFacts.All) if (f?.Id != null) seenFacts.Add(f.Id);
+            var seenSources = new HashSet<string>();
+            foreach (var s in baseFacts.Sources) if (s?.Id != null) seenSources.Add(s.Id);
+            foreach (var f in ext.All)
+                if (f?.Id == null || !seenFacts.Add(f.Id)) skipped.Add("fact:" + f?.Id); else facts.Add(f);
+            foreach (var s in ext.Sources)
+                if (s?.Id == null || !seenSources.Add(s.Id)) skipped.Add("source:" + s?.Id); else sources.Add(s);
+            return new Facts(facts, sources) { Skipped = skipped, ExtensionFrom = baseFacts.All.Count };
+        }
+
+        /// <summary>Extension ids dropped by <see cref="Merge"/> because the original already has them ("fact:id" / "source:id").</summary>
+        public IReadOnlyList<string> Skipped { get; private set; } = Array.Empty<string>();
+
+        /// <summary>Index in <see cref="All"/> where the extension's facts begin, or -1 for facts that were not merged.</summary>
+        public int ExtensionFrom { get; private set; } = -1;
+
+        /// <summary>True when the fact came from facts-ext.json rather than the original.</summary>
+        public bool IsExtension(string id)
+        {
+            if (ExtensionFrom < 0) return false;
+            for (int i = ExtensionFrom; i < All.Count; i++) if (All[i].Id == id) return true;
+            return false;
+        }
+
         /// <summary>The fact, or null.</summary>
         public FactEntry Fact(string id) => id != null && _byId.TryGetValue(id, out var f) ? f : null;
 

@@ -17,11 +17,47 @@ namespace AiOn.Tests
     /// </summary>
     static class GoldenRuns
     {
-        /// <summary>Reads a fixture as JSON; strings stay strings (no date parsing).</summary>
+        /// <summary>Reads a fixture as JSON; strings stay strings (no date parsing). The port's rewordings apply first.</summary>
         public static JObject ParseFixture(string name)
         {
-            using var reader = new JsonTextReader(new StringReader(Fixture(name))) { DateParseHandling = DateParseHandling.None, FloatParseHandling = FloatParseHandling.Double };
+            using var reader = new JsonTextReader(new StringReader(Reword(Fixture(name)))) { DateParseHandling = DateParseHandling.None, FloatParseHandling = FloatParseHandling.Double };
             return (JObject)JToken.ReadFrom(reader);
+        }
+
+        /// <summary>
+        /// Sentences the port reworded on purpose (competition upgrade: no fight and no injury wording; Docs/COMPETITION_PLAN.md
+        /// "갈라짐 기록"). The fixtures stay the original's output; the expected text is swapped here, whole sentences only.
+        /// </summary>
+        public static readonly (string original, string port)[] Reworded =
+        {
+            // Debrief: the fail card of a health run-out (Debrief.Dead)
+            ("몸싸움 끝에 쓰러졌습니다", "시비가 커졌습니다"),
+            ("폭발에 휘말렸습니다", "포격을 피할 곳을 찾지 못했습니다"),
+            ("무너진 잔해에 다쳤습니다", "무너지는 벽 가까이에 있었습니다"),
+            ("불길 속에서 쓰러졌습니다", "불길 곁에 너무 오래 머물렀습니다"),
+            ("더 이상 버틸 수 없을 만큼 다쳤습니다", "더 버틸 힘이 남지 않았습니다"),
+            ("쉬면서 상처를 돌볼 수 있는 순간이 있었습니다.", "쉬면서 몸을 추스를 수 있는 순간이 있었습니다."),
+            ("구급함을 챙기고, 다쳤을 때는 안전한 곳에서 먼저 처치하기", "구급함을 챙기고, 몸이 힘들 때는 안전한 곳에서 먼저 쉬기"),
+            ("다친 뒤에는 먼저 안전한 곳에서 처치하기", "몸이 힘들 때는 먼저 안전한 곳에서 쉬기"),
+            ("이미 다친 몸으로 움직이고 있었습니다.", "이미 지친 몸으로 움직이고 있었습니다."),
+            // Endings: an old save's leg injury
+            ("부러진 다리로 걷는 길은 끝이 없었다. 지나가던 구호 트럭이 태워 주지 않았다면 그 길 위에서 멈췄을 것이다.", Endings.LegWalkLine),
+            ("부러진 다리는 제대로 붙지 않았다. 지금도 비가 오면 욱신거린다.", Endings.LegAfterLine),
+            ("다친 몸으로 무리한 뒤 한동안 앓아누웠지만, 그 일을 후회하지는 않았다.", "지친 몸으로 무리한 뒤 한동안 앓아누웠지만, 그 일을 후회하지는 않았다."),
+            // Fates: an old save's fight
+            ("골목에서 주먹을 휘둘렀던 날의 기억은 오래 꿈에 나왔다.", "골목에서 시비가 붙었던 날의 기억은 오래 꿈에 나왔다."),
+            // Deeds: looter_escaped is the polite 'back' now
+            ("시비를 피해 자리를 떴다", "낯선 사람의 부탁을 정중히 거절했다"),
+            ("시비가 붙자 맞서지 않고 자리를 피했다.", "먹을 것을 달라는 낯선 사람에게 정중히 거절하고 물러섰다."),
+            // Challenges: hands_off is about the voice
+            ("누구에게도 손대지 않고", "끝까지 차분하게"),
+            ("시비가 붙어도 맞서지 않고 자리를 피하기", "낯선 사람이 먹을 것을 달라고 해도 언성을 높이지 않기"),
+        };
+
+        static string Reword(string text)
+        {
+            foreach (var (a, b) in Reworded) text = text.Replace(a, b);
+            return text;
         }
 
         // ---------- the runs ----------

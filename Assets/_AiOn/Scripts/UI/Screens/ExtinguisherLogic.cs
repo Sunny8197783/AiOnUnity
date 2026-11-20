@@ -32,6 +32,15 @@ namespace AiOn.UI
         public string Mode { get; }
         public bool Large { get; }
         public bool Practice { get; }
+        /// <summary>
+        /// Competition upgrade: the extinguisher lost its pressure (the 1장 gauge was never read, ExtinguisherCheck). Each
+        /// stroke does <see cref="LowPower"/> as much and the powder stops after <see cref="LowStrokes"/> strokes (end "empty"):
+        /// alternating strokes still just put a small fire out, one-sided ones do not.
+        /// </summary>
+        public bool Low { get; }
+        public const int LowStrokes = 7;
+        public const double LowPower = 0.8;
+        int _strokes;
         public IReadOnlyList<DrillStep> Steps { get; }
         public IReadOnlyList<DrillStep> Choices { get; }
         /// <summary>The step buttons' order on screen (shuffled by a fixed hash, like the original).</summary>
@@ -73,9 +82,10 @@ namespace AiOn.UI
         /// <summary>The squeeze hold completed: focus moves to the sweep button.</summary>
         public event Action Squeezed;
 
-        public ExtinguisherLogic(string mode = "guided", string fire = "small", IReadOnlyList<DrillStep> steps = null, IReadOnlyList<DrillStep> choices = null, bool practice = false)
+        public ExtinguisherLogic(string mode = "guided", string fire = "small", IReadOnlyList<DrillStep> steps = null, IReadOnlyList<DrillStep> choices = null, bool practice = false, bool low = false)
         {
             Mode = mode;
+            Low = low && !practice;
             Large = fire == "large";
             Practice = practice;
             Steps = steps ?? Drills.ExtSteps;
@@ -140,15 +150,17 @@ namespace AiOn.UI
             "out" => practice ? "연습 완료" : "불이 꺼졌다",
             "spread" => "불이 번졌다",
             "overwhelmed" => "더는 버틸 수 없다",
+            "empty" => "분말이 다 떨어졌다",
             _ => "",
         };
         public static string EndBody(string kind) => kind switch
         {
             "spread" => "상자 더미로 옮겨 붙었다. 이제는 작은 불이 아니다.",
             "overwhelmed" => "연기와 열기가 덮쳐 온다. 소화기 한 대로는 감당할 수 없는 불이다.",
+            "empty" => "압력이 빠진 소화기라 분말이 금방 끊겼다. 불은 그대로다. 물러나 알리자.",
             _ => null,
         };
-        public static string EndOk(string kind) => kind == "out" ? "확인" : kind == "spread" ? "계속" : "그래도 버틴다";
+        public static string EndOk(string kind) => kind == "out" ? "확인" : kind == "spread" || kind == "empty" ? "계속" : "그래도 버틴다";
 
         /// <summary>On a fire put out: was the alarm raised before anything else?</summary>
         public bool ShoutFirst => _seq.FirstOrDefault(id => id != "fight") == "shout";
@@ -221,9 +233,10 @@ namespace AiOn.UI
             if (!_done.Contains("squeeze") || Ended) return;
             bool alt = dir != LastDir;
             LastDir = dir; SweepDir = dir;
-            FireLv = Math.Max(0, FireLv - (Large ? 0.012 : alt ? 0.085 : 0.03));
+            FireLv = Math.Max(0, FireLv - (Large ? 0.012 : alt ? 0.085 : 0.03) * (Low ? LowPower : 1));
             if (!alt && !Large) Say("한쪽으로만 뿌리고 있다. 좌우로 쓸듯이.");
-            if (!Large && FireLv <= 0.02) { FireLv = 0; _seq.Add("sweep"); _done.Add("sweep"); End("out"); }
+            if (!Large && FireLv <= 0.02) { FireLv = 0; _seq.Add("sweep"); _done.Add("sweep"); End("out"); return; }
+            if (Low && ++_strokes >= LowStrokes) { Spraying = false; End("empty"); }
         }
 
         // Mouse sweep: every swing of ~1/6 of the scene's width that turns back counts as one stroke.
@@ -339,7 +352,7 @@ namespace AiOn.UI
             string fire = o["fire"]?.Type == JTokenType.String ? (string)o["fire"] : "small";
             var steps = o["steps"] is JArray sa ? sa.ToObject<List<DrillStep>>() : null;
             var choices = o["choices"] is JArray ca ? ca.ToObject<List<DrillStep>>() : null;
-            return new ExtinguisherLogic(mode, fire, steps, choices, Truthy(o["practice"]));
+            return new ExtinguisherLogic(mode, fire, steps, choices, Truthy(o["practice"]), Truthy(o["low"]));
         }
 
         /// <summary>JS truthiness of an option value.</summary>

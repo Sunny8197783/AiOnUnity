@@ -1637,6 +1637,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: AiOn.Runtime::AiOn.Game.GameSession
   items: {fileID: 11400000, guid: ab87db87444433f4694ef32b48eb2ce0, type: 2}
   factsJson: {fileID: 4900000, guid: b01205c8e9f0b0340a4390f05d46e88c, type: 3}
+  factsExtJson: {fileID: 4900000, guid: 86763d1f972f10c4199e443977458403, type: 3}
   seed: 0
   power: 1
 --- !u!4 &221442991
@@ -3528,6 +3529,7 @@ Transform:
   - {fileID: 1031677622}
   - {fileID: 282324229}
   - {fileID: 2032943569}
+  - {fileID: 2017053336}
   - {fileID: 703291875}
   m_Father: {fileID: 1257099149}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -8721,6 +8723,8 @@ MonoBehaviour:
       map: {fileID: 0}
       emissiveMap: {fileID: 0}
   emissionGain: 1
+  nightAmount: 1
+  poolGain: 1
 --- !u!114 &1257099147
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9088,18 +9092,27 @@ MonoBehaviour:
   cam: {fileID: 1294892575}
   body: {fileID: 503656598}
   thirdPerson: 1
+  reduceMotion: 0
+  hostOwnsView: 0
   overrideActive: 0
   overridePosition: {x: 0, y: 0, z: 0}
   overrideTarget: {x: 0, y: 0, z: 0}
   overrideFov: 50
   shakeStrength: 0
   shakeUntil: 0
+  forceBodyHidden: 0
+  bodyCastsShadow: 1
   fov: 70
   runFovBoost: 4
   distance: 3.2
   height: 1.95
   shoulder: 0.7
   probeRadius: 0.2
+  indoorDistance: 1.8
+  indoorHeight: 1.7
+  indoorShoulder: 0.45
+  indoorProbe: 1.2
+  firstPersonBelow: 0.9
   obstacles:
     serializedVersion: 2
     m_Bits: 4294967291
@@ -9743,6 +9756,11 @@ MonoBehaviour:
   staminaUse: 1
   lookSensitivity: 0.1375
   pitchLimit: 80
+  sensitivity: 1
+  canRun: 1
+  canJump: 1
+  canStairs: 1
+  eye: 1.62
   startSpawn: home
 --- !u!114 &1348004288
 MonoBehaviour:
@@ -13137,6 +13155,57 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &2017053335
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2017053336}
+  - component: {fileID: 2017053337}
+  m_Layer: 0
+  m_Name: Point_homePartition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2017053336
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2017053335}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.05, y: 5.67, z: -8.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 525310354}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2017053337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2017053335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d578e00ba399baf4fb93c6acfd3e8bfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: AiOn.Runtime::AiOn.Interaction.InteractionPoint
+  id: homePartition
+  label: "\uBCA0\uB780\uB2E4 \uB05D \uBCBD (\uACBD\uB7C9\uCE78\uB9C9\uC774)"
+  kind: inspect
+  radius: 1.3
+  reach: 0
+  host: 
+  interactable: 1
 --- !u!1 &2026246036
 GameObject:
   m_ObjectHideFlags: 0

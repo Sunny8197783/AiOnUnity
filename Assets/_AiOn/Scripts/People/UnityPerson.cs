@@ -18,7 +18,11 @@ namespace AiOn.People
             Name = name;
             Root = root;
             _anim = root.GetComponentInChildren<PersonAnimator>(true);
+            if (_anim) { _modelRot = _anim.transform.localRotation; _modelPos = _anim.transform.localPosition; }
         }
+
+        Quaternion _modelRot = Quaternion.identity;
+        Vector3 _modelPos;
 
         public string Name { get; }
         public bool Visible { get => Root && Root.activeSelf; set { if (Root) Root.SetActive(value); } }
@@ -32,8 +36,28 @@ namespace AiOn.People
             if (yaw.HasValue) Root.transform.rotation = Quaternion.Euler(0, LevelLayout.ToUnityYaw((float)yaw.Value), 0);
         }
 
+        /// <summary>
+        /// "lie" (competition upgrade, the shelter CPR): lying on the back, head behind the feet, made from the idle clip with
+        /// the model tipped over (there is no lying clip; "down" is a take-cover crouch). Any other animation stands it up.
+        /// </summary>
+        public const string Lie = "lie";
+        /// <summary>The back's depth below the spine when tipped over: lifts the body onto the floor.</summary>
+        const float LieLift = 0.13f;
+
         public void SetAnim(string anim, double? speed = null)
         {
+            bool lie = anim == Lie;
+            if (_anim)
+            {
+                var t = _anim.transform;
+                if (t != Root.transform)
+                {
+                    // tipped back about the feet in the root's frame, on top of the model's own half turn
+                    t.localRotation = lie ? Quaternion.Euler(-90f, 0f, 0f) * _modelRot : _modelRot;
+                    t.localPosition = lie ? _modelPos + new Vector3(0, LieLift, 0) : _modelPos;
+                }
+                if (lie) anim = "idle";
+            }
             if (_anim) _anim.SetAnim(anim, speed.HasValue ? (float)speed.Value : (float?)null);
             // people.js AUTO: carry shows the jug, phone the phone, while the animation lasts (unless set on by the story)
             var auto = AutoProp(anim);

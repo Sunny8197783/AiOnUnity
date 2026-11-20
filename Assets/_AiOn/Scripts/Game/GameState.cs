@@ -34,13 +34,13 @@ namespace AiOn.Game
         [JsonProperty("info")] public List<InfoNote> Info = new();
         [JsonProperty("cond")] public GameConditions Cond = new();
         [JsonProperty("events")] public List<GameEvent> Events = new();
-        /// <summary>Day-ledger rows (original game/ledger.js, not ported yet).</summary>
+        /// <summary>Day-ledger rows (original game/ledger.js; written by <see cref="AiOn.Game.Ledger"/>).</summary>
         [JsonProperty("ledger")] public List<JObject> Ledger = new();
         [JsonProperty("checkpoint", NullValueHandling = NullValueHandling.Include)] public Checkpoint Checkpoint;
         /// <summary>Lasting injuries ('leg'); null until the first one.</summary>
         [JsonProperty("injury", NullValueHandling = NullValueHandling.Ignore)] public List<string> Injury;
 
-        /// <summary>Fields owned by systems not ported yet (relay, karma, handover...); kept on save.</summary>
+        /// <summary>Fields with no typed member, kept as the original's JSON on save: relay and handover (Relay), karma (Neighbors, Danger).</summary>
         [JsonExtensionData] public IDictionary<string, JToken> Extra = new Dictionary<string, JToken>();
 
         /// <summary>JS truthiness of a know flag: missing, null, false, 0 and "" are false.</summary>

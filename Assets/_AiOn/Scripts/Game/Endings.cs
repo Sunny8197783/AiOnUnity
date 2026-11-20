@@ -105,6 +105,13 @@ namespace AiOn.Game
     /// </summary>
     public static class Endings
     {
+        /// <summary>
+        /// An old save's leg injury (new runs no longer break a leg). Port change (competition upgrade, no injury scenes):
+        /// the original said "부러진 다리로…" and "부러진 다리는 제대로 붙지 않았다…".
+        /// </summary>
+        public const string LegWalkLine = "지친 몸으로 걷는 길은 끝이 없었다. 지나가던 구호 트럭이 태워 주지 않았다면 그 길 위에서 멈췄을 것이다.",
+            LegAfterLine = "그날 걸었던 먼 길이 지금도 가끔 꿈에 나온다.";
+
         public static string[] Paths => Fates.Paths;
         public static HashSet<string> Leave => Fates.Leave;
         public static HashSet<string> Town => Fates.Town;
@@ -185,7 +192,7 @@ namespace AiOn.Game
                 Hint = "버스를 기다리지 않고 걸어서 떠났다면.",
                 Lines = (g, a, has) => L(
                     has("driver_text") ? "국도에서 낯익은 화물차가 섰다. 문자를 받았던 김 기사님이었다. 남은 길은 조수석에서 갔다."
-                        : g.HasInjury("leg") ? "부러진 다리로 걷는 길은 끝이 없었다. 지나가던 구호 트럭이 태워 주지 않았다면 그 길 위에서 멈췄을 것이다."
+                        : g.HasInjury("leg") ? LegWalkLine
                             : g.Stats.Health < 40 ? "몸이 버티지 못해 길가에 주저앉았다가 구호소에 실려 갔다. 멈춘 건 실패가 아니었다. 도움을 받을 수 있는 곳까지 간 것이었다."
                                 : "사흘을 걸어 친척이 있는 남쪽 도시에 닿았다.",
                     has("card_family") ? "종이 카드에 적어 둔 번호로 대구 부모님께 전화를 걸었다. 휴대폰이 꺼져 있어도 번호는 남아 있었다." : null),
@@ -218,7 +225,7 @@ namespace AiOn.Game
             {
                 No = 6, Id = "volunteer", Kind = "base", Title = "남은 손", Place = "행정복지센터 비상급수시설 · D+14", Axes = new[] { "town", "logistics" },
                 Hint = "행정복지센터 자원봉사에 남았다면.",
-                Lines = (g, a, has) => L(g.Stats.Health < 40 ? "다친 몸으로 무리한 뒤 한동안 앓아누웠지만, 그 일을 후회하지는 않았다." : null),
+                Lines = (g, a, has) => L(g.Stats.Health < 40 ? "지친 몸으로 무리한 뒤 한동안 앓아누웠지만, 그 일을 후회하지는 않았다." : null),
             },
             new EndingDef
             {
@@ -367,8 +374,8 @@ namespace AiOn.Game
             lines.AddRange(e.Lines(g, a, has));
             lines.Add(LedgerLine(g, path));
             lines.RemoveAll(string.IsNullOrEmpty);
-            // The leg is told once: the walk's own line may already have said it.
-            if (g.HasInjury("leg") && !lines.Any(l => l.Contains("부러진 다리"))) lines.Add("부러진 다리는 제대로 붙지 않았다. 지금도 비가 오면 욱신거린다.");
+            // The leg is told once: the walk's own line may already have said it. (Only old saves carry a leg injury now.)
+            if (g.HasInjury("leg") && !lines.Contains(LegWalkLine)) lines.Add(LegAfterLine);
             if (a["harm"] >= 2 && id != "shut") lines.Add("몇몇 이웃은 끝내 눈을 마주치지 않았다."); // on town paths harm 4+ is already 'shut'
             return new Fate
             {

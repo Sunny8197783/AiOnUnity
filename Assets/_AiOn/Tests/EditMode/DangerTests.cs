@@ -1,5 +1,6 @@
-// Danger (story/danger.js): port of tests/r6-fix2-danger.test.mjs (shellAim; the looter's give/loot rules, which the
+// Danger (story/danger.js): port of tests/r6-fix2-danger.test.mjs (shellAim; the stranger's give rules, which the
 // original checked by reading its source, are checked here by playing them on FakeStoryHost) plus the layer's rules.
+// Competition upgrade: the stranger asking for food is a non-violent encounter (no punch, no chase, nobody hurt).
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +58,7 @@ namespace AiOn.Tests
         [Test]
         public void Looter_GiveGoesThroughConsumeBag_OnlyWhileTheBagIsOn()
         {
-            var (host, ctx, layer, _) = Rig();
+            var (host, ctx, layer, hurts) = Rig();
             var g = host.G;
             g.Items["water_500"] = Item(2); g.Items["bars"] = Item(1, 3); g.Items["canned"] = Item(0, 2);
             g.SetKnow("bagOn", true);
@@ -68,58 +69,175 @@ namespace AiOn.Tests
                 var roam = ctx.Roam(new RoamOptions { Doors = false, Tick = _ => EndOnLooterEvent(g) });
                 layer.Trigger("looter");
                 Assert.That(layer.CurrentLooter, Is.Not.Null);
-                Assert.That(layer.IsHostile(layer.CurrentLooter), Is.True);
                 await roam;
             });
             var talk = host.Talks.Last();
-            Assert.That(talk.Choices.Select(c => c.Id), Is.EqualTo(new[] { "give", "refuse", "run" }));
+            Assert.That(talk.Choices.Select(c => c.Id), Is.EqualTo(new[] { "give", "back", "neighbors", "report", "argue" }));
             Assert.That(g.Items["water_500"].Bag, Is.EqualTo(1)); Assert.That(g.Items["water_500"].Used, Is.EqualTo(1));
             Assert.That(g.Items["bars"].Bag, Is.EqualTo(0)); Assert.That(g.Items["bars"].Home, Is.EqualTo(3), "the home stock is not handed over");
             Assert.That((string)g.Events.Last(e => e.Type == "looter").Details["result"], Is.EqualTo("gave"));
             Assert.That((double)g.Extra["karma"], Is.EqualTo(1));
-            Assert.That(host.Toasts, Does.Contain("먹을 것을 건넸다. 그는 말없이 골목으로 사라졌다."));
+            Assert.That(host.Toasts, Does.Contain("먹을 것을 건넸다. 그는 고개를 숙이고 골목으로 사라졌다."));
+            Assert.That(hurts, Is.Empty);
 
-            // no bag on the back: nothing to hand over
-            var (h2, c2, l2, _) = Rig();
+            // no bag on the back: nothing to hand over; stepping back is the calm way out
+            var (h2, c2, l2, hurts2) = Rig();
             h2.G.Items["water_500"] = Item(2); h2.G.SetKnow("bagOn", false);
-            h2.AnswerSpeaker("낯선 사람", "run");
+            h2.AnswerSpeaker("낯선 사람", "back");
             h2.Run(async () =>
             {
                 await c2.Goto("town", "park");
                 var roam = c2.Roam(new RoamOptions { Doors = false, Tick = _ => EndOnLooterEvent(h2.G) });
                 l2.Trigger("looter");
-                // the chase gives up once the player is far enough away
-                h2.Queue(h => h.MoveTo(h.PlayerX + 40, h.PlayerZ), () => c2.Roaming && h2.ControlsEnabled && h2.Talks.Count > 0, "run away");
                 await roam;
             });
-            Assert.That(h2.Talks.Last().Choices.Select(c => c.Id), Is.EqualTo(new[] { "refuse", "run" }));
+            Assert.That(h2.Talks.Last().Choices.Select(c => c.Id), Is.EqualTo(new[] { "back", "neighbors", "report", "argue" }));
             Assert.That(h2.G.Items["water_500"].Bag, Is.EqualTo(2));
             Assert.That((string)h2.G.Events.Last(e => e.Type == "looter").Details["result"], Is.EqualTo("escaped"));
+            Assert.That(hurts2, Is.Empty);
+        }
+
+        // Competition upgrade (non-violent): every answer to the stranger is words. Nobody is hit, nobody chases, nothing
+        // punches; the bad answer (argue) costs calm and, with food in the bag, one item handed over in the end.
+        [TestCase("back", "escaped", 0, 4, 0)]
+        [TestCase("neighbors", "escaped", 0, -2, 0)]
+        [TestCase("report", "escaped", 0, -2, 0)]
+        [TestCase("argue", "argued", -1, 12, 1)]
+        public void Looter_EveryAnswerIsWords_NobodyIsHurt_AndTheStrangerWalksAway(string pick, string result, double karma, int tension, int lost)
+        {
+            var (host, ctx, layer, hurts) = Rig("prep"); // a chapter with no shelling: only the stranger, forced in
+            var g = host.G;
+            g.Items.Clear();
+            g.Items["bars"] = Item(2); g.SetKnow("bagOn", true);
+            g.Stats.Tension = 20;
+            double battery = g.Phone.Battery;
+            host.AnswerSpeaker("낯선 사람", pick);
+            double closest = double.MaxValue;
+            host.Run(async () =>
+            {
+                await ctx.Goto("town", "park");
+                var roam = ctx.Roam(new RoamOptions
+                {
+                    Doors = false,
+                    Tick = _ =>
+                    {
+                        var p = layer.CurrentLooter;
+                        if (p != null) closest = Math.Min(closest, Math.Sqrt((p.X - host.PlayerX) * (p.X - host.PlayerX) + (p.Z - host.PlayerZ) * (p.Z - host.PlayerZ)));
+                        return host.FrameCount > 2400 ? "end" : null;
+                    },
+                });
+                layer.Trigger("looter");
+                await roam;
+            });
+            var ev = g.Events.Single(e => e.Type == "looter");
+            Assert.That((string)ev.Details["result"], Is.EqualTo(result));
+            Assert.That((string)ev.Details["how"], Is.EqualTo(pick));
+            Assert.That(hurts, Is.Empty, "nobody is hurt");
+            Assert.That(host.Cues, Has.No.Member("hit"), "no punch, no hit sound");
+            Assert.That(host.Calls("hurt"), Is.Empty);
+            Assert.That(g.Extra.ContainsKey("karma") ? (double)g.Extra["karma"] : 0, Is.EqualTo(karma));
+            Assert.That(g.Stats.Tension, Is.EqualTo(20 + tension).Within(0.01));
+            Assert.That(g.Items["bars"].Bag, Is.EqualTo(2 - lost));
+            Assert.That(g.Phone.Battery, Is.EqualTo(pick == "report" ? battery - 2 : battery));
+            if (pick == "report") Assert.That(host.Toasts, Does.Contain(ctx.Facts.Text("comms_112")), "the sourced 112 line");
+            Assert.That(closest, Is.GreaterThanOrEqualTo(Danger.TalkDistance - 0.2), "he stops at a talking distance");
+            Assert.That(layer.CurrentLooter, Is.Null, "he walked away and is gone");
+            Assert.That(g.Events.Any(e => e.Type == "violence"), Is.False);
+            var said = host.Talks.Last();
+            int variant = Array.FindIndex(Danger.LooterLines, ls => ls[0] == said.Lines[0]);
+            Assert.That(variant, Is.GreaterThanOrEqualTo(0));
+            Assert.That(said.Role, Is.EqualTo(Danger.LooterCues[variant]), "the cue fits the line he said");
+        }
+
+        // Review fix: the empty-handed version of 'argue' never showed (it compared How with "argued"), so a player with
+        // nothing in the bag was told they handed food over.
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Looter_ArgueWithNothingToHandOver_SaysSo_AndTakesNothing(bool bagOn)
+        {
+            var (host, ctx, layer, hurts) = Rig("prep");
+            var g = host.G;
+            g.Items.Clear();
+            g.Items["water_500"] = Item(bagOn ? 0 : 2, 3); g.SetKnow("bagOn", bagOn);
+            host.AnswerSpeaker("낯선 사람", "argue");
+            host.Run(async () =>
+            {
+                await ctx.Goto("town", "park");
+                var roam = ctx.Roam(new RoamOptions { Doors = false, Tick = _ => EndOnLooterEvent(g) });
+                layer.Trigger("looter");
+                await roam;
+            });
+            Assert.That(host.Toasts, Does.Contain(Danger.ArguedEmptyLine));
+            Assert.That(host.Toasts, Has.No.Member(Danger.LooterOutcome("argue").Line));
+            Assert.That(g.Items["water_500"].Bag, Is.EqualTo(bagOn ? 0 : 2));
+            Assert.That(g.Items["water_500"].Home, Is.EqualTo(3));
+            Assert.That((string)g.Events.Single(e => e.Type == "looter").Details["result"], Is.EqualTo("argued"));
+            Assert.That(hurts, Is.Empty);
+        }
+
+        // Review fix: a player who walks on is not followed across town; he gives up and walks off, no talk opens.
+        [Test]
+        public void Looter_GivesUpWhenThePlayerWalksOn()
+        {
+            var (host, ctx, layer, hurts) = Rig("prep");
+            var g = host.G;
+            bool talked = false;
+            host.Run(async () =>
+            {
+                await ctx.Goto("town", "park");
+                double x0 = host.PlayerX, z0 = host.PlayerZ;
+                var roam = ctx.Roam(new RoamOptions
+                {
+                    Doors = false,
+                    Tick = _ =>
+                    {
+                        var p = layer.CurrentLooter;
+                        if (p != null)
+                        {
+                            // walk straight away from him, a little faster than he walks
+                            double dx = host.PlayerX - p.X, dz = host.PlayerZ - p.Z, d = Math.Sqrt(dx * dx + dz * dz);
+                            host.PlayerX += dx / d * 1.6 / 30; host.PlayerZ += dz / d * 1.6 / 30;
+                        }
+                        talked |= host.Talks.Count > 0;
+                        return g.Events.Any(e => e.Type == "looter") || host.FrameCount > 30 * 40 ? "end" : null;
+                    },
+                });
+                layer.Trigger("looter");
+                await roam;
+            });
+            Assert.That(talked, Is.False, "no talk opens");
+            var ev = g.Events.Single(e => e.Type == "looter");
+            Assert.That((string)ev.Details["result"], Is.EqualTo("left"));
+            Assert.That(host.Toasts, Does.Contain(Danger.GaveUpLine));
+            Assert.That(hurts, Is.Empty);
         }
 
         [Test]
-        public void Looter_KnockedDown_DropsLootWhereTheBagIs()
+        public void LooterCues_FitEachVariant()
         {
-            foreach (var bagOn in new[] { true, false })
+            Assert.That(Danger.LooterCues.Length, Is.EqualTo(Danger.LooterLines.Length));
+            Assert.That(Danger.LooterCues[1], Is.Not.EqualTo("목소리가 날카롭다"), "the pleading variant is not sharp");
+        }
+
+        [Test]
+        public void LooterChoices_AreCalm_AndReportNeedsACharge()
+        {
+            var with = Danger.LooterChoices(true, true);
+            Assert.That(with.Select(c => c.Id), Is.EqualTo(new[] { "give", "back", "neighbors", "report", "argue" }));
+            Assert.That(with.All(c => !c.Disabled && c.Why == null), Is.True, "an open choice carries no reason line");
+            var flat = Danger.LooterChoices(false, false);
+            Assert.That(flat.Select(c => c.Id), Is.EqualTo(new[] { "back", "neighbors", "report", "argue" }));
+            Assert.That(flat.Single(c => c.Id == "report").Disabled, Is.True);
+            Assert.That(flat.Single(c => c.Id == "report").Why, Is.EqualTo("휴대폰 배터리가 없다"));
+            foreach (var c in with) Assert.That(c.Label, Does.Not.Contain("주먹").And.Not.Contain("맞서").And.Not.Contain("때리"), c.Id);
+            foreach (var p in new[] { "give", "back", "neighbors", "report", "argue", null, "fight" })
             {
-                var (host, ctx, layer, _) = Rig();
-                var g = host.G;
-                g.Items.Remove("canned"); g.SetKnow("bagOn", bagOn);
-                host.AnswerSpeaker("낯선 사람", "refuse");
-                host.Run(async () =>
-                {
-                    await ctx.Goto("town", "park");
-                    var roam = ctx.Roam(new RoamOptions { Doors = false, Tick = _ => EndOnLooterEvent(g) });
-                    layer.Trigger("looter");
-                    host.Queue(h => { layer.HitLooter(layer.CurrentLooter, true); layer.HitLooter(layer.CurrentLooter, true); },
-                        () => ctx.Roaming && host.ControlsEnabled && host.Talks.Count > 0, "fight back");
-                    await roam;
-                });
-                Assert.That((string)g.Events.Last(e => e.Type == "looter").Details["result"], Is.EqualTo("fought"));
-                Assert.That(bagOn ? g.Items["canned"].Bag : g.Items["canned"].Home, Is.EqualTo(1));
-                Assert.That(bagOn ? g.Items["canned"].Home : g.Items["canned"].Bag, Is.EqualTo(0));
-                Assert.That(host.Toasts.Any(t => t.StartsWith("“좋게 말할 때 내놨어야지.”")), Is.True);
+                var o = Danger.LooterOutcome(p);
+                Assert.That(new[] { "gave", "escaped", "argued" }, Does.Contain(o.Result), p);
+                Assert.That(o.Line, Does.Not.Contain("주먹").And.Not.Contain("쓰러").And.Not.Contain("피가"), p);
             }
+            Assert.That(Danger.LooterOutcome("fight").How, Is.EqualTo("back"), "an old or unknown answer is stepping back");
+            foreach (var lines in Danger.LooterLines) foreach (var l in lines) Assert.That(l, Does.Not.Contain("주먹"));
         }
 
         // Polish fix: the looter's body dies with the level, but the layer kept it while the player was indoors (Active() is
@@ -170,8 +288,9 @@ namespace AiOn.Tests
             Assert.That(hurts, Is.EqualTo(new[] { (85, "blast"), (16, "blast") }));
             var blasts = host.G.Events.Where(e => e.Type == "blast").Select(e => ((int)e.Details["near"], (int)e.Details["dmg"])).ToList();
             Assert.That(blasts, Is.EqualTo(new[] { (3, 85), (6, 16), (30, 0) }));
-            Assert.That(host.Toasts, Does.Contain("폭풍에 날아가 바닥을 굴렀다. 귀가 먹먹하다."));
-            Assert.That(host.Toasts, Does.Contain("파편이 스쳤다. 피가 흐른다."));
+            Assert.That(host.Toasts, Does.Contain("폭풍에 밀려 바닥에 주저앉았다. 귀가 먹먹하다."));
+            Assert.That(host.Toasts, Does.Contain("가까운 폭발에 몸이 휘청였다. 몸을 낮추자."));
+            Assert.That(host.Toasts.Any(t => t.Contains("피가")), Is.False, "no blood on screen");
         }
 
         [Test]

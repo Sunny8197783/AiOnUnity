@@ -97,7 +97,7 @@ namespace AiOn.Story
         public static readonly string[] Presets = { "여기 위험해", "이 길 막혔음", "물 있음", "숨을 곳 있음", "여기서 맞았다. 엎드려" };
         public static readonly IReadOnlyDictionary<string, string> Why = new Dictionary<string, string>
         {
-            ["fall"] = "추락", ["fight"] = "몸싸움", ["blast"] = "포격", ["debris"] = "붕괴", ["fire"] = "화재", ["smoke"] = "연기", ["hurt"] = "부상",
+            ["fall"] = "추락", ["fight"] = "시비", ["blast"] = "포격", ["debris"] = "붕괴", ["fire"] = "화재", ["smoke"] = "연기", ["hurt"] = "탈진",
         };
 
         /// <summary>A run that left a mark.</summary>
@@ -222,6 +222,8 @@ namespace AiOn.Story
         /// <summary>Earlier runs only.</summary>
         public IReadOnlyList<EchoRun> Past => _data.Runs;
         public EchoRun Current => _run;
+        /// <summary>True while a prepared-state run plays (StoryDirector.PlayPrepared): nothing of it is recorded.</summary>
+        public bool Held;
         public EchoMarks Shown { get; private set; }
 
         public EchoRecorder(StoryContext ctx, Func<string, string> get, Action<string, string> set)
@@ -266,7 +268,7 @@ namespace AiOn.Story
             var E = _ctx.Engine;
             var lv = E.LevelId;
             if (lv != null && _shownLevel != lv) ShowLevel(lv);
-            if (_run == null || !_ctx.Roaming || lv == null) return;
+            if (_run == null || Held || !_ctx.Roaming || lv == null) return;
             var last = _run.Trail.Count > 0 ? _run.Trail[^1] : default;
             if (_run.Trail.Count == 0 || last.Lv != lv || Math.Sqrt((last.X - E.PlayerX) * (last.X - E.PlayerX) + (last.Z - E.PlayerZ) * (last.Z - E.PlayerZ)) > 1.5)
             {

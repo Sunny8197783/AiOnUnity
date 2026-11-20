@@ -119,11 +119,15 @@ namespace AiOn.UI
         public const string FictionNote = "이 게임의 동네·인물·회사·재난문자·방송은 모두 가상입니다. 실제 상황이 아닙니다. 안전 행동요령은 국민안전24 등 공식 자료에서 확인한 문장만 출처와 함께 인용합니다. 폭력이나 부상 장면은 나오지 않습니다.";
         public static readonly string[][] LandingKeys = { new[] { "WASD", "이동" }, new[] { "E", "살피기" }, new[] { "Tab", "수첩" }, new[] { "Esc", "메뉴" } };
 
-        /// <summary>The landing buttons in order; ids are the values landing() resolves with.</summary>
+        /// <summary>The landing buttons in order; ids are the values landing() resolves with (scenes / teacher: the judge
+        /// entry, SceneSelect).</summary>
         public static List<MenuButton> LandingButtons(bool hasSave, int endings, int challenges, int challengeTotal)
         {
             var list = new List<MenuButton> { new("new", "새로 시작", primary: true, autofocus: !hasSave) };
             if (hasSave) list.Add(new MenuButton("continue", "이어하기", autofocus: true));
+            // judge / classroom entry (competition upgrade): prepared states, never the main save
+            list.Add(new MenuButton("scenes", "장면 바로가기", ghost: true));
+            list.Add(new MenuButton("teacher", "교사용 30분 모드", ghost: true));
             list.Add(new MenuButton("records", $"도전 과제 {challenges}/{challengeTotal}", ghost: true));
             list.Add(new MenuButton("lounge", "대피소 라운지", ghost: true));
             if (endings > 0) list.Add(new MenuButton("gallery", $"엔딩 기록 {endings}/11", ghost: true));

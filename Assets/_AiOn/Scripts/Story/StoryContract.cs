@@ -100,7 +100,7 @@ namespace AiOn.Story
         double X { get; }
         double Z { get; }
         void SetPosition(double x, double y, double z, double? yaw = null);
-        /// <summary>Original animation names: idle, walk, brisk, run, carry, walker, sit, sitChair, talk, phone, wave, point, crouch, stairsUp, stairsDown, hurt, down, air.</summary>
+        /// <summary>Original animation names: idle, walk, brisk, run, carry, walker, sit, sitChair, talk, phone, wave, point, crouch, stairsUp, stairsDown, hurt, down, air; and the port's lie (on the back).</summary>
         void SetAnim(string anim, double? speed = null);
         /// <summary>One-shot clips: punch, throw, pickup, vault, climb, land, hurt.</summary>
         void Play(string clip);
@@ -244,6 +244,8 @@ namespace AiOn.Story
     {
         void Checkpoint(string key);
         void Save();
+        /// <summary>A story mark passed (competition upgrade): the teacher mode ends a moment at one. Most hosts ignore it.</summary>
+        void Reached(string mark) { }
     }
 
     /// <summary>Player settings the story reads (original settings object).</summary>

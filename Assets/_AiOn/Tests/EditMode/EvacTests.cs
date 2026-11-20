@@ -333,6 +333,36 @@ namespace AiOn.Tests
         };
 
         [Test]
+        public void Evacuation_AnOverweightBag_LeavesNoHandForTheLift_AndKeepsTheHandPackedLayout()
+        {
+            var (host, ctx) = Fresh();
+            Kit(host.G);
+            host.G.Items["water_2l"] = new ItemEntry(12); // the five days before drink some of it
+            host.AnswerWhen(IsLabels, "rumor").AnswerSpeaker("정민", "go").AnswerSpeaker("라디오", "no");
+            host.AnswerSpeaker("현관", "no").AnswerSpeaker("집결지", "ask");
+            var heavy = FullBag;
+            ((JObject)heavy["bag"])["water_2l"] = 4; // 8.2 kg of water alone: over the 8 kg limit
+            heavy["layout"] = "water_2l:0,0;water_2l:3,0;water_2l:6,0;water_2l:0,2";
+            heavy["aids"] = new JArray();
+            heavy["score"] = new JObject { ["total"] = 9, ["max"] = 18, ["over"] = true, ["wet"] = 0, ["missed"] = new JArray("weight") };
+            heavy["tidied"] = 1;
+            host.AnswerOpen("bag", heavy);
+            host.QueuePress("apartment:homeExitDoor").QueuePress("apartment:lobbyExit").QueuePress("town:assembly");
+            host.Run(() => Evac.Evacuation(ctx));
+            var g = host.G;
+            Assert.That(g.Items["water_2l"].Bag, Is.EqualTo(4));
+            Assert.That(ctx.Rules.BagLoad(g).OverWeight, Is.True);
+            Assert.That(host.Toasts.Any(t => t.StartsWith("배낭을 메 보니")), Is.True, "felt when it goes on the back");
+            Assert.That(g.Events.Any(e => e.Type == "bag_heavy" && (string)e.Details["where"] == "lift"), Is.True);
+            Assert.That(Deeds(g), Does.Not.Contain("bus_helped"), "no hand left for 어르신's bag");
+            Assert.That(host.Talks.Any(t => t.Speaker == "어르신" && t.Lines.Any(l => l.Contains("안내 요원"))), Is.True);
+            Assert.That((string)g.Know[BagHand.LayoutKey], Is.EqualTo("water_2l:0,0;water_2l:3,0;water_2l:6,0;water_2l:0,2"));
+            var score = g.Events.Single(e => e.Type == "bag_score");
+            Assert.That((string)score.Details["context"], Is.EqualTo("evac"));
+            Assert.That((bool)score.Details["over"], Is.True);
+        }
+
+        [Test]
         public void Evacuation_ByBus_NoteOnTheDoor_HelpAtTheLift_PapersFromThePocket()
         {
             var (host, ctx) = Fresh();

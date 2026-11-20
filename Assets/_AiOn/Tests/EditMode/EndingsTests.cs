@@ -94,9 +94,9 @@ namespace AiOn.Tests
             Assert.That(Pick(walk).Lines.Any(l => l.Contains("김 기사님")) && Pick(walk).Lines.Any(l => l.Contains("대구 부모님")));
             var leg = Run("walk"); leg.Injury = new List<string> { "leg" };
             Assert.That(Pick(leg).Lines.Any(l => l.Contains("구호 트럭")));
-            Assert.AreEqual(1, Pick(leg).Lines.Count(l => l.Contains("부러진 다리")), "the leg is told once on the walk");
+            Assert.AreEqual(1, Pick(leg).Lines.Count(l => l == Endings.LegWalkLine || l == Endings.LegAfterLine), "the leg is told once on the walk");
             var legDriver = Run("walk", "driver_text"); legDriver.Injury = new List<string> { "leg" };
-            Assert.That(Pick(legDriver).Lines.Any(l => l.Contains("욱신")), "a ride from 김 기사님 does not tell the leg, so the lasting line does");
+            Assert.That(Pick(legDriver).Lines.Any(l => l == Endings.LegAfterLine), "a ride from 김 기사님 does not tell the leg, so the lasting line does");
             var weak = Run("walk"); weak.Stats.Health = 30;
             Assert.That(Pick(weak).Lines.Any(l => l.Contains("실패가 아니었다")));
             Assert.That(Pick(Run("bus")).Lines.Any(l => l.Contains("우편함은 비어")));
@@ -116,7 +116,7 @@ namespace AiOn.Tests
             var excl = new[]
             {
                 new[] { "store_paid", "store_iou", "store_took" }, new[] { "handover_precise", "handover_partial", "handover_overgeneral" }, new[] { "stairs_asked", "stairs_carried" },
-                new[] { "looter_gave", "looter_escaped", "looter_fought" }, new[] { "rumor_checked", "rumor_spread" }, new[] { "water_for_seoyeon", "water_declined" },
+                new[] { "looter_gave", "looter_escaped", "looter_fought", "looter_reported", "looter_neighbors", "looter_argued" }, new[] { "rumor_checked", "rumor_spread" }, new[] { "water_for_seoyeon", "water_declined" },
                 new[] { "shelter_water_given", "shelter_water_received" }, new[] { "elder_alert_knock", "elder_alert_told" },
             };
             var branch = new Dictionary<string, string[]> { ["stay"] = new[] { "rounds_with_manager", "smoke_judged" }, ["move"] = new[] { "sort_supplies", "shelter_fire_judged", "fire_report" } };
@@ -318,9 +318,9 @@ namespace AiOn.Tests
             Assert.That(lines.Any(l => l.Contains("끼니를 거른 날")), "the skipped-meal line is there, in its weak form");
             Assert.That(!lines.Any(l => l.Contains("마지막까지 버틸 수 있었다")), string.Join(" / ", lines));
             var leg = Flat("walk"); leg.Injury = new List<string> { "leg" };
-            Assert.AreEqual(1, Pick(leg).Lines.Count(l => l.Contains("부러진 다리")));
+            Assert.AreEqual(1, Pick(leg).Lines.Count(l => l == Endings.LegWalkLine || l == Endings.LegAfterLine));
             var stay = Flat("stay"); stay.Injury = new List<string> { "leg" };
-            Assert.That(Pick(stay).Lines.Any(l => l.Contains("부러진 다리는")));
+            Assert.That(Pick(stay).Lines.Any(l => l == Endings.LegAfterLine));
         }
 
         [Test]

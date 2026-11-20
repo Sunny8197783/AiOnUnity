@@ -45,11 +45,12 @@ namespace AiOn.Tests
         }
 
         /// <summary>The alert on 3F: walk past 304, answer, then go down to the 1F stairs.</summary>
-        static (FakeStoryHost host, StoryContext ctx, ElderDilemma elder) Play(string pick)
+        static (FakeStoryHost host, StoryContext ctx, ElderDilemma elder) Play(string pick, Action<GameState> setup = null)
         {
             var host = new FakeStoryHost { Strict = true };
             var ctx = host.CreateContext(TestSupport.Rules);
             var g = host.G;
+            setup?.Invoke(g);
             host.Answer(pick);
             ElderDilemma elder = null;
             host.Run(async () =>
@@ -97,6 +98,23 @@ namespace AiOn.Tests
             Assert.That(g.Minute, Is.EqualTo(17 * 60 + 33), "3 minutes to get ready");
             var her = host.Person("elder");
             Assert.That(her.Y, Is.LessThan(1), "she came down");
+        }
+
+        [Test]
+        public void Dilemma_Help_WithABagOverTheLimit_StillHelps_ButTheWeightCostsAMinuteAndFatigue()
+        {
+            var (host, ctx, elder) = Play("help", g =>
+            {
+                g.Items["water_2l"] = new ItemEntry(0) { Bag = 5 }; // 10.25 kg on the back
+                g.SetKnow("bagOn", true);
+            });
+            var g = host.G;
+            Assert.That(TestSupport.Rules.BagLoad(g).OverWeight, Is.True);
+            Assert.That(host.EventTypes(), Is.EqualTo(new[] { "elder_choice", "bag_heavy", "help" }), "she is still helped down");
+            Assert.That((string)g.Events[1].Details["where"], Is.EqualTo("stairs"));
+            Assert.That(host.Captions.Any(c => c.StartsWith("배낭 ") && c.Contains("어깨가 짓눌린다")), Is.True);
+            Assert.That(g.Minute, Is.EqualTo(17 * 60 + 34), "3 minutes to get ready and one more for the weight");
+            Assert.That(Elder.ElderSafeEarly(g), Is.True);
         }
 
         [Test]

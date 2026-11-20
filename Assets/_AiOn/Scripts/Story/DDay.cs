@@ -21,6 +21,12 @@ namespace AiOn.Story
         public const double EveningRoamSeconds = 15;
         /// <summary>Until this minute evacuees keep coming out of the complex (town state trickle on); after it the street empties.</summary>
         public const int TrickleEnd = Alert + 15;
+        /// <summary>The resume key of a scene-select start inside the shelter (a prepared save, never a story checkpoint).</summary>
+        public const string ShelterResume = "shelter";
+        /// <summary>The story mark after the shelter's sign-in and seat (ctx.Reached): the teacher mode's alert moment ends here.</summary>
+        public const string ShelteredMark = "sheltered";
+        /// <summary>The resume key of the scene-select CPR start (seated in the shelter, just before the grandfather collapses).</summary>
+        public const string CprResume = "cpr";
 
         /// <summary>Math.random stand-in (far blasts). Tests may pin it.</summary>
         public static Func<double> Random = new System.Random().NextDouble;
@@ -30,6 +36,12 @@ namespace AiOn.Story
         /// stand-in for the other chapter part (and must put it back); the game never changes it.
         /// </summary>
         public static Func<StoryContext, Task> SeoyeonPart = ctx => SeoyeonRelay.Run(ctx);
+
+        /// <summary>
+        /// The shelter's bystander CPR (CprScene.Run; a port addition, not in the original chapter). The same kind of test
+        /// seam: the tests that compare this chapter with the original play it without the scene (and put it back).
+        /// </summary>
+        public static Func<StoryContext, Task> CprPart = ctx => CprScene.Run(ctx);
 
         static bool Truthy(JToken t) => t != null && t.Type switch
         {
@@ -88,18 +100,43 @@ namespace AiOn.Story
             var g = ctx.G;
             g.Chapter = "dday";
             ctx.Hud.SetChapter("2장", "정전과 경보");
-            if (ctx.Resume != "alert")
+            if (ctx.Resume == ShelterResume)
             {
-                await Evening(ctx);
-                ctx.Checkpoint("alert");
+                // Scene select (SceneSelect "shelter"): a prepared state taken inside the shelter, right after arriving.
+                // Not a story checkpoint (no ctx.Checkpoint here): only a prepared save carries this key.
+                ctx.Audio.Loop("siren", false);
+                await ctx.Goto("shelter", "stairs");
+                ctx.Refresh();
+            }
+            else if (ctx.Resume == CprResume)
+            {
+                // Scene select (SceneSelect "cpr"): seated in the shelter after the sign-in; again a prepared save only.
+                ctx.Audio.Loop("siren", false);
+                ShelterState(ctx);
+                await ctx.Goto("shelter", "spot");
+                ctx.Refresh();
             }
             else
             {
-                BlackoutState(ctx);
-                await ctx.Goto("apartment", "home");
+                if (ctx.Resume != "alert")
+                {
+                    await Evening(ctx);
+                    ctx.Checkpoint("alert");
+                }
+                else
+                {
+                    BlackoutState(ctx);
+                    await ctx.Goto("apartment", "home");
+                }
+                await AlertScene(ctx);
             }
-            await AlertScene(ctx);
-            await Shelter(ctx);
+            if (ctx.Resume != CprResume)
+            {
+                await Shelter(ctx);
+                ctx.Reached(ShelteredMark);
+            }
+            // Competition upgrade: the grandfather on the next mat collapses (bystander CPR). After the teacher mode's stop.
+            await CprPart(ctx);
             await SeoyeonPart(ctx);
             await AfterAlert(ctx);
         }
@@ -314,24 +351,29 @@ namespace AiOn.Story
                 if (pick != "pack") { GameRules.RecordEvent(g, "departure", new JObject { ["bag"] = "none" }); return; }
                 var items = BagDrill.BagItems(g, ctx.Rules.Db, id => ctx.Facts.Text(id), withTips: false);
                 var mode = Drills.LadderStage(g, "bag");
-                var res = await ctx.Ui.Open("bag", new JObject
+                // The one timed packing: right after the siren, for whoever did not pack on D-1 (a packed bag skips all of this).
+                var profile = ctx.Settings?.Profile ?? "";
+                var res = await ctx.Ui.Open("bag", BagHand.AddOptions(new JObject
                 {
                     ["mode"] = mode, ["context"] = "alert",
                     ["limit"] = new JObject { ["weightKg"] = ctx.Rules.Db.bagLimitKg, ["volumeL"] = ctx.Rules.Db.bagLimitL },
                     ["items"] = new JArray(items.Select(BagItemJson)), ["goals"] = new JArray(Drills.BagGoals["alert"].Select(GoalJson)),
-                    ["tips"] = new JArray(), ["tidy"] = new JObject { ["cost"] = "1분" },
-                });
+                    ["tips"] = new JArray(), ["tidy"] = new JObject { ["cost"] = "1분" }, ["timer"] = BagHand.TimerFor(profile),
+                }, g, profile, ctx.Settings?.ReduceMotion ?? false));
                 var r = res as JObject;
-                if (r?["tidied"] is JValue tv && (tv.Type == JTokenType.Integer || tv.Type == JTokenType.Float))
-                    for (int i = 0; i < (int)(double)tv; i++) ctx.Pass(1);
+                BagHand.Remember(g, r, "alert");
+                // The original screen charges a minute per tidy. The timed screen charges it once: 10 s off the countdown, which is
+                // in 'elapsed' and so in the rush minutes below.
+                for (int i = BagHand.AlertTidyMinutes(r); i > 0; i--) ctx.Pass(1);
                 BagDrill.ApplyBag(ctx.Rules, g, BagTarget(r?["bag"]));
                 ApplyPocket(ctx.Rules, g, r?["pocket"]);
                 var ev = Drills.EvalBag(ctx.Rules, g, "alert");
                 Drills.RecordEncounter(g, "bag", ev.Missing.Count > 0 ? "partial" : "complete");
-                ctx.Pass(4);
+                int rush = BagHand.RushMinutes(r); // the original's fixed 4 minutes when the screen does not say
+                ctx.Pass(rush);
                 g.SetKnow("bagOn", true); ctx.SetLevelState("apartment", "bag", "none");
-                ctx.Toast("물건을 고르느라 4분이 지났다.", "self");
-                GameRules.RecordEvent(g, "departure", new JObject { ["bag"] = "late", ["delay"] = 4 });
+                ctx.Toast(BagHand.TimedOut(r) ? $"사이렌이 계속 울린다. 챙긴 것만 메고 나섰다. ({rush}분)" : $"물건을 고르느라 {rush}분이 지났다.", "self");
+                GameRules.RecordEvent(g, "departure", new JObject { ["bag"] = "late", ["delay"] = rush });
             }
 
             var on = new Dictionary<string, Func<StoryPoint, Task<JToken>>>
@@ -558,15 +600,20 @@ namespace AiOn.Story
             return $"배낭에서 {what}{(b ? "를" : "을")} 꺼냈다";
         }
 
-        static async Task Shelter(StoryContext ctx)
+        static void ShelterState(StoryContext ctx)
         {
-            var g = ctx.G;
             ctx.SetLevelState("shelter", "crowd", "arriving");
             ctx.SetLevelState("shelter", "ways", new JArray("stairs", "ramp")); // east closed, C not open yet: nobody walks in there
             ctx.SetLevelState("shelter", "phase", "alert");
             ctx.SetLevelState("shelter", "power", "emergency");
-            if (g.Knows("elderPick")) ctx.SetLevelState("shelter", "elder", "on"); // helped down, or brought by 박 소장
+            if (ctx.G.Knows("elderPick")) ctx.SetLevelState("shelter", "elder", "on"); // helped down, or brought by 박 소장
             ctx.Engine.SetEnv("underground", 0.8);
+        }
+
+        static async Task Shelter(StoryContext ctx)
+        {
+            var g = ctx.G;
+            ShelterState(ctx);
             bool signed = false;
             ctx.Objective("대피소 안에서", "접수대에서 명부를 쓰고 자리를 잡습니다.", new List<ObjectiveStep> { new("명부 쓰기 (접수대)"), new("자리 잡기") });
             var thuds = FarBlasts(ctx);

@@ -97,6 +97,8 @@ namespace AiOn.Story
         public Dictionary<string, Dictionary<string, JToken>> LevelStates = new();
         /// <summary>True while a Roam runs.</summary>
         public bool Roaming;
+        /// <summary>Both hands on the 3D extinguisher (ExtinguisherScene.Run3D): the view, chalk and first-aid keys wait.</summary>
+        public bool HandsFull;
 
         bool _power = true;
         /// <summary>Grid power. The shelter runs on its own generator, so the engine sees power there either way.</summary>
@@ -368,6 +370,9 @@ namespace AiOn.Story
         }
 
         public void Checkpoint(string key) => Persist.Checkpoint(key);
+
+        /// <summary>A story mark (not a retry point): the teacher mode may end its moment here (StoryDirector.Reached).</summary>
+        public void Reached(string mark) => Persist.Reached(mark);
 
         /// <summary>Throws StoryFail: the director shows the fail card and retries.</summary>
         public void Fail(string type, JObject detail = null) => throw new StoryFail(type, detail);

@@ -248,6 +248,20 @@ namespace AiOn.Levels
             foreach (var l in indoorLamps) _lampBase.Add(l ? l.intensity : 0);
             BuildVolume();
             Apply(preset);
+            AiOn.Rendering.AtmosphereDirector.Ensure(); // the cold base look, emergency grade and screen effects over this
+            if (!GetComponent<AiOn.Rendering.GuidingLights>()) gameObject.AddComponent<AiOn.Rendering.GuidingLights>(); // exits, shelters, supplies
+            if (!TryGetComponent(out _reflections)) _reflections = gameObject.AddComponent<AiOn.Rendering.LevelReflections>(); // live reflections
+        }
+
+        float _satBias;
+        AiOn.Rendering.LevelReflections _reflections;
+
+        /// <summary>Saturation points added over every preset's grade (the base look's cold desaturation).</summary>
+        public void SetSaturationBias(float points)
+        {
+            if (Mathf.Approximately(points, _satBias)) return;
+            _satBias = points;
+            if (Current != null && _color) { _color.saturation.Override((_shown.Saturation - 1f) * 100f + _satBias); ApplyGradeOverride(); }
         }
 
         void OnDestroy() { if (Instance == this) Instance = null; }
@@ -368,7 +382,9 @@ namespace AiOn.Levels
 
         /// <summary>
         /// A blackout by day indoors: interiorDark lit from the windows instead of by the moon (a neutral daylight key at
-        /// 0.6 and a cool sky fill), so a daytime room without power reads as grey daylight, not night.
+        /// 0.6 and a cool sky fill), so a daytime room without power reads as grey daylight, not night. The key barely
+        /// reaches past the walls, so the window daylight that spills into the rooms is the fill (DaylightSpillFill): bright
+        /// enough that the morning's objectives (fridge, veranda shelf, radio) read without the flashlight.
         /// </summary>
         EnvPreset DarkByDay(EnvPreset dark)
         {
@@ -380,12 +396,15 @@ namespace AiOn.Levels
         }
 
         /// <summary>interiorDark turned into its daylight variant (pure; see DarkByDay).</summary>
+        /// <summary>The ambient fill of a powerless room by day (window spill; was 0.16, which left the 3장 morning near black).</summary>
+        public const float DaylightSpillFill = 0.36f;
+
         public static void DaylightVariant(EnvPreset e)
         {
             e.KeyColor = new Color(0.91f, 0.93f, 0.96f);
             e.KeyIntensity = 0.6f; // the window key
             e.SkyFill = new Color(0.55f, 0.62f, 0.72f); e.GroundFill = new Color(0.22f, 0.21f, 0.2f);
-            e.FillIntensity = 0.16f;
+            e.FillIntensity = DaylightSpillFill;
             e.FogColor = new Color(0.28f, 0.3f, 0.33f);
             e.Tint = new Color(0.95f, 0.97f, 1.02f); e.TintAmount = 0.2f;
             e.Saturation = 0.8f; e.Exposure = 1.1f;
@@ -429,7 +448,7 @@ namespace AiOn.Levels
             RenderSettings.fog = e.FogDensity > 0;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogColor = e.FogColor;
-            RenderSettings.fogDensity = e.FogDensity * (e.Outdoor ? 1f : 0.5f);
+            RenderSettings.fogDensity = AiOn.Rendering.AtmosphereMath.FogDensity(e.FogDensity, e.Outdoor, e.NightAmount, e.Name);
 
             // The sky rig (AiOn/Sky skybox + distant city and hills); the procedural skyMaterial is only the fallback.
             if (!_skyRig) { _skyRig = GetComponent<SkyRig>(); if (!_skyRig) _skyRig = gameObject.AddComponent<SkyRig>(); }
@@ -448,7 +467,7 @@ namespace AiOn.Levels
             }
 
             _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, e.Exposure), 2f) + e.GradeExposure + exposureOffset);
-            _color.saturation.Override((e.Saturation - 1f) * 100f);
+            _color.saturation.Override((e.Saturation - 1f) * 100f + _satBias);
             _color.contrast.Override((e.Contrast - 1f) * 100f);
             // The original mixes the tint in at tintAmount (post.js); 1.5x washed afternoon orange and dusk lavender.
             _color.colorFilter.Override(Color.Lerp(Color.white, e.Tint, Mathf.Clamp01(e.TintAmount)));
@@ -467,6 +486,7 @@ namespace AiOn.Levels
 
             ApplyLamps();
             UpdateLit();
+            if (!Blending && _reflections) _reflections.Request(); // the live probe sees the room as it now is
             if (SmokeLevel > 0) { _smokeFogBase = -1; SetSmoke(SmokeLevel); } // a preset change mid-escape keeps the smoke
         }
 
@@ -487,7 +507,7 @@ namespace AiOn.Levels
 
         void ApplyGradeOverride()
         {
-            if (_gSat.HasValue) _color.saturation.Override((_gSat.Value - 1f) * 100f);
+            if (_gSat.HasValue) _color.saturation.Override((_gSat.Value - 1f) * 100f + _satBias);
             if (_gExp.HasValue) _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, _shown.Exposure), 2f) + _shown.GradeExposure + _gExp.Value + exposureOffset);
             if (_gVig.HasValue) _vignette.intensity.Override(_gVig.Value * 0.8f);
             if (_gTint.HasValue) _color.colorFilter.Override(_gTint.Value);
@@ -535,6 +555,7 @@ namespace AiOn.Levels
             if (Current != null) RenderSettings.reflectionIntensity = ReflectionFor(_shown.NightAmount, power, _shown.Outdoor);
             ApplyLamps();
             UpdateLit(); // grid groups (street, windows, shops, signs) of the level's materials
+            if (_reflections) _reflections.Request(0.6f); // after the lamps' own fade
             if (_skyRig && Current != null) _skyRig.Apply(_shown, power); // grid groups: distant city windows + beacons
         }
 

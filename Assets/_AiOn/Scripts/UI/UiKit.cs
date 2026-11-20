@@ -181,6 +181,9 @@ namespace AiOn.UI
     /// </summary>
     public static class UiKeys
     {
+        /// <summary>A scene with its own key panel (the 3D extinguisher) hides the general strip meanwhile.</summary>
+        public static bool StripSuppressed;
+
         public readonly struct Entry
         {
             public readonly string StripKey, Strip, PauseKey, Pause, CardKey, Card;
@@ -195,8 +198,8 @@ namespace AiOn.UI
             new("Shift", "달리기", "Shift", "달리기 (기력)", "Shift", "달리기 (기력이 줄어듭니다. 가방이 무거우면 더 빨리 지칩니다)"),
             new("Space", "점프·넘기", "Space", "점프", "Space", "점프 · 낮은 담/차/난간 앞에서 누르면 넘거나 올라감"),
             new("E", "살피기", "E · Enter", "살피기 · 대화", "E · Enter", "살피기 · 대화 · 사용"),
-            new("Q", "주먹", "클릭 · Q", "주먹 · 던지기", "클릭 · Q", "주먹 (손에 든 게 있으면 던지기)"),
-            new("G", "줍기·던지기", "G", "줍기 · 던지기", "G", "바닥의 돌·병 줍기 / 던지기"),
+            new("G", "줍기·놓기", "G", "줍기 · 내려놓기", "G", "바닥의 물건 줍기 / 내려놓기"),
+            new("Q", "내려놓기", "Q", "든 물건 내려놓기", "Q", "손에 든 물건 내려놓기"),
             new("C", "엎드리기", "C", "엎드리기 · 웅크리기", "C", "엎드리기/웅크리기 (폭발·파편 피해가 줄어듭니다. Space로 일어서기)"),
             new("X", "구급함", "X", "구급함", "X", "구급함 쓰기"),
             new("B", "분필", "B", "분필로 적기", "B", "분필로 바닥에 적기 — 다음 회차의 내가 보게 됩니다"),
@@ -206,6 +209,7 @@ namespace AiOn.UI
             new("Tab", "수첩", "Tab", "수첩", "Tab", "수첩"),
             new("I", "소지품", "I", "소지품", "I", "소지품"),
             new("M", "지도", "M", "지도", "M", "지도"),
+            new("K", "행동요령", "K", "행동 요령 (재난 단말기)", "K", "재난 단말기 — 상황별 행동 요령"),
             new("H", "조작법", "H", "조작법", "H", "이 조작법 다시 보기"),
             new("Esc", "메뉴", "Esc", "이 메뉴", "Esc", "일시정지 · 설정"),
         };
@@ -281,6 +285,10 @@ namespace AiOn.UI
                 "click" => Make(name, (1400, 1400, 0.035f, 0.03f, 0f)),
                 "tick" => Make(name, (1250, 1250, 0.03f, 0.022f, 0f)),
                 "confirm" => Make(name, (784, 784, 0.08f, 0.045f, 0f), (1175, 1175, 0.12f, 0.045f, 0.07f)),
+                // a radio / terminal keying up: a hard click, then a short high blip and a lower one
+                "radio" => Make(name, (2400, 900, 0.018f, 0.05f, 0f), (1760, 1760, 0.045f, 0.03f, 0.03f), (1320, 1320, 0.06f, 0.03f, 0.09f)),
+                // the report arriving: three rising tones
+                "report" => Make(name, (523, 523, 0.09f, 0.04f, 0f), (659, 659, 0.09f, 0.04f, 0.09f), (784, 784, 0.16f, 0.045f, 0.18f)),
                 _ => null,
             };
             _clips[name] = c;

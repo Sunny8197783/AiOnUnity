@@ -24,8 +24,6 @@ namespace AiOn.Player
         public bool InteractPressed => _interact.WasPressedThisFrame();
         public bool ViewPressed => _view.WasPressedThisFrame();
         public bool CursorLocked => Cursor.lockState == CursorLockMode.Locked;
-        /// <summary>A left click while the pointer was already locked (controls.js 'Mouse0': the fist, or a throw).</summary>
-        public bool PunchClicked { get; private set; }
 
         [Tooltip("Stick look speed in 'pixels' per second, to match mouse deltas.")]
         public float stickLookRate = 900f;
@@ -62,9 +60,12 @@ namespace AiOn.Player
 
         void Update()
         {
-            PunchClicked = _lockClick.WasPressedThisFrame() && CursorLocked; // the click that takes the lock is not a punch
+            // A screen that takes the pointer keeps the cursor out and visible, whatever locked it meanwhile (the player's
+            // first Start locks it after the title is already up); a click on that screen is a UI click, not a lock.
+            if (PointerWanted && (CursorLocked || !Cursor.visible)) SetCursorLocked(false);
+            // (the original's click-while-locked fist is gone: the competition upgrade has no hitting)
             if (_unlock.WasPressedThisFrame()) SetCursorLocked(false);
-            else if (_lockClick.WasPressedThisFrame() && !CursorLocked) SetCursorLocked(true);
+            else if (_lockClick.WasPressedThisFrame() && !CursorLocked && !PointerWanted) SetCursorLocked(true);
 
             var mouse = CursorLocked ? _look.ReadValue<Vector2>() : Vector2.zero;
             var stick = _lookStick.ReadValue<Vector2>() * (stickLookRate * Time.unscaledDeltaTime);
@@ -73,8 +74,32 @@ namespace AiOn.Player
 
         public static void SetCursorLocked(bool locked)
         {
+            if (locked && PointerWanted) locked = false; // a screen still needs the mouse
             Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = !locked;
         }
+
+        static int s_pointerHolds;
+
+        /// <summary>True while a screen that is clicked or typed in is open (menus, choices, cards, the bag...).</summary>
+        public static bool PointerWanted => s_pointerHolds > 0;
+
+        /// <summary>A screen that needs the mouse opened: the cursor comes out at once (counted, so screens can stack).</summary>
+        public static void HoldPointer()
+        {
+            s_pointerHolds++;
+            SetCursorLocked(false);
+        }
+
+        /// <summary>That screen closed: when the last one goes, the cursor locks back for looking around.</summary>
+        public static void ReleasePointer()
+        {
+            if (s_pointerHolds <= 0) return;
+            if (--s_pointerHolds == 0) SetCursorLocked(true);
+        }
+
+        // Play mode may start without a domain reload: never carry a hold over from the last session.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetPointer() => s_pointerHolds = 0;
     }
 }

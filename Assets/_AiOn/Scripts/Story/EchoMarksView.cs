@@ -187,6 +187,19 @@ namespace AiOn.Story
             return 1f + (min - 1f) * t;
         }
 
+        /// <summary>The ghost's base opacity: a faint trace of the last run, not a solid figure.</summary>
+        public const float GhostAlpha = 0.22f;
+
+        /// <summary>
+        /// How visible the ghost is, 0..1, by its distance to the camera and (on the ground) to the player: it melts away
+        /// within about 2 m of either, so a run resumed on its path never starts with a blue figure filling the view (pure; tested).
+        /// </summary>
+        public static float GhostVisibility(float cameraDist, float playerDist)
+        {
+            static float Ramp(float d, float from, float to) { float t = Mathf.Clamp01((d - from) / (to - from)); return t * t * (3 - 2 * t); }
+            return Mathf.Min(Ramp(cameraDist, 1.2f, 3f), Ramp(playerDist, 0.8f, 2.4f));
+        }
+
         /// <summary>The original ghost's step: walk toward point i at <paramref name="speed"/>, next point within 0.3 m, snap back to the start when far.</summary>
         public static (double X, double Z, int I, double? Yaw) GhostStep(double x, double z, int i, IReadOnlyList<(double X, double Z)> pts, double dt, double speed = 1.5)
         {
@@ -553,7 +566,7 @@ namespace AiOn.Story
         {
             if (_ghostMat) return _ghostMat;
             _ghostMat = TransparentMat("Universal Render Pipeline/Unlit", null);
-            _ghostMat.SetColor("_BaseColor", new Color(GhostBlue.r, GhostBlue.g, GhostBlue.b, 0.3f));
+            _ghostMat.SetColor("_BaseColor", new Color(GhostBlue.r, GhostBlue.g, GhostBlue.b, GhostAlpha));
             return _ghostMat;
         }
 
@@ -647,6 +660,10 @@ namespace AiOn.Story
 
             List<(double X, double Z)> _ghostPts;
             Transform _ghost;
+            MeshRenderer[] _ghostParts;
+            MaterialPropertyBlock _ghostMpb;
+            float _ghostShown = -1f;
+            static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
             double _gx, _gz;
             int _gi;
             float _gy, _ghostBorn;
@@ -664,6 +681,9 @@ namespace AiOn.Story
             public void StartGhost(List<(double X, double Z)> pts, double x, double z, int i, float hint, Transform ghost, bool fadeIn)
             {
                 _ghostPts = pts; _gx = x; _gz = z; _gi = i; _ghost = ghost;
+                _ghostParts = ghost.GetComponentsInChildren<MeshRenderer>(true);
+                _ghostMpb ??= new MaterialPropertyBlock();
+                _ghostShown = -1f;
                 var u = LevelLayout.ToUnity((float)x, 0, (float)z);
                 _gy = GroundY(u.x, u.z, hint, Player);
                 _ghost.position = new Vector3(u.x, _gy, u.z);
@@ -686,6 +706,27 @@ namespace AiOn.Story
                         open ? new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(a, 0.03f), new GradientAlphaKey(a, 0.97f), new GradientAlphaKey(0, 1) }
                              : new[] { new GradientAlphaKey(a, 0), new GradientAlphaKey(a, 1) });
                     lr.colorGradient = g;
+                }
+            }
+
+            /// <summary>Melts the ghost away near the camera and the player (alpha through a property block, parts hidden at 0).</summary>
+            void FadeGhostNear(Vector3 player)
+            {
+                if (_ghostParts == null) return;
+                var cam = Camera.main;
+                Vector3 chest = _ghost.position + Vector3.up * 1f;
+                float camDist = cam ? Vector3.Distance(cam.transform.position, chest) : 99f;
+                float dx = _ghost.position.x - player.x, dz = _ghost.position.z - player.z;
+                float v = Player ? GhostVisibility(camDist, Mathf.Sqrt(dx * dx + dz * dz)) : GhostVisibility(camDist, 99f);
+                v = Mathf.Round(v * 50f) / 50f; // re-tint only when it changes visibly
+                if (Mathf.Approximately(v, _ghostShown)) return;
+                _ghostShown = v;
+                _ghostMpb.SetColor(BaseColorId, new Color(GhostBlue.r, GhostBlue.g, GhostBlue.b, GhostAlpha * v));
+                foreach (var r in _ghostParts)
+                {
+                    if (!r) continue;
+                    r.enabled = v > 0.01f;
+                    r.SetPropertyBlock(_ghostMpb);
                 }
             }
 
@@ -718,6 +759,7 @@ namespace AiOn.Story
                     if (s.Yaw.HasValue) _ghost.rotation = Quaternion.Euler(0, LevelLayout.ToUnityYaw((float)s.Yaw.Value), 0);
                     float f = Mathf.Clamp01((_t - _ghostBorn) / FadeIn);
                     _ghost.localScale = new Vector3(1, f, 1);
+                    FadeGhostNear(eye);
                     // a little walking bob and leg swing, since it is not an animated person
                     float ph = _t * 1.5f * Mathf.PI * 1.25f;
                     if (_ghost.childCount >= 4)

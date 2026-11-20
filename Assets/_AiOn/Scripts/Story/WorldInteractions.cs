@@ -55,15 +55,31 @@ namespace AiOn.Story
             var g = session.State;
             var db = session.Rules.Db;
             var items = BagDrill.BagItems(g, db, session.Fact);
-            var model = new BagPackingModel(items, db);
+            var o = BagHand.AddOptions(new Newtonsoft.Json.Linq.JObject(), g, Profile(), false);
+            var profile = (string)o["profile"];
+            var model = new ManualBagModel(items, db, BagAids.For(profile), BagHand.AidsFrom(o["aids"]), (string)o["layout"]);
             var tips = BagDrill.AlertTips.Select(session.Fact).Where(t => t != null).ToList();
-            return BagScreen.Open(model, "alert", BagDrill.LadderStage(g, "bag"), db.bagLimitKg, db.bagLimitL, BagDrill.Goals["alert"], tips, result =>
+            var facts = session.FactsData;
+            return BagScreen.Open(model, new BagScreenOptions
             {
-                var (_, toast) = BagDrill.FinishAlertBag(session.Rules, g, result);
+                Context = "alert", Mode = BagDrill.LadderStage(g, "bag"), LimitKg = db.bagLimitKg, LimitL = db.bagLimitL,
+                Goals = BagDrill.Goals["alert"], Tips = tips, Profile = profile, Cite = id => facts?.Cite(id),
+            }, result =>
+            {
+                BagHand.Remember(g, result.ToJson(), "alert");
+                var (_, toast) = BagDrill.FinishAlertBag(session.Rules, g, result.Bag);
                 Last = new WorldResponse { Toast = toast, ToastSeconds = 5f };
                 SyncBagLabel();
                 hud.Toast(toast, 5f);
             });
+        }
+
+        /// <summary>The experience mode the story runs with ("" when none or no story).</summary>
+        static string Profile()
+        {
+            var r = FindFirstObjectByType<StoryRunner>();
+            var p = r != null && r.Director != null ? r.Director.Profile : "";
+            return p == "none" ? "" : p ?? "";
         }
 
         void SyncBagLabel()

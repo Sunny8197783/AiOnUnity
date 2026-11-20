@@ -46,7 +46,7 @@ namespace AiOn.Tests
             Assert.That(Rms(near), Is.GreaterThan(Rms(far)));
         }
 
-        [TestCase("whistle")] [TestCase("punch")] [TestCase("thud")] [TestCase("land")]
+        [TestCase("whistle")] [TestCase("thud")] [TestCase("land")]
         [TestCase("glass")] [TestCase("swing")] [TestCase("pick")] [TestCase("collapse")]
         public void HitsSound(string name) => AssertSound(ProceduralAudio.HitSamples(name, 2.2f), 0.05f);
 

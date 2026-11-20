@@ -31,6 +31,12 @@ namespace AiOn.Story
             ["apartment:homeDesk"] = c => c.Power ? new[] { "노트북과 스탠드. 회사 메일은 확인할 게 없다." } : new[] { "노트북 화면이 꺼져 있다. 배터리를 아끼려면 켜지 않는 게 낫다." },
             ["apartment:homeBed"] = Lines("아직 잘 시간은 아니다."),
             ["apartment:homeStock"] = Lines("베란다 수납장. 생수와 비상용품을 넣어 두는 곳이다."),
+            // competition upgrade: the balcony's 경량칸막이 to 301 (PrepActions.Partition handles it in 1장)
+            ["apartment:homePartition"] = c => LookFirstScene.Broken(c.G)
+                ? new[] { "베란다 끝 경량칸막이. 그날 밤 부수고 301호로 건너간 자리다. 관리사무소에서 다시 막아 주기로 했다." }
+                : c.G.Knows(LookFirstScene.ClearedKnow)
+                ? new[] { "베란다 끝 경량칸막이. 앞을 비워 두었다. 현관으로 못 나갈 때 이 벽을 부수고 301호로 피한다." }
+                : new[] { "베란다 끝 경량칸막이. 그 앞에 이사 때 상자가 쌓여 있다.", c.Facts.Text("fire_partition_clear") },
             ["apartment:homePlanner"] = Lines("이번 주 계획판. 관리비 25일까지, 분리수거 화·금."),
             ["apartment:homeRadio"] = c => Has(c.G, "radio") ? new[] { "거실 탁자 위 휴대용 라디오." } : new[] { "라디오가 없다. 휴대폰 FM 라디오 앱은 쓸 수 있다 (P)." },
             ["apartment:homeBag"] = Lines("현관 옆 배낭. 대피할 때 들고 나갈 것을 담아 두는 곳이다."),

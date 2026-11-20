@@ -422,6 +422,9 @@ namespace AiOn.Story
         AiOn.Levels.Interiors.InteriorDressing _dressing;
         FireFx _fire;
         SmokeFx _smoke, _haze;
+        /// <summary>The level's story fire and its smoke (apartment hall fire, shelter fire), or null: the 3D extinguisher draws on them.</summary>
+        public FireFx StoryFire => _fire;
+        public SmokeFx StorySmoke => _smoke;
         FireFx[] _strikeFires;
         SmokeColumnFx _strikeSmoke;
 
@@ -819,7 +822,7 @@ namespace AiOn.Story
                 _loops[name] = src; _loopLevel[name] = 0.6f;
             }
             if (name == "fire") _loopLevel[name] = Mathf.Clamp01((float?)args?["level"] ?? 1f) * 0.8f;
-            if (name == "siren") _loopLevel[name] = 0.9f;
+            if (name == "siren") { _loopLevel[name] = 0.9f; AiOn.Rendering.AtmosphereDirector.Siren(on, src.clip ? src.clip.length : 60f); if (on && !src.isPlaying) Shake(0.1, 1.6); } // the siren winding up: a low rumble (skipped under reduce-motion)
             src.volume = _loopLevel[name] * AiOn.Settings.AudioBus.Effects;
             if (on && !src.isPlaying) src.Play(); else if (!on) src.Stop();
         }
@@ -860,7 +863,12 @@ namespace AiOn.Story
 
         public async Task<JToken> Open(string screen, JObject options)
         {
-            if (Screens.TryGetValue(screen, out var open)) return await open(options ?? new JObject());
+            if (Screens.TryGetValue(screen, out var open))
+            {
+                // a broadcast comes in as a weak analogue signal over the world behind the radio screen
+                using (screen == "radio" ? AiOn.Rendering.AtmosphereDirector.RadioScope() : null)
+                    return await open(options ?? new JObject());
+            }
             Debug.LogWarning($"[Story] screen '{screen}' is not built yet; showing a placeholder");
             await overlay.Card(new CardOptions
             {

@@ -54,6 +54,7 @@ namespace AiOn.Levels.Interiors
                 case "apartment":
                     if (key == "stock") { SetStock(value as JObject); return true; }
                     if (key == "candles") { _candleLit = s == "lit"; ShowCandle(); return true; }
+                    if (key == "partition") { ShowPartition(s); return true; }
                     return false;
                 case "store":
                     if (key == "clerk")
@@ -135,8 +136,79 @@ namespace AiOn.Levels.Interiors
 
         Light _candleLight; Transform _flame, _halo; Renderer _haloR; Color _haloColor; bool _candleLit;
 
+        // ---- the balcony's 경량칸막이 (competition upgrade): moving boxes in front of it until 1장 clears them ----
+        GameObject _partitionBoxes, _partitionHole;
+
+        /// <summary>The partition panel of the model is the west end of the balcony (toward 301); the boxes stand before it.</summary>
+        void BuildPartition()
+        {
+            var root = new GameObject("PartitionDressing").transform;
+            root.SetParent(transform, false);
+            var card = InteriorMeshes.LitMat(InteriorMeshes.Hex("#dcb47c"), 0.12f);
+            var tape = InteriorMeshes.LitMat(InteriorMeshes.Hex("#ece0bf"), 0.35f);
+            _partitionBoxes = new GameObject("Boxes");
+            _partitionBoxes.transform.SetParent(root, false);
+            const float floor = L.StockFloor;
+            Prop(_partitionBoxes.transform, "Box0", -7.2f, floor + 0.21f, 8.41f, new Vector3(0.48f, 0.42f, 0.46f), 4f, card);
+            Prop(_partitionBoxes.transform, "Tape0", -7.2f, floor + 0.425f, 8.41f, new Vector3(0.49f, 0.012f, 0.08f), 4f, tape);
+            Prop(_partitionBoxes.transform, "Box1", -7.22f, floor + 0.61f, 8.43f, new Vector3(0.44f, 0.38f, 0.42f), -7f, card);
+            Prop(_partitionBoxes.transform, "Tape1", -7.22f, floor + 0.805f, 8.43f, new Vector3(0.45f, 0.012f, 0.08f), -7f, tape);
+            Prop(_partitionBoxes.transform, "Box2", -7.18f, floor + 0.97f, 8.4f, new Vector3(0.38f, 0.34f, 0.36f), 11f, card);
+            // a pale shipping label on each box's room side, faintly lit so the pile reads as boxes in the dark balcony
+            var label = LabelMat();
+            foreach (Transform box in _partitionBoxes.transform)
+            {
+                if (!box.name.StartsWith("Box")) continue;
+                var l = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                l.name = "Label";
+                Destroy(l.GetComponent<Collider>());
+                l.transform.SetParent(box, false);
+                l.transform.localPosition = new Vector3(0.505f, 0.08f, 0f);
+                l.transform.localScale = new Vector3(0.01f, 0.32f, 0.42f);
+                l.GetComponent<MeshRenderer>().sharedMaterial = label;
+            }
+            _partitionHole = new GameObject("Hole");
+            _partitionHole.transform.SetParent(root, false);
+            Prop(_partitionHole.transform, "Dark", -7.465f, floor + 0.85f, 8.42f, new Vector3(0.02f, 1.1f, 0.42f), 0f, InteriorMeshes.LitMat(new Color(0.03f, 0.03f, 0.035f), 0f));
+            _partitionHole.SetActive(false);
+        }
+
+        static Material _labelMat;
+        static Material LabelMat()
+        {
+            if (_labelMat) return _labelMat;
+            var c = new Color(0.93f, 0.9f, 0.82f);
+            _labelMat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "PartitionBoxLabel" };
+            _labelMat.SetColor("_BaseColor", c);
+            _labelMat.SetFloat("_Smoothness", 0.2f);
+            _labelMat.EnableKeyword("_EMISSION");
+            _labelMat.SetColor("_EmissionColor", c * 0.05f); // a faint hint in the blackout, not a lamp
+            _labelMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            return _labelMat;
+        }
+
+        static void Prop(Transform parent, string name, float x, float y, float z, Vector3 size, float yaw, Material m)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = name;
+            Destroy(go.GetComponent<Collider>()); // dressing only: the walk mesh is the level's
+            go.transform.SetParent(parent, false);
+            go.transform.position = U(x, y, z);
+            go.transform.rotation = Quaternion.Euler(0, yaw, 0);
+            go.transform.localScale = size;
+            go.GetComponent<MeshRenderer>().sharedMaterial = m;
+        }
+
+        /// <summary>boxes (default) | clear | broken (the night of the 3장 fire, crossed to 301).</summary>
+        void ShowPartition(string s)
+        {
+            if (_partitionBoxes) _partitionBoxes.SetActive(s != "clear" && s != "broken");
+            if (_partitionHole) _partitionHole.SetActive(s == "broken");
+        }
+
         void BuildApartment()
         {
+            BuildPartition();
             // ---- the sensor lamps replace the stairwell's and corridor's grid lamps ----
             var env = EnvironmentController.Instance;
             if (env) env.SetLampFactor(p => L.AptSensorArea(p.x, p.y, -p.z) ? 0f : 1f);

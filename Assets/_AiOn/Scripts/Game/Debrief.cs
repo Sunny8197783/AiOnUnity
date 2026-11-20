@@ -99,6 +99,13 @@ namespace AiOn.Game
         static readonly Dictionary<string, string> Tool = new()
         {
             ["radio"] = "라디오", ["bag"] = "비상가방", ["route"] = "경로 정하기", ["extinguisher"] = "소화기", ["docs"] = "비상연락처 카드", ["info"] = "정보 가려 듣기",
+            ["cpr"] = "심폐소생술", // port addition (Story/CprScene.cs)
+        };
+
+        /// <summary>The CPR encounter's results (CprLogic.Evaluate): kept apart, since "skipped" already means the docs card's.</summary>
+        static readonly Dictionary<string, string> CprWords = new()
+        {
+            ["relay"] = "이웃과 교대하며 구급대에 넘겼습니다", ["solo"] = "혼자 압박을 이어 구급대에 넘겼습니다",
         };
 
         // Every result string the story passes to recordEncounter, so no raw id reaches the player.
@@ -172,13 +179,14 @@ namespace AiOn.Game
             string[] w = why switch
             {
                 "fall" => new[] { "높은 곳에서 떨어졌습니다", "떨어지기 전, 아래까지의 높이를 가늠할 시간이 있었습니다.", "내려갈 때는 계단·사다리처럼 몸을 붙일 수 있는 길을 먼저 찾기" },
-                "fight" => new[] { "몸싸움 끝에 쓰러졌습니다", "상대가 먼저 물러설 여지가 있었습니다.", "시비가 붙으면 물건을 내주거나 자리를 피하는 것도 선택지로 두기" },
-                "blast" => new[] { "폭발에 휘말렸습니다", "휘파람 같은 낙하음이 들린 뒤 몇 초의 여유가 있었습니다.", "낙하음이 들리면 바로 엎드리고, 건물 안쪽·지하로 몸을 숨기기" },
-                "debris" => new[] { "무너진 잔해에 다쳤습니다", "금이 가고 먼지가 떨어지는 건물은 무너지기 전에 신호를 보냅니다.", "흔들리거나 금 간 건물 곁에서는 멀리 떨어져 걷기" },
-                "fire" => new[] { "불길 속에서 쓰러졌습니다", "연기가 짙어지기 전에 빠져나갈 길이 있었습니다.", "불길에서 멀리 떨어지고, 연기가 오지 않는 쪽으로 피하기" },
+                // Port change (competition upgrade, no injury scenes): the titles say what happened around 정민, never a wound.
+                "fight" => new[] { "시비가 커졌습니다", "상대가 먼저 물러설 여지가 있었습니다.", "시비가 붙으면 물건을 내주거나 자리를 피하는 것도 선택지로 두기" },
+                "blast" => new[] { "포격을 피할 곳을 찾지 못했습니다", "휘파람 같은 낙하음이 들린 뒤 몇 초의 여유가 있었습니다.", "낙하음이 들리면 바로 엎드리고, 건물 안쪽·지하로 몸을 숨기기" },
+                "debris" => new[] { "무너지는 벽 가까이에 있었습니다", "금이 가고 먼지가 떨어지는 건물은 무너지기 전에 신호를 보냅니다.", "흔들리거나 금 간 건물 곁에서는 멀리 떨어져 걷기" },
+                "fire" => new[] { "불길 곁에 너무 오래 머물렀습니다", "연기가 짙어지기 전에 빠져나갈 길이 있었습니다.", "불길에서 멀리 떨어지고, 연기가 오지 않는 쪽으로 피하기" },
                 "smoke" => new[] { "연기를 너무 많이 마셨습니다", "복도 가운데 계단과 비상구 표시등까지는 몇 걸음이었습니다.", fact("fire_big") },
-                "hurt" => new[] { "더 이상 버틸 수 없을 만큼 다쳤습니다", "쉬면서 상처를 돌볼 수 있는 순간이 있었습니다.", "구급함을 챙기고, 다쳤을 때는 안전한 곳에서 먼저 처치하기" },
-                _ => new[] { "더 이상 버틸 수 없을 만큼 다쳤습니다", "쉬면서 상처를 돌볼 수 있는 순간이 있었습니다.", "다친 뒤에는 먼저 안전한 곳에서 처치하기" },
+                "hurt" => new[] { "더 버틸 힘이 남지 않았습니다", "쉬면서 몸을 추스를 수 있는 순간이 있었습니다.", "구급함을 챙기고, 몸이 힘들 때는 안전한 곳에서 먼저 쉬기" },
+                _ => new[] { "더 버틸 힘이 남지 않았습니다", "쉬면서 몸을 추스를 수 있는 순간이 있었습니다.", "몸이 힘들 때는 먼저 안전한 곳에서 쉬기" },
             };
             string[] facts = why switch
             {
@@ -188,7 +196,7 @@ namespace AiOn.Game
             };
             string missed = why == "smoke"
                 ? (g.Events.Any(e => e.Type == "towel_wet") ? "연기 속에서 몸을 낮추지 않고(C) 오래 머물렀습니다." : "젖은 수건으로 코와 입을 막지 못한 채 연기 속에 있었습니다.")
-                : g.Injury != null && g.Injury.Count > 0 ? "이미 다친 몸으로 움직이고 있었습니다." : "몸 상태를 살필 여유가 없었습니다.";
+                : g.Injury != null && g.Injury.Count > 0 ? "이미 지친 몸으로 움직이고 있었습니다." : "몸 상태를 살필 여유가 없었습니다.";
             return new Card { Title = w[0], Seen = w[1], Missed = missed, Next = w[2], Facts = facts };
         }
 
@@ -358,7 +366,12 @@ namespace AiOn.Game
             {
                 var t = Deeds.Det(e)["tool"];
                 var res = Deeds.Det(e)["result"];
-                if (smoke && JsSem.Is(t, "extinguisher"))
+                if (JsSem.Is(t, "cpr"))
+                {
+                    // not played (no screen) leaves no line; otherwise the CPR's own words, never the docs card's "skipped"
+                    if (JsSem.Str(res) is string cr && CprWords.TryGetValue(cr, out var cw)) lines.Add($"{Tool["cpr"]}: {cw}");
+                }
+                else if (smoke && JsSem.Is(t, "extinguisher"))
                     lines.Add($"화재 판단: {(JsSem.Is(res, "risky") ? "연기 속으로 바로 나섰습니다" : JsSem.Is(res, "retreat-ok") ? "문을 닫고 신고한 뒤 안내를 기다렸습니다" : ResultWord(res))}");
                 else
                     lines.Add($"{(JsSem.Str(t) is string tool && Tool.TryGetValue(tool, out var toolName) ? toolName : JsSem.Text(t))}: {ResultWord(res)}");

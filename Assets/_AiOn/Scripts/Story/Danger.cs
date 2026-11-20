@@ -1,10 +1,12 @@
 // Port of story/danger.js — war in the streets: while the player roams the town after the war has started, shells fall
 // (a falling whistle first, then the blast, debris, a crater and a fire), damaged buildings shed rubble onto the
-// sidewalk, and desperate people demand food. Crouching (C) and cover between you and a blast cut the damage.
+// sidewalk, and desperate people ask for food. Crouching (C) and cover between you and a blast cut the damage.
+// Competition upgrade: the stranger asking for food is a calm, non-physical encounter (LooterChoices / LooterOutcome):
+// no punch, no chase, nobody hurt; the title's promise ("폭력이나 부상 장면은 나오지 않습니다") holds.
 // How much of each depends on the chapter (Intensity). Rubble piles are solids you can climb over.
 // ctx.Calm (the 서연 interlude) holds the whole layer: nothing new falls and nothing pending lands.
 //
-// Danger.Create(ctx, hurt, fx) -> DangerLayer { IsHostile, Trigger, Reset, HitLooter }; Reset also clears rubble,
+// Danger.Create(ctx, hurt, fx) -> DangerLayer { IsHostile, Trigger, Reset, CurrentLooter }; Reset also clears rubble,
 // craters and fires. Danger.ShellAim(x, z, yaw, close) -> (X, Z): where a shell lands (pure, tested).
 //
 // What the original drew with three.js (flash light, fireball, shock ring, smoke puffs, craters, the rubble mesh and its
@@ -42,8 +44,6 @@ namespace AiOn.Story
         public virtual void Clear(object mark) { }
         /// <summary>All smoke puffs out.</summary>
         public virtual void ResetPuffs() { }
-        /// <summary>A player reaction (engine.act): 'hurt' for seconds.</summary>
-        public virtual void PlayerAct(string act, double seconds) { }
         /// <summary>The spawned body still stands in the scene (a level switch destroys it with the level).</summary>
         public virtual bool Alive(IStoryPerson p) => p != null;
         /// <summary>The danger layer these effects serve (set by Danger.Create): the hands ask it about the looter.</summary>
@@ -71,8 +71,58 @@ namespace AiOn.Story
 
         public static readonly string[][] LooterLines =
         {
-            new[] { "야, 거기. 가방 내려놔.", "물이랑 먹을 거 있지? 다 알아. 순순히 내놔." },
-            new[] { "애들이 사흘째 굶었어요…", "먹을 거 좀 나눠 줘요. 안 주면… 나도 어쩔 수 없어." },
+            new[] { "저기요, 잠깐만요. 가방에 먹을 거 있죠?", "물이랑 먹을 거 좀 나눠 줘요. 우리도 살아야 할 거 아니에요." },
+            new[] { "애들이 사흘째 제대로 못 먹었어요…", "먹을 거 좀 나눠 줘요. 부탁이에요." },
+        };
+
+        /// <summary>How each variant sounds (the talk's subtitle), by LooterLines index.</summary>
+        public static readonly string[] LooterCues = { "목소리가 날카롭다", "지쳐 보인다" };
+
+        /// <summary>The stranger stops this far away to talk (m): a conversation, not a crowding.</summary>
+        public const double TalkDistance = 3.2;
+
+        /// <summary>A stranger who has not reached talking distance after this long (s), or is this far behind (m), gives up and walks off.</summary>
+        public const double ApproachGiveUpSeconds = 20, ApproachGiveUpDistance = 22;
+        public const string GaveUpLine = "그는 멈춰 서더니 다른 쪽으로 걸어갔다.";
+
+        /// <summary>
+        /// Port change (competition upgrade, non-violent): the original's refuse led to a fist fight. Now every answer is
+        /// words. give: share food (karma +1). back: decline politely and step back. neighbors: ask people nearby to stand
+        /// with you. report: call 112 (needs a charged phone). argue: raise your voice (the bad choice: tension, and in the
+        /// end one food item handed over anyway). Nobody is hurt, whatever is picked.
+        /// </summary>
+        public static List<TalkChoice> LooterChoices(bool haveFood, bool phoneCharged)
+        {
+            var list = new List<TalkChoice>();
+            if (haveFood) list.Add(new TalkChoice("give", "가방에서 먹을 것을 나눈다"));
+            list.Add(new TalkChoice("back", "정중히 거절하고 물러선다"));
+            list.Add(new TalkChoice("neighbors", "근처 주민에게 함께 있어 달라고 부탁한다"));
+            list.Add(new TalkChoice("report", "112에 신고한다", !phoneCharged, phoneCharged ? null : "휴대폰 배터리가 없다")); // the overlay shows a Why even on an open choice
+            list.Add(new TalkChoice("argue", "언성을 높여 따진다"));
+            return list;
+        }
+
+        public sealed class LooterResult
+        {
+            /// <summary>The event's result (the deed table reads it): gave | escaped | argued.</summary>
+            public string Result;
+            /// <summary>What was picked: give | back | neighbors | report | argue.</summary>
+            public string How;
+            public string Line;
+            public int Tension;
+            public double Karma;
+        }
+
+        public const string ArguedEmptyLine = "언성이 높아지자 사람들이 쳐다본다. 가진 게 없다는 걸 확인하고서야 그가 돌아섰다. 손이 떨린다.";
+
+        /// <summary>What an answer leads to (pure; a null or unknown pick counts as stepping back).</summary>
+        public static LooterResult LooterOutcome(string pick) => pick switch
+        {
+            "give" => new LooterResult { Result = "gave", How = "give", Line = "먹을 것을 건넸다. 그는 고개를 숙이고 골목으로 사라졌다.", Karma = 1 },
+            "neighbors" => new LooterResult { Result = "escaped", How = "neighbors", Line = "근처를 지나던 주민 두 사람이 곁에 섰다. 그는 한숨을 쉬고 돌아섰다.", Tension = -2 },
+            "report" => new LooterResult { Result = "escaped", How = "report", Line = "112에 지금 있는 곳과 상황을 차분히 알렸다. 그는 통화하는 소리를 듣고 자리를 떴다.", Tension = -2 },
+            "argue" => new LooterResult { Result = "argued", How = "argue", Line = "언성이 높아지자 사람들이 쳐다본다. 결국 먹을 것 하나를 내주고서야 그가 물러났다. 손이 떨린다.", Tension = 12, Karma = -1 },
+            _ => new LooterResult { Result = "escaped", How = "back", Line = "“미안해요, 나눌 게 없어요.” 거리를 두고 천천히 물러섰다. 그는 따라오지 않았다.", Tension = 4 },
         };
 
         /// <summary>Math.random stand-in. Tests may pin it.</summary>
@@ -106,8 +156,8 @@ namespace AiOn.Story
         sealed class Pending { public double T; public Action Run; }
         sealed class Looter
         {
-            public IStoryPerson P; public string Level; public int Hp = 4; public string State = "approach"; public double HitT; public int Talk; public bool Down;
-            public double? Gone; public double X, Y, Z; public string Anim;
+            public IStoryPerson P; public string Level; public string State = "approach"; public int Talk;
+            public double X, Y, Z, T; public string Anim;
         }
 
         readonly StoryContext _ctx;
@@ -186,8 +236,8 @@ namespace AiOn.Story
             if (R() < 0.6) Ignite(x, y, z, Rnd(25, 50)); // often a fire that keeps burning
             if (!harm) return;
             int n = Damage(x, z, new double[] { 4, 9, 16 }, "blast");
-            if (n >= 30) _ctx.Toast("폭풍에 날아가 바닥을 굴렀다. 귀가 먹먹하다.", "self", 4200);
-            else if (n > 0) _ctx.Toast("파편이 스쳤다. 피가 흐른다.", "self", 3600);
+            if (n >= 30) _ctx.Toast("폭풍에 밀려 바닥에 주저앉았다. 귀가 먹먹하다.", "self", 4200);
+            else if (n > 0) _ctx.Toast("가까운 폭발에 몸이 휘청였다. 몸을 낮추자.", "self", 3600);
             _ctx.Stat("tension", 8);
             _ctx.Event("blast", new JObject { ["near"] = Num.JsRound(d), ["dmg"] = n });
         }
@@ -232,13 +282,13 @@ namespace AiOn.Story
                 {
                     _hurt(Engine.Crouching ? 30 : 55, "debris");
                     Engine.TeleportTo(Engine.PlayerX, Engine.PlayerY, cz + (Engine.PlayerZ > cz ? 1 : -1) * (D / 2 + 0.6), Engine.PlayerYaw);
-                    _ctx.Toast("쏟아진 잔해에 깔릴 뻔했다. 온몸이 욱신거린다.", "self", 4200);
+                    _ctx.Toast("쏟아진 잔해를 겨우 피했다. 먼지에 숨이 막힌다.", "self", 4200);
                 }
                 _ctx.Event("collapse", new JObject { ["x"] = Num.JsRound(cx), ["z"] = Num.JsRound(cz) });
             });
         }
 
-        // ---- a looter: walks up, asks; give, refuse (a fight) or run ----
+        // ---- a stranger who wants food: walks up and asks; the answer is words, never a fight ----
         void SpawnLooter()
         {
             // Port upgrade: the original came from behind (yaw + pi); here it walks in from ahead or the side, in view, so
@@ -255,51 +305,41 @@ namespace AiOn.Story
 
         void SetAnim(string anim) { if (_looter == null) return; _looter.Anim = anim; _looter.P.SetAnim(anim); }
 
-        /// <summary>The player hits back (the original's p.onHit, called by actions.js instead of its own reaction).</summary>
-        public void HitLooter(IStoryPerson p, bool ko)
-        {
-            var l = _looter;
-            if (l == null || l.P != p || l.Down) return;
-            l.Hp -= ko ? 2 : 1; l.State = "fight"; SetAnim("hurt"); l.HitT = 0.9;
-            if (l.Hp <= 0) { l.Down = true; l.State = "down"; SetAnim("down"); DropLoot(l); }
-        }
+        static double Karma(GameState g) => g.Extra.TryGetValue("karma", out var k) && k != null && k.Type is JTokenType.Integer or JTokenType.Float ? (double)k : 0;
 
-        void DropLoot(Looter l)
-        {
-            _fx.Debris("can", l.X, l.Y + 0.5, l.Z, Rnd(-1, 1), 2, Rnd(-1, 1));
-            var g = _ctx.G;
-            if (!g.Items.TryGetValue("canned", out var e) || e == null) g.Items["canned"] = e = new ItemEntry();
-            if (g.Knows("bagOn")) e.Bag += 1; else e.Home += 1; // the bag may be sitting at home
-            _ctx.Toast("상대가 쓰러졌다. 떨어뜨린 통조림 하나를 챙겼다.", "self", 4200);
-            _ctx.Event("looter", new JObject { ["result"] = "fought" });
-        }
+        /// <summary>The food the bag on your back holds (no bag on, nothing to hand over).</summary>
+        static List<string> FoodInBag(GameState g) => g.Knows("bagOn") ? Danger.Food.Where(id => g.Items.TryGetValue(id, out var e) && e != null && e.Bag > 0).ToList() : new List<string>();
 
         async Task Confront()
         {
             var l = _looter;
             l.State = "talking";
             var g = _ctx.G;
-            var have = g.Knows("bagOn") ? Danger.Food.Where(id => g.Items.TryGetValue(id, out var e) && e != null && e.Bag > 0).ToList() : new List<string>(); // no bag on your back, nothing to hand over
+            var have = FoodInBag(g);
             SetAnim("talk"); l.P.LookAt(Engine.PlayerX, Engine.PlayerZ);
-            var choices = new List<TalkChoice>();
-            if (have.Count > 0) choices.Add(new TalkChoice("give", "가방에서 먹을 것을 내준다"));
-            choices.Add(new TalkChoice("refuse", "거절한다"));
-            choices.Add(new TalkChoice("run", "등을 돌려 뛴다"));
-            var pick = await _ctx.Say("낯선 사람", Danger.LooterLines[l.Talk], choices, "눈빛이 심상치 않다");
+            var pick = await _ctx.Say("낯선 사람", Danger.LooterLines[l.Talk], Danger.LooterChoices(have.Count > 0, g.Phone.Battery > 0), Danger.LooterCues[l.Talk]);
             if (_looter == null) return;
-            if (pick == "give")
+            var outcome = Danger.LooterOutcome(pick);
+            switch (outcome.Result == "argued" ? "argued" : outcome.How)
             {
-                foreach (var id in have.Take(2)) _ctx.Rules.Consume(g, id, 1, "bag"); // keeps pocket <= bag (a save that loads) and counts it used
-                _ctx.Toast("먹을 것을 건넸다. 그는 말없이 골목으로 사라졌다.", "self", 4200);
-                _ctx.Event("looter", new JObject { ["result"] = "gave" });
-                g.Extra["karma"] = (g.Extra.TryGetValue("karma", out var k) && k != null && k.Type is JTokenType.Integer or JTokenType.Float ? (double)k : 0) + 1;
-                _looter.State = "leave";
+                case "give":
+                    foreach (var id in have.Take(2)) _ctx.Rules.Consume(g, id, 1, "bag"); // keeps pocket <= bag (a save that loads) and counts it used
+                    break;
+                case "report":
+                    StoryCommon.DrainBattery(g, 2);
+                    var fact = _ctx.Facts?.Text("comms_112"); // 긴급전화는 통신이 어려워도 연결된다
+                    if (!string.IsNullOrEmpty(fact)) _ctx.After(1.2, () => _ctx.Toast(fact, "official", 5200));
+                    break;
+                case "argued":
+                    if (have.Count > 0) _ctx.Rules.Consume(g, have[0], 1, "bag"); // handed over in the end, to end it
+                    break;
             }
-            else
-            {
-                _looter.State = pick == "run" ? "chase" : "fight";
-                if (pick == "refuse") _ctx.Toast("“좋게 말할 때 내놨어야지.” 그가 주먹을 쥔다. (클릭/Q로 맞서기, 멀리 뛰면 포기한다)", "site", 5000);
-            }
+            if (outcome.Tension != 0) _ctx.Stat("tension", outcome.Tension);
+            if (outcome.Karma != 0) g.Extra["karma"] = Karma(g) + outcome.Karma;
+            _ctx.Toast(outcome.Result == "argued" && have.Count == 0 ? Danger.ArguedEmptyLine : outcome.Line, "self", 4600);
+            _ctx.Event("looter", new JObject { ["result"] = outcome.Result, ["how"] = outcome.How });
+            _ctx.Refresh();
+            _looter.State = "leave";
         }
 
         void LooterTick(double dt)
@@ -314,18 +354,21 @@ namespace AiOn.Story
                 var gy = _fx.GroundAt(l.X, l.Z); if (gy != null) l.Y = gy.Value;
                 l.P.SetPosition(l.X, l.Y, l.Z, Math.Atan2(away ? dx : -dx, away ? dz : -dz));
             }
-            l.HitT = Math.Max(0, l.HitT - dt);
-            if (l.State == "down") { if ((l.Gone = (l.Gone ?? 15) - dt) <= 0) DropLooter(); return; }
-            if (l.State == "leave") { if (l.Anim != "walk") SetAnim("walk"); Step(1.4, true); if (d > 30) DropLooter(); return; }
-            if (l.State == "approach") { if (d < 2.6) _ = Confront(); else { if (l.Anim != "walk") SetAnim("walk"); Step(1.6); } return; }
-            if (l.State == "fight" || l.State == "chase")
+            if (l.State == "leave") { if (l.Anim != "walk") SetAnim("walk"); Step(1.3, true); if (d > 30) DropLooter(); return; }
+            // stops at a talking distance (never walks into the player's space) and asks
+            if (l.State == "approach")
             {
-                if (d > 22) { _ctx.Toast("뒤쫓던 사람이 포기하고 멈춰 섰다.", "self"); l.State = "leave"; _ctx.Event("looter", new JObject { ["result"] = "escaped" }); return; }
-                if (l.HitT > 0) return;
-                if (d > 1.1) { if (l.Anim != "run") SetAnim("run"); Step(l.State == "chase" ? 4.4 : 3.4); return; }
-                l.P.Play("punch"); l.P.LookAt(Engine.PlayerX, Engine.PlayerZ); l.HitT = 1.3;
-                _ctx.Audio.Cue("hit", new JObject { ["name"] = "punch" }); _fx.PlayerAct("hurt", 0.35); Engine.Shake(0.1, 0.3);
-                _hurt((int)Num.JsRound(Rnd(7, 12)), "fight");
+                l.T += dt;
+                if (d < Danger.TalkDistance) _ = Confront();
+                else if (l.T > Danger.ApproachGiveUpSeconds || d > Danger.ApproachGiveUpDistance)
+                {
+                    // the player walked on: he does not follow them across town
+                    l.State = "leave";
+                    _ctx.Toast(Danger.GaveUpLine, "site", 3200);
+                    _ctx.Event("looter", new JObject { ["result"] = "left", ["how"] = "walked_on" });
+                }
+                else { if (l.Anim != "walk") SetAnim("walk"); Step(1.4); }
+                return;
             }
         }
 
@@ -373,10 +416,10 @@ namespace AiOn.Story
             _hostile.RemoveWhere(p => !_fx.Alive(p));
         }
 
-        /// <summary>A looter or anyone else the layer made hostile: engine/actions hit them, the app does not count it as violence.</summary>
+        /// <summary>The stranger the layer spawned (kept for the host's talk facing; nothing hits anyone any more).</summary>
         public bool IsHostile(IStoryPerson p) => p != null && _hostile.Contains(p);
 
-        /// <summary>The current looter (null when none), for the host's hit test.</summary>
+        /// <summary>The current stranger (null when none), for the talk camera.</summary>
         public IStoryPerson CurrentLooter => _looter?.P;
 
         /// <summary>Force an event now (dev panel / tests): blast | boom | shell | collapse | looter.</summary>

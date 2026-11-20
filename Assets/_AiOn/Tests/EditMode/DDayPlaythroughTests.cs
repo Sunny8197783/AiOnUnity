@@ -33,18 +33,22 @@ namespace AiOn.Tests
         }
 
         /// <summary>Runs DDay.Run with StandInSeoyeon (put back afterwards, so other tests get the real SeoyeonRelay).</summary>
+        /// <summary>
+        /// Runs DDay.Run with StandInSeoyeon and without the port's shelter CPR (these tests and the golden compare the
+        /// chapter with the original; CprSceneTests plays the CPR scene), both put back afterwards.
+        /// </summary>
         public static void Play(FakeStoryHost host, StoryContext ctx)
         {
-            var keep = DDay.SeoyeonPart;
-            DDay.SeoyeonPart = StandInSeoyeon;
-            try { host.Run(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; }
+            var keep = DDay.SeoyeonPart; var cpr = DDay.CprPart;
+            DDay.SeoyeonPart = StandInSeoyeon; DDay.CprPart = _ => System.Threading.Tasks.Task.CompletedTask;
+            try { host.Run(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; DDay.CprPart = cpr; }
         }
 
         public static StoryFail PlayExpectFail(FakeStoryHost host, StoryContext ctx)
         {
-            var keep = DDay.SeoyeonPart;
-            DDay.SeoyeonPart = StandInSeoyeon;
-            try { return host.RunExpectFail(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; }
+            var keep = DDay.SeoyeonPart; var cpr = DDay.CprPart;
+            DDay.SeoyeonPart = StandInSeoyeon; DDay.CprPart = _ => System.Threading.Tasks.Task.CompletedTask;
+            try { return host.RunExpectFail(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; DDay.CprPart = cpr; }
         }
 
         static (FakeStoryHost host, StoryContext ctx) Rig(System.Action<GameRules, GameState> setup = null)
