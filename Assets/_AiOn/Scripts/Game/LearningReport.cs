@@ -30,6 +30,8 @@ namespace AiOn.Game
         public int? GoldenMinutes;
         public bool? GoldenOk;
         public double Health, Thirst, Fatigue, Tension;
+        /// <summary>사전 → 사후 퀴즈, concept by concept (QuizLogic.Compare over the run's "quiz" events); null when no quiz was answered.</summary>
+        public QuizComparison Quiz;
     }
 
     /// <summary>
@@ -175,6 +177,11 @@ namespace AiOn.Game
             if (Has("rumor_spread")) Row("info", "rumorSpread", false, null, "확인하지 않은 말을 이웃에게 옮겼다", "shelter_rumor");
             if (Has("rumor_corrected")) Row("info", "rumorCorrected", true, "잘못 알고 있던 내용을 공식 안내로 바로잡았다", null, "radio_listen");
             if (Has("note_left")) Row("info", "note", true, "떠나면서 행선지를 쪽지로 남겼다", null, "evac_note");
+            // competition upgrade: 루머 해부 (prebunking) and the blackout's phone battery
+            var techniques = RumorAnatomy.Seen(g);
+            if (techniques.Count > 0) Row("info", "prebunk", true, RumorAnatomy.ReportLine(techniques), null, "info_rumor");
+            var battery = PhoneBattery.Judge(g);
+            if (battery.Show) Row("endure", "battery", battery.Ok, battery.Yes, battery.No, PhoneBattery.FactId);
 
             // ---- 「산에서 내려온 사람들」 (3장 하위 장면, MountainScene): the report card, the intercom, the object ----
             var sight = ev.LastOrDefault(e => e.Type == "sighting");
@@ -214,6 +221,7 @@ namespace AiOn.Game
                 r.Axes.Add(new ReportAxis { Id = id, Label = label, Ok = rows.Count(x => x.Ok), Total = rows.Count });
             }
             r.Total = r.Rows.Count; r.Ok = r.Rows.Count(x => x.Ok);
+            r.Quiz = QuizLogic.Compare(g);
             if (g.Stats != null) { r.Health = g.Stats.Health; r.Thirst = g.Stats.Thirst; r.Fatigue = g.Stats.Fatigue; r.Tension = g.Stats.Tension; }
             return r;
         }

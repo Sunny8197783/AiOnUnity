@@ -62,6 +62,7 @@ namespace AiOn.Game
             Rules = new GameRules(items);
             State = Rules.CreateGame(seed != 0 ? seed : (long?)null);
             LoadFacts(factsJson ? factsJson.text : null, factsExtJson ? factsExtJson.text : null, _facts);
+            if (Current == this) EasyKorean.UseFacts(FactsData); // 쉬운 한국어 finds the facts' plain wordings by their text
         }
 
         void OnDestroy()

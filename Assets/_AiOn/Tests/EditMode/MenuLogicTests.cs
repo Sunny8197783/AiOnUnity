@@ -13,18 +13,19 @@ namespace AiOn.Tests
         public void Landing_NoSave_NewIsAutofocusAndGalleryHidden()
         {
             var b = MenuLogic.LandingButtons(false, 0, 2, 13);
-            Assert.That(b.Select(x => x.Id), Is.EqualTo(new[] { "new", "scenes", "teacher", "records", "lounge", "settings", "about" }));
+            Assert.That(b.Select(x => x.Id), Is.EqualTo(new[] { "new", "scenes", "teacher", "more", "records", "lounge", "settings", "about" }));
             Assert.That(b[0].Autofocus && b[0].Primary, Is.True);
             Assert.That(b[1].Label, Is.EqualTo("장면 바로가기"));
             Assert.That(b[2].Label, Is.EqualTo("교사용 30분 모드"));
-            Assert.That(b[3].Label, Is.EqualTo("도전 과제 2/13"));
+            Assert.That(b[3].Label, Is.EqualTo("더 알아보기")); // 기록관, 지도와 사람들, 훈련 달력, 우리 집 안전 준비 under one entry
+            Assert.That(b[4].Label, Is.EqualTo("도전 과제 2/13"));
         }
 
         [Test]
         public void Landing_WithSaveAndEndings_ContinueFocusedGalleryShown()
         {
             var b = MenuLogic.LandingButtons(true, 3, 0, 13);
-            Assert.That(b.Select(x => x.Id), Is.EqualTo(new[] { "new", "continue", "scenes", "teacher", "records", "lounge", "gallery", "settings", "about" }));
+            Assert.That(b.Select(x => x.Id), Is.EqualTo(new[] { "new", "continue", "scenes", "teacher", "more", "records", "lounge", "gallery", "settings", "about" }));
             Assert.That(b.Single(x => x.Autofocus).Id, Is.EqualTo("continue"));
             Assert.That(b.Single(x => x.Id == "gallery").Label, Is.EqualTo($"엔딩 기록 3/{AiOn.Game.Endings.All.Count}"));
         }
@@ -58,7 +59,8 @@ namespace AiOn.Tests
         {
             var f = new SettingsForm(new JObject());
             TestSupport.AssertJson(f.Submit(), @"{quality:'medium',volume:0.7,mute:false,captions:true,reduceMotion:false,textScale:1,view:'third',
-                sensitivity:1,minimap:true,volAmbience:1,volEffects:1,volUi:1,profile:'none',memoryCue:true,qualityAuto:false}");
+                sensitivity:1,minimap:true,volAmbience:1,volEffects:1,volUi:1,profile:'none',memoryCue:true,
+                easyKorean:false,companion:false,qualityAuto:false}"); // competition upgrade: 쉬운 한국어 · 도우미 모드 after the original's keys
             Assert.That(f.Submit().Properties().Last().Name, Is.EqualTo("qualityAuto"), "qualityAuto is appended after cur's keys");
             Assert.That((string)f.Submit()["quality"], Is.EqualTo("medium"));
         }

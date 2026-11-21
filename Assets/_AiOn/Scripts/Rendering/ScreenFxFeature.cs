@@ -17,6 +17,9 @@ namespace AiOn.Rendering
         [SerializeField] RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
 
         Material _material;
+
+        /// <summary>A camera that never gets the effects: set while the 비상연락카드 / 점검표 PNG renders (UI.OffscreenPng).</summary>
+        public static Camera Excluded;
         ScreenFxPass _pass;
 
         public override void Create()
@@ -28,6 +31,7 @@ namespace AiOn.Rendering
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             if (renderingData.cameraData.cameraType != CameraType.Game) return;
+            if (Excluded && renderingData.cameraData.camera == Excluded) return; // the 우리 집 안전 준비 print camera (a PNG, not the view)
             var stack = VolumeManager.instance.stack;
             var signal = stack.GetComponent<AnalogSignal>();
             var mask = stack.GetComponent<MaskView>();

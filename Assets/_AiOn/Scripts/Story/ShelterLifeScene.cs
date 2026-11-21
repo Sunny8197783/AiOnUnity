@@ -37,13 +37,13 @@ namespace AiOn.Story
             var l = lines.ToList();
             var said = speaker + ". " + string.Join(" ", l);
             if (choices != null && choices.Count > 0) said += " 고르세요. " + string.Join(" ", choices.Select((c, i) => $"{i + 1}번, {c.Label}."));
-            Read(ctx, said);
+            if (!ctx.UiReadsAloud) Read(ctx, said); // the host's talk box reads itself (StoryOverlay)
             return ctx.Say(speaker, l, choices, role);
         }
 
         static Task<string> Card(StoryContext ctx, CardOptions o)
         {
-            Read(ctx, o.Title + ". " + string.Join(" ", o.Body ?? new List<string>()));
+            if (!ctx.UiReadsAloud) Read(ctx, o.Title + ". " + string.Join(" ", o.Body ?? new List<string>()));
             return ctx.Card(o);
         }
 

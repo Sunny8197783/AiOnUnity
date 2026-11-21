@@ -334,6 +334,36 @@ namespace AiOn.Tests
             });
         }
 
+        // ------------------------------------------------------------------ 더 알아보기 (기록관)
+
+        [Test]
+        public void TheArchiveKeepsWhatTheRunUnlockedAndTheTitleOpensItThenMarksItSeen()
+        {
+            var r = new Rig();
+            Assert.IsNull(r.Store.Get(Archive.Key), "nothing before the first run");
+            r.Title(("landing", "new"));
+            var kept = Archive.Read(r.Store.Get(Archive.Key));
+            CollectionAssert.IsSupersetOf(kept.Entries, new[] { "y1975", "y2010" }, "the prologue and chapter 2 were played to their end");
+            Assert.That(kept.Residents["jeongmin"][0], Does.StartWith("지나온 장: 프롤로그"));
+            Assert.That(kept.Viewed, Is.Empty);
+
+            // the hub closed without the 기록관 (only the calendar, say): nothing is spent
+            Assert.AreEqual(Archive.Screen, r.Title(("landing", Archive.Screen), (Archive.Screen, null)));
+            Assert.That(Archive.Read(r.Store.Get(Archive.Key)).Viewed, Is.Empty, "the 새로 marks wait for the 기록관 itself");
+            Assert.That(StoryDirector.Str(r.Host.Opens.Last().options["chapter"]), Is.Null, "the title spoils nothing: every hint shows");
+
+            Assert.AreEqual(Archive.Screen, r.Title(("landing", Archive.Screen), (Archive.Screen, StoryDirector.MoreSeen)), "더 알아보기 opens and returns to the title");
+            var (screen, options) = r.Host.Opens.Last();
+            Assert.AreEqual(Archive.Screen, screen);
+            var shown = Archive.Read(options["progress"]);
+            CollectionAssert.AreEqual(kept.Entries, shown.Entries);
+            Assert.That(shown.IsNew("y1975"), "new until opened once");
+            var after = Archive.Read(r.Store.Get(Archive.Key));
+            CollectionAssert.IsSupersetOf(after.Viewed, kept.Entries, "opened: no longer new");
+            CollectionAssert.AreEqual(kept.Entries, after.Entries, "opening changes no unlock");
+            Assert.AreEqual("homeprep", r.Title(("landing", "homeprep")), "the old entry id still opens 우리 집 안전 준비");
+        }
+
         // ------------------------------------------------------------------ title screens
 
         [Test]
@@ -347,6 +377,10 @@ namespace AiOn.Tests
             TestSupport.AssertJson(r.Host.Opens.Last().options, "{ done: {}, best: {}, runs: [] }");
             Assert.AreEqual("about", r.Title(("landing", "about")));
             Assert.AreEqual(FakeStoryHost.LoadFacts().Sources.Count, ((JArray)r.Host.Opens.Last().options["sources"]).Count);
+            var before = string.Join("|", r.Store.Data.OrderBy(kv => kv.Key).Select(kv => kv.Key + "=" + kv.Value));
+            Assert.AreEqual("homeprep", r.Title(("landing", "homeprep")), "우리 집 안전 준비 opens and returns to the title");
+            Assert.AreEqual("homeprep", r.Host.Opens.Last().screen);
+            Assert.AreEqual(before, string.Join("|", r.Store.Data.OrderBy(kv => kv.Key).Select(kv => kv.Key + "=" + kv.Value)), "the card and the checklist are never stored");
             Assert.AreEqual("lounge", r.Title(("landing", "lounge")));
             var name = (string)r.Host.Opens.Last().options["name"];
             Assert.IsTrue(Lounge.IsName(name));
@@ -501,6 +535,48 @@ namespace AiOn.Tests
             var radio = rig.Host.Opens.Single(o => o.screen == "radio").options;
             Assert.AreEqual("phone", (string)radio["device"]);
             Assert.Contains("휴대폰이 꺼져 있다.", rig.Host.Toasts);
+        }
+
+        [Test]
+        public void InTheBlackoutThePhoneCostsBattery_TheChatAndFmWaitAtLow_AndSaverModeIsHere()
+        {
+            JArray full = null, low = null;
+            double afterChat = 0, afterSaverChat = 0, afterOpens = 0;
+            var rig = Roaming(async r =>
+            {
+                var g = r.D.G;
+                g.Chapter = "endure"; r.D.Ctx.Power = false; g.Phone.Battery = 60;
+                r.Host.AnswerOpen("phone", "sns");
+                r.Host.PressKey("KeyP"); await r.Host.Settle();
+                afterChat = g.Phone.Battery; // −1 reading the texts, −5 scrolling the chat
+                r.Host.AnswerOpen("phone", "saver");
+                r.Host.PressKey("KeyP"); await r.Host.Settle();
+                r.Host.AnswerOpen("phone", "sns");
+                r.Host.PressKey("KeyP"); await r.Host.Settle();
+                afterSaverChat = g.Phone.Battery;
+                g.Phone.Battery = 12;
+                r.Host.AnswerOpen("phone", "close");
+                r.Host.PressKey("KeyP"); await r.Host.Settle();
+                // opening and closing the phone again and again never takes the last percent
+                g.Phone.Battery = 2;
+                for (int i = 0; i < 4; i++) { r.Host.AnswerOpen("phone", "close"); r.Host.PressKey("KeyP"); await r.Host.Settle(); }
+                afterOpens = g.Phone.Battery;
+            });
+            var phones = rig.Host.Opens.Where(o => o.screen == "phone").Select(o => (JArray)o.options["actions"]).ToList();
+            full = phones[0]; low = phones[3];
+            CollectionAssert.AreEqual(new[] { "sns", "radio", "saver", "close" }, full.Select(a => (string)a["id"]));
+            Assert.That((string)full[0]["label"], Does.Contain("−5%"));
+            Assert.AreEqual(54, afterChat, 1e-9);
+            Assert.AreEqual(54 - 1 - 1 - 3, afterSaverChat, 1e-9, "opening for 절전 −1, then with 절전: the texts −1 (never below 1), the chat −3");
+            CollectionAssert.AreEqual(new[] { "close", "saver" }, low.Select(a => (string)a["id"]), "at low battery the chat and the FM app wait; 닫기 comes first once 절전 is on");
+            Assert.That((string)low[1]["label"], Is.EqualTo("절전 모드 끄기"));
+            Assert.That(low[1]["primary"], Is.Null, "turning 절전 off is never the suggested press");
+            Assert.AreEqual(1, afterOpens, 1e-9, "the texts' cost never takes the last percent");
+            var messages = rig.Host.Opens.Where(o => o.screen == "phone").Last().options["messages"];
+            Assert.That(messages.Any(m => ((string)m["text"]).Contains("Ready.gov")), Is.False, "guidance from abroad is not shown as a 안전안내문자");
+            Assert.That(rig.Host.Talks.Count(t => t.Speaker == "103동 단톡방"), Is.EqualTo(2));
+            Assert.That(rig.Host.Toasts, Has.Member(PhoneBattery.SaverOnLine));
+            Assert.That(rig.Host.Toasts.Any(t => t.StartsWith("배터리 아끼기")), "the first time: comms_battery as a notice");
         }
 
         [Test]

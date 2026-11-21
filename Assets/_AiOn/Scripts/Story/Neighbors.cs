@@ -85,7 +85,8 @@ namespace AiOn.Story
                     ctx.Remember("rumor_corrected", new JObject { ["after"] = "check" });
                 }
             }
-            await StoryCommon.FactCard(ctx, "소문을 만났을 때", new[] { "info_rumor", "shelter_rumor", "info_harm" });
+            bool card = await PrebunkScene.Show(ctx, "shelter_closed"); // 루머 해부 (a roam handler: already modal)
+            await StoryCommon.FactCard(ctx, "소문을 만났을 때", new[] { "info_rumor", "shelter_rumor", "info_harm" }, card ? RumorAnatomy.HabitFacts : null);
         }
 
         /// <summary>102동 주민 offers a battery pack for food. Testing it first shows it is a used pack (batteries_old).</summary>

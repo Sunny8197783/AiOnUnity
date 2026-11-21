@@ -12,6 +12,10 @@ namespace AiOn.Tests
 {
     public class NeighborsTests
     {
+        // The original's scripts: the 루머 해부 card after the shelter rumour is the port's (PrebunkTests plays it).
+        [SetUp] public void WithoutTheAnatomyCard() => PrebunkScene.Enabled = false;
+        [TearDown] public void PutTheAnatomyCardBack() => PrebunkScene.Enabled = true;
+
         /// <summary>sceneCtx: a context for one scene, talks answered from a script (strict), in the store.</summary>
         static (FakeStoryHost host, StoryContext ctx) Scene(GameState g, params string[] answers)
         {

@@ -20,6 +20,7 @@ namespace AiOn.Settings
             Time.timeScale = 1f;
             AudioListener.pause = false;
             InputGate.Clear();
+            AiOn.Game.Companion.Reset(); // 도우미 모드: the last run's goal and screens are not the title's
             AiOn.UI.UiScreen.ResetModals(); // a card or time skip torn down mid-await never pops its count
             AiOn.UI.GameHud.Cinematic = false;
             if (EnvironmentController.Instance) EnvironmentController.Instance.SetSmoke(0); // its statics outlive the scene

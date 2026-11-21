@@ -8,7 +8,7 @@
 // "그날, 시민들은" gives three sourced lines on 1996 (no names, no victims) and today's line.
 //
 // Events: mountain_traces { noted, reached, minute }, sighting (SightingReport.Result), intercom { first, opened, asked,
-// office, police }, unknown_object { first, reported, extKnown }, defense_lift { lift }, record_card { id }. Know:
+// office, police }, unknown_object { first, reported, extKnown, via? }, defense_lift { lift }, record_card { id }. Know:
 // mountainTraces (noted | seen), defenseLift (early | evening | late).
 using System;
 using System.Collections.Generic;
@@ -149,7 +149,9 @@ namespace AiOn.Story
                 ctx.Note("뒷산: 병종사태 · 외출 자제 (서연이 공식 안내로 확인)", "neighbor");
             }
             else ctx.Toast("확인되지 않은 말이다. 문자대로 집에 있자.", "self", 4200);
-            await StoryCommon.FactCard(ctx, "소문을 만났을 때", new[] { "info_rumor", "radio_listen" });
+            bool card = await ctx.Modal(() => PrebunkScene.Show(ctx, MountainLogic.RumorId)); // 루머 해부
+            // the card already shows the habit's facts with their sources: they are noted, not toasted a second time
+            await StoryCommon.FactCard(ctx, "소문을 만났을 때", new[] { "info_rumor", "radio_listen" }, card ? RumorAnatomy.HabitFacts : null);
         }
 
         /// <summary>The day at home: the report (when the traces were seen), the intercom, the window, then the calendar.</summary>
@@ -378,7 +380,9 @@ namespace AiOn.Story
             ctx.Pass(60);
             await ctx.Caption("한 시간쯤 뒤 군 처리반이 와서 물체를 수거해 갔다. 안에는 젖은 종이 뭉치뿐이었다고 했다.", null, 3600);
             await StoryCommon.FactCard(ctx, "미상 낙하물", new[] { "object_no_touch", "report_object" });
-            GameRules.RecordEvent(g, "unknown_object", new JObject { ["first"] = first, ["reported"] = report, ["extKnown"] = extKnown });
+            var obj = new JObject { ["first"] = first, ["reported"] = report, ["extKnown"] = extKnown };
+            if (report == "police") obj["via"] = deaf ? "text112" : "station"; // the 기록관's 112 card (a text) or 경찰서 card (the 파출소)
+            GameRules.RecordEvent(g, "unknown_object", obj);
         }
 
         /// <summary>The evening: the lift (or the 통제 kept overnight), then the skip to the fire's night (21:40).</summary>

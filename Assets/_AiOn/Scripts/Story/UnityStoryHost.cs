@@ -865,9 +865,14 @@ namespace AiOn.Story
         {
             if (Screens.TryGetValue(screen, out var open))
             {
-                // a broadcast comes in as a weak analogue signal over the world behind the radio screen
-                using (screen == "radio" ? AiOn.Rendering.AtmosphereDirector.RadioScope() : null)
-                    return await open(options ?? new JObject());
+                AiOn.Game.Companion.PushScreen(screen); // 도우미 모드's F1 hint knows what is on screen
+                try
+                {
+                    // a broadcast comes in as a weak analogue signal over the world behind the radio screen
+                    using (screen == "radio" ? AiOn.Rendering.AtmosphereDirector.RadioScope() : null)
+                        return await open(options ?? new JObject());
+                }
+                finally { AiOn.Game.Companion.PopScreen(screen); }
             }
             Debug.LogWarning($"[Story] screen '{screen}' is not built yet; showing a placeholder");
             await overlay.Card(new CardOptions

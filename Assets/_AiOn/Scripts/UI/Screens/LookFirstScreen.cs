@@ -96,7 +96,7 @@ namespace AiOn.UI
             if (!this) return;
             var p = L.Phase;
             bool deciding = !_review && (p == LookPhase.Where || p == LookPhase.Act);
-            if (deciding && _moment == null) _moment = DecisionMoment.Begin();
+            if (deciding && _moment == null) _moment = DecisionMoment.Begin("fire");
             else if (!deciding && _moment != null) { _moment.Dispose(); _moment = null; }
             int keep = p == _shown && _review == _shownReview ? _cursor : -1; // the same page redrawn keeps its highlight
             Clear(_side);
@@ -177,7 +177,7 @@ namespace AiOn.UI
             spoken.Append(tag).Append(". ").Append(f.Title).Append(". ").Append(f.Text).Append(' ');
         }
 
-        string FactText(string id) => _o["facts"]?[id]?["text"]?.Type == JTokenType.String ? (string)_o["facts"][id]["text"] : null;
+        string FactText(string id) => _o["facts"]?[id]?["text"]?.Type == JTokenType.String ? EasyKorean.Of((string)_o["facts"][id]["text"]) : null; // 쉬운 한국어
         string FactSource(string id) => _o["facts"]?[id]?["source"]?.Type == JTokenType.String ? (string)_o["facts"][id]["source"] : null;
 
         void RenderLook(System.Text.StringBuilder spoken)

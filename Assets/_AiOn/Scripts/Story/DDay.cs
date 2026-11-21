@@ -621,12 +621,51 @@ namespace AiOn.Story
             ctx.Engine.SetEnv("underground", 0.8);
         }
 
+        /// <summary>
+        /// 휴대폰 배터리 자원: the shelter desk's emergency power strip (back at the desk after signing). Charging is one of
+        /// the habits the phone battery answers; letting the next person go first is just as fair (no cost either way).
+        /// Talks through ctx.Ui (a roam handler).
+        /// </summary>
+        static async Task ShelterCharge(StoryContext ctx)
+        {
+            var g = ctx.G;
+            var pick = await ctx.Ui.Talk(new TalkOptions
+            {
+                Speaker = "대피소 관리자", Role = $"접수대 옆 비상 전원 · 휴대폰 {Math.Round(g.Phone.Battery)}%",
+                Lines = { "\"휴대폰 충전은 여기 멀티탭에서 하세요. 자리가 모자라니 조금씩 돌아가면서요.\"" },
+                Choices = new List<TalkChoice>
+                {
+                    new("charge", $"충전기를 꽂아 두고 자리에 앉는다 (+{PhoneBattery.ShelterCharge}%)"),
+                    new("yield", "배터리가 더 급한 사람에게 먼저 쓰시라고 한다"),
+                },
+            }) ?? "yield";
+            if (pick == "charge")
+            {
+                var gain = PhoneBattery.Charge(g, "shelter", PhoneBattery.ShelterCharge);
+                ctx.Refresh();
+                ctx.Toast($"{PhoneBattery.ChargeLine} +{Math.Round(gain)}% (지금 {Math.Round(g.Phone.Battery)}%)", "self", 4200);
+            }
+            else
+            {
+                PhoneBattery.Yield(g); // the report counts it as a fair habit too
+                ctx.Toast("\"고마워요. 우리 애 휴대폰이 꺼져서요.\" 옆 사람이 먼저 꽂았다.", "neighbor", 3800);
+            }
+        }
+
         static async Task Shelter(StoryContext ctx)
         {
             var g = ctx.G;
             ShelterState(ctx);
-            bool signed = false;
+            bool signed = false, charged = false;
             ctx.Objective("대피소 안에서", "접수대에서 명부를 쓰고 자리를 잡습니다.", new List<ObjectiveStep> { new("명부 쓰기 (접수대)"), new("자리 잡기") });
+            void ShowSigned()
+            {
+                var steps = new List<ObjectiveStep> { new("명부 쓰기 (접수대)", true) };
+                // 휴대폰 배터리 자원: the power strip by the desk, an optional step (only while it can still help)
+                if (PhoneBattery.Live && (charged || g.Phone.Battery < 100)) steps.Add(new ObjectiveStep("휴대폰 충전 (접수대 옆 비상 전원 · 선택)", charged));
+                steps.Add(new ObjectiveStep("자리 잡기"));
+                ctx.Objective("대피소 안에서", "자리를 잡습니다.", steps);
+            }
             var thuds = FarBlasts(ctx);
             await ctx.Roam(new RoamOptions
             {
@@ -636,7 +675,12 @@ namespace AiOn.Story
                     ["shelterExit"] = _ => { ctx.Toast("경보가 해제될 때까지 대피소 안에 머뭅니다.", "site"); return Task.FromResult<JToken>(null); },
                     ["reception"] = async _ =>
                     {
-                        if (signed) { ctx.Toast("명부를 썼다."); return null; }
+                        if (signed)
+                        {
+                            // 휴대폰 배터리 자원: the shelter's emergency power strip, once, back at the desk after signing
+                            if (PhoneBattery.Live && !charged && g.Phone.Battery < 100) { charged = true; await ShelterCharge(ctx); ShowSigned(); return null; }
+                            ctx.Toast("명부를 썼다."); return null;
+                        }
                         var (card, line) = ReceptionCard(g);
                         await ctx.Ui.Talk(new TalkOptions { Speaker = "대피소 관리자", Role = "접수대", Lines = { "이름이랑 연락처, 복용하는 약 있으면 여기 적어 주세요.", line } });
                         if (card) ctx.Payoff("docs", "비상연락카드를 보고 명부를 바로 적었다"); else { StoryCommon.DrainBattery(g, 2); ctx.Refresh(); }
@@ -652,7 +696,7 @@ namespace AiOn.Story
                             await ctx.Ui.Talk(new TalkOptions { Speaker = "할아버지", Role = "접수대", Lines = { "아이고, 그래 주면 고맙지. 내가 불러 줄 테니 적어 줘요." } });
                             ctx.Pass(2); ctx.Remember("register_helped");
                         }
-                        ctx.Objective("대피소 안에서", "자리를 잡습니다.", new List<ObjectiveStep> { new("명부 쓰기 (접수대)", true), new("자리 잡기") });
+                        ShowSigned();
                         return null;
                     },
                     ["shelterRadio"] = async _ =>

@@ -28,7 +28,48 @@ namespace AiOn.UI
         public static event Action<bool> ModalChanged;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { OpenCount = 0; ModalChanged = null; }
+        static void ResetStatics() { OpenCount = 0; ModalChanged = null; Stack.Clear(); }
+
+        /// <summary>The open screens, oldest first: only the newest takes Esc (a screen opened from another closes alone).</summary>
+        static readonly System.Collections.Generic.List<UiScreen> Stack = new();
+
+        /// <summary>No other screen was opened over this one (and is still open).</summary>
+        protected bool IsTop
+        {
+            get
+            {
+                for (int i = Stack.Count - 1; i >= 0; i--)
+                {
+                    if (!Stack[i] || Stack[i]._closed) { Stack.RemoveAt(i); continue; }
+                    return Stack[i] == this;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>The newest open screen's window, or null (도우미 모드's hint plate finds the free margin beside it).</summary>
+        public static RectTransform TopWindow
+        {
+            get
+            {
+                for (int i = Stack.Count - 1; i >= 0; i--)
+                    if (Stack[i] && !Stack[i]._closed && Stack[i].Window) return Stack[i].Window;
+                return null;
+            }
+        }
+
+        static int _escFrame = -1;
+
+        /// <summary>
+        /// This frame's Esc, for the top screen only and only once: the screen under a closing one does not see the same
+        /// press as its own (it becomes the top in the same frame).
+        /// </summary>
+        protected bool TakeEscape()
+        {
+            if (_escFrame == Time.frameCount || !IsTop) return false;
+            _escFrame = Time.frameCount;
+            return true;
+        }
 
         /// <summary>Counts a modal that is not a UiScreen (a story card, a time skip); pair with PopModal.</summary>
         public static void PushModal()
@@ -61,7 +102,15 @@ namespace AiOn.UI
         /// <summary>Creates screen T on its own canvas and returns when it finishes.</summary>
         public static async Task<object> Show<T>(Action<T> setup = null, float width = 1720, float height = 940) where T : UiScreen
         {
-            var canvas = UiKit.ScreenCanvas(typeof(T).Name, 220);
+            // above every screen already open (equal orders draw in no set order: a report opened from the ending
+            // document could land under it), and still under the reread caption (225)
+            int order = 220;
+            foreach (var other in FindObjectsByType<UiScreen>(FindObjectsSortMode.None))
+            {
+                var oc = other && !other._closed ? other.GetComponent<Canvas>() : null;
+                if (oc) order = Mathf.Max(order, oc.sortingOrder + 1);
+            }
+            var canvas = UiKit.ScreenCanvas(typeof(T).Name, Mathf.Min(order, 224));
             var s = canvas.gameObject.AddComponent<T>();
             s._done = new TaskCompletionSource<object>();
             s.Root = (RectTransform)canvas.transform;
@@ -70,6 +119,7 @@ namespace AiOn.UI
             win.anchorMin = win.anchorMax = win.pivot = new Vector2(0.5f, 0.5f);
             win.sizeDelta = new Vector2(width, height);
             s.Window = win;
+            Stack.Add(s);
             InputGate.Hold();
             s._counted = true;
             PushModal();
@@ -132,7 +182,7 @@ namespace AiOn.UI
         {
             if (_closed || Time.unscaledTime - OpenedAt < 0.2f) return;
             var kb = Keyboard.current;
-            if (kb != null && kb.escapeKey.wasPressedThisFrame)
+            if (kb != null && kb.escapeKey.wasPressedThisFrame && TakeEscape())
             {
                 var r = EscapeResult();
                 if (r != null) Finish(r);

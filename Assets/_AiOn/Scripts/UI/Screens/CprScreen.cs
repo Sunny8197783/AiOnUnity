@@ -246,7 +246,7 @@ namespace AiOn.UI
         string FactText(string id)
         {
             var f = _o["facts"]?[id];
-            return f?["text"]?.Type == JTokenType.String ? (string)f["text"] : null;
+            return f?["text"]?.Type == JTokenType.String ? EasyKorean.Of((string)f["text"]) : null; // 쉬운 한국어: the fact's plain wording
         }
 
         string FactSource(string id)

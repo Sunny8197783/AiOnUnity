@@ -55,6 +55,9 @@ namespace AiOn.Game
 
         readonly Dictionary<string, FactEntry> _byId = new();
         readonly Dictionary<string, FactSource> _srcById = new();
+        // 쉬운 한국어 (competition upgrade): fact id -> the plain-language wording, kept beside the original in
+        // facts-ext.json's top-level "plain" map (facts.json is never edited). Never replaces Text; EasyKorean picks it.
+        readonly Dictionary<string, string> _plain = new();
 
         Facts(List<FactEntry> facts, List<FactSource> sources)
         {
@@ -78,7 +81,11 @@ namespace AiOn.Game
             catch (JsonException e) { throw new ArgumentException($"facts json is not JSON: {e.Message}", nameof(json)); }
             if (root is not JObject o || o["facts"] is not JArray facts) throw new ArgumentException("facts json needs a 'facts' array", nameof(json));
             var sources = o["sources"] as JArray ?? new JArray();
-            return new Facts(facts.ToObject<List<FactEntry>>(), sources.ToObject<List<FactSource>>());
+            var loaded = new Facts(facts.ToObject<List<FactEntry>>(), sources.ToObject<List<FactSource>>());
+            if (o["plain"] is JObject plain)
+                foreach (var p in plain.Properties())
+                    if (p.Value.Type == JTokenType.String && !string.IsNullOrWhiteSpace((string)p.Value)) loaded._plain[p.Name] = (string)p.Value;
+            return loaded;
         }
 
         /// <summary>
@@ -108,7 +115,13 @@ namespace AiOn.Game
                 if (f?.Id == null || !seenFacts.Add(f.Id)) skipped.Add("fact:" + f?.Id); else facts.Add(f);
             foreach (var s in ext.Sources)
                 if (s?.Id == null || !seenSources.Add(s.Id)) skipped.Add("source:" + s?.Id); else sources.Add(s);
-            return new Facts(facts, sources) { Skipped = skipped, ExtensionFrom = baseFacts.All.Count };
+            var merged = new Facts(facts, sources) { Skipped = skipped, ExtensionFrom = baseFacts.All.Count };
+            // plain wordings: the extension's map may name original facts too (that is where they live); ids the merged
+            // set does not have are dropped
+            foreach (var src in new[] { baseFacts._plain, ext._plain })
+                foreach (var kv in src)
+                    if (merged._byId.ContainsKey(kv.Key)) merged._plain[kv.Key] = kv.Value;
+            return merged;
         }
 
         /// <summary>Extension ids dropped by <see cref="Merge"/> because the original already has them ("fact:id" / "source:id").</summary>
@@ -139,6 +152,12 @@ namespace AiOn.Game
             var s = Source(f.SourceId);
             return new FactCitation { Text = f.Text, Source = s != null ? $"{s.Publisher} · {s.Title}" : "", Url = s?.Url ?? "" };
         }
+
+        /// <summary>The fact's plain-language wording (쉬운 한국어), or null when it has none.</summary>
+        public string Plain(string id) => id != null && _plain.TryGetValue(id, out var p) ? p : null;
+
+        /// <summary>Every fact id with a plain wording, and that wording.</summary>
+        public IReadOnlyDictionary<string, string> PlainTexts => _plain;
 
         /// <summary>The fact's text, or null: the <c>Func&lt;string, string&gt; fact</c> the rules take (the original fact(id)?.text).</summary>
         public string Text(string id) => Fact(id)?.Text;

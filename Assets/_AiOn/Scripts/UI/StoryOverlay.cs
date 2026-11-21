@@ -10,6 +10,69 @@ using UnityEngine.UI;
 
 namespace AiOn.UI
 {
+    /// <summary>
+    /// What the shared dialogue box, cards and time skips say aloud in the low-vision profile (pure, EditMode-tested).
+    /// The voice is HostSettings.Speak (Windows System.Speech, ko-KR when installed); each new line cancels the one before.
+    /// Rich-text tags are dropped; choices are numbered as the keys 1-9 pick them.
+    /// </summary>
+    public static class OverlaySpeech
+    {
+        static readonly System.Text.RegularExpressions.Regex Tags = new("<[^>]+>");
+
+        public static string Plain(string text) => string.IsNullOrEmpty(text) ? "" : Tags.Replace(text, "").Trim();
+
+        /// <summary>" 고르세요. 1번, …. 2번, … (고를 수 없음)."</summary>
+        public static string Choices(IReadOnlyList<TalkChoice> choices)
+        {
+            if (choices == null || choices.Count == 0) return "";
+            var sb = new System.Text.StringBuilder(" 고르세요.");
+            for (int i = 0; i < choices.Count; i++)
+            {
+                var c = choices[i];
+                sb.Append(' ').Append(i + 1).Append("번, ").Append(Plain(c.Label));
+                if (c.Disabled) sb.Append(c.Taken ? " (이미 함)" : " (고를 수 없음)");
+                sb.Append('.');
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>One talk line: the speaker (and role) before the first, the numbered choices after the last.</summary>
+        public static string TalkLine(TalkOptions o, string line, bool first, bool withChoices)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (first && !string.IsNullOrEmpty(o?.Speaker))
+            {
+                sb.Append(Plain(o.Speaker));
+                if (!string.IsNullOrEmpty(o.Role)) sb.Append(", ").Append(Plain(o.Role));
+                sb.Append(". ");
+            }
+            sb.Append(Plain(line));
+            if (withChoices) sb.Append(Choices(o?.Choices));
+            return sb.ToString();
+        }
+
+        /// <summary>A card: its kind, title, meta, body and the buttons.</summary>
+        public static string Card(string kindLabel, CardOptions o, IReadOnlyList<CardAction> actions)
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(kindLabel)) parts.Add(kindLabel);
+            if (!string.IsNullOrEmpty(o?.Title)) parts.Add(Plain(o.Title));
+            if (!string.IsNullOrEmpty(o?.Meta)) parts.Add(Plain(o.Meta));
+            if (o?.Body != null) foreach (var b in o.Body) if (!string.IsNullOrEmpty(b)) parts.Add(Plain(b));
+            var said = string.Join(". ", parts.ConvertAll(p => p.TrimEnd('.')));
+            if (actions != null && actions.Count > 0)
+            {
+                var labels = new List<string>(actions.Count);
+                foreach (var a in actions) labels.Add(Plain(a.Label));
+                said += ". 버튼: " + string.Join(", ", labels) + ".";
+            }
+            return said;
+        }
+
+        /// <summary>A time-skip line: where the clock goes before the first line.</summary>
+        public static string Skip(string to, string line, bool first) => (first ? Plain(to) + ". " : "") + Plain(line);
+    }
+
     /// <summary>Keyboard focus on a card's actions (pure, EditMode-tested).</summary>
     public static class CardFocus
     {
@@ -144,6 +207,7 @@ namespace AiOn.UI
             _canvas.transform.SetParent(transform, false);
             _root = (RectTransform)_canvas.transform;
             Build();
+            CompanionPanel.Ensure(); // 도우미 모드 (shows itself only while the setting is on)
             Hide(); // the whole HUD waits for the Director's Hud.Show() (original hud.js: .hud starts hidden)
         }
 
@@ -592,6 +656,7 @@ namespace AiOn.UI
         {
             var key = label != null && Labels.ContainsKey(label) ? label : "self";
             var (tagText, tagColor) = Labels[key];
+            text = EasyKorean.Of(text); // 쉬운 한국어: the plain wording when there is one
             // At most two official notices on screen: the oldest one makes way.
             _toastLabels.Clear();
             for (int i = 0; i < _toasts.childCount; i++) _toastLabels.Add(_toasts.GetChild(i).name);
@@ -620,6 +685,7 @@ namespace AiOn.UI
             int token = ++_captionToken;
             _caption.SetActive(!string.IsNullOrEmpty(text));
             _captionSpeaker.text = speaker ?? "";
+            text = EasyKorean.Of(text);
             _captionText.text = text ?? "";
             int wait = ms ?? Math.Min(7000, 1500 + (text?.Length ?? 0) * 60);
             await Wait(wait / 1000f);
@@ -630,6 +696,9 @@ namespace AiOn.UI
 
         public void SetObjective(string title, string body, IReadOnlyList<ObjectiveStep> steps)
         {
+            Companion.SetObjective(title, body, steps); // 도우미 모드's hint reads the goal as the story set it
+            _objectiveEasy = EasyKorean.On;
+            title = EasyKorean.Of(title); body = EasyKorean.Of(body); steps = EasyKorean.Steps(steps);
             _objective.SetActive(!string.IsNullOrEmpty(title) && !_hidden);
             _objTitle.text = title ?? "";
             _objBody.text = body ?? "";
@@ -795,9 +864,14 @@ namespace AiOn.UI
             _fade.color = new Color(0, 0, 0, to);
         }
 
+        bool _objectiveEasy;
+
         void Update()
         {
             float now = Time.unscaledTime, dt = Time.unscaledDeltaTime;
+            // 쉬운 한국어 switched in the settings: the goal on screen is shown again in the new wording at once
+            if (_objectiveEasy != EasyKorean.On && Companion.ObjectiveTitle != null)
+                SetObjective(Companion.ObjectiveTitle, Companion.ObjectiveBody, Companion.ObjectiveSteps);
             _hurtLevel = Mathf.MoveTowards(_hurtLevel, 0, dt * 0.8f);
             _hurt.color = new Color(HurtTint.r, HurtTint.g, HurtTint.b, _hurtLevel * 0.55f);
             // Tension edge: a muted, capped red — at 0.45 a saturated maroon swallowed the dark blackout scenes.
@@ -890,6 +964,18 @@ namespace AiOn.UI
             if (fa != _objFlash.alpha) _objFlash.alpha = fa;
         }
 
+        // ---------- low vision: the dialogue box, cards and time skips read themselves (OverlaySpeech) ----------
+
+        AiOn.Settings.HostSettings _voice;
+
+        /// <summary>Says this through the host's voice; HostSettings.Speak is silent outside the low-vision profile.</summary>
+        void Read(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            if (!_voice) _voice = FindFirstObjectByType<AiOn.Settings.HostSettings>();
+            if (_voice) _voice.Speak(text);
+        }
+
         static async Task Wait(float seconds)
         {
             float end = Time.unscaledTime + seconds;
@@ -929,6 +1015,7 @@ namespace AiOn.UI
         /// <summary>The talk box sized to its line (140 to 300 px), at the bottom: the centre stays free for the speaker.</summary>
         async Task<string> TalkBody(TalkOptions o)
         {
+            o = EasyKorean.Talk(o); // 쉬운 한국어: lines and choices as shown (the ids are the same)
             var lines = new List<string>();
             foreach (var l in o.Lines ?? new List<string>()) if (!string.IsNullOrEmpty(l)) lines.Add(l);
             if (lines.Count == 0) lines.Add("…");
@@ -958,10 +1045,15 @@ namespace AiOn.UI
                     box.sizeDelta = new Vector2(TalkWidth, Mathf.Clamp(lineTop + lh + 30, TalkMinH, TalkMaxH));
                     count.text = lines.Count > 1 ? $"{i + 1} / {lines.Count}" : o.Progress ?? "";
                     bool last = i == lines.Count - 1;
+                    Read(OverlaySpeech.TalkLine(o, lines[i], i == 0, last && hasChoices)); // low vision: each line as it shows
                     if (last && hasChoices) break;
                     await Advance();
                 }
                 if (!hasChoices) return null;
+                // 도우미 모드: a judgement stops for the pair to talk it over before the choices come up (once per
+                // judgement, not on each pass of a loop that asks it again; only the choices the player can still pick)
+                if (IsJudgement(o.Speaker) || o.Role == "판단")
+                    await CompanionPanel.Discuss(lines[lines.Count - 1], Companion.OpenChoices(o.Choices));
                 return await Choose(box, o.Choices);
             }
             finally { Destroy(box.gameObject); }
@@ -1072,6 +1164,7 @@ namespace AiOn.UI
         /// </summary>
         public async Task<string> Card(CardOptions o)
         {
+            o = EasyKorean.Card(o); // 쉬운 한국어
             var actions = o.Actions != null && o.Actions.Count > 0 ? o.Actions : new List<CardAction> { new("ok", "확인", true) };
             bool decision = o.Kind == "decision";
             bool hints = actions.Exists(a => !string.IsNullOrEmpty(a.Hint));
@@ -1088,6 +1181,7 @@ namespace AiOn.UI
             UiKit.Label("Title", box, o.Title ?? "", decision ? 42 : 34, UiKit.Ink, style: FontStyle.Bold);
             if (!string.IsNullOrEmpty(o.Meta)) UiKit.Label("Meta", box, o.Meta, 20, UiKit.Dim);
             foreach (var p in o.Body ?? new List<string>()) if (!string.IsNullOrEmpty(p)) UiKit.Label("Body", box, p, 23, UiKit.Ink);
+            Read(OverlaySpeech.Card(string.IsNullOrEmpty(o.Kind) ? null : KindLabel(o.Kind), o, actions)); // low vision: the whole card
             if (decision) UiKit.Height(UiKit.Rect("Gap", box), 10); // 14 + 10 = 24 px before the choice
             // Action buttons in rows that wrap inside the card (six experience modes do not fit on one line).
             // One line right-aligned when they fit; otherwise an even grid (six modes: 3 + 3 of equal width, centred) so a
@@ -1156,6 +1250,12 @@ namespace AiOn.UI
             PaintFocus();
             try
             {
+                if (decision && Companion.Offered && Companion.CardDiscusses(o))
+                {
+                    // 도우미 모드: talk it over first (the card stays behind, its buttons wait)
+                    await CompanionPanel.Discuss(o.Title, actions.ConvertAll(a => string.IsNullOrEmpty(a.Hint) ? a.Label : a.Label + " (" + a.Hint + ")"), atBottom: true);
+                    armAt = Time.unscaledTime + CardFocus.ArmSeconds;
+                }
                 var primaryAction = actions.Find(a => a.Primary) ?? actions[0];
                 while (!tcs.Task.IsCompleted)
                 {
@@ -1183,7 +1283,7 @@ namespace AiOn.UI
         static string KindLabel(string kind) => kind switch
         {
             // the original ui/dialog.js KIND table; anything else shows as info. "decision" is the port's choice card.
-            "alert" => "경보", "news" => "뉴스", "notice" => "안내문", "sms" => "문자", "decision" => "선택", "record" => "기록 카드", _ => "알아 둘 것",
+            "alert" => "경보", "news" => "뉴스", "notice" => "안내문", "sms" => "문자", "decision" => "선택", "record" => "기록 카드", "anatomy" => "루머 해부", _ => "알아 둘 것",
         };
 
         /// <summary>
@@ -1228,7 +1328,8 @@ namespace AiOn.UI
                     contRt.anchoredPosition = new Vector2(0, ys[3]);
                 }
                 if (text == null || text.Count == 0) { Layout(); await SkipLine("", fill); return; }
-                foreach (var t in text) { body.text = t; Layout(); await SkipLine(t, fill); }
+                bool firstLine = true;
+                foreach (var raw in text) { var t = EasyKorean.Of(raw); body.text = t; Layout(); Read(OverlaySpeech.Skip(to, t, firstLine)); firstLine = false; await SkipLine(t, fill); }
             }
             finally { Destroy(shade.gameObject); }
         }

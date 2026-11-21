@@ -18,7 +18,13 @@ namespace AiOn.UI
         float _normal = 1f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { s_inst = null; s_count = 0; }
+        static void ResetStatics() { s_inst = null; s_count = 0; Began = null; Ended = null; }
+
+        /// <summary>A moment started (the first of nested ones): its topic ("fire", "report"... from a screen's own
+        /// judgement; null from the overlay's talk and cards, which show 도우미 모드's card themselves). CompanionPanel listens.</summary>
+        public static event Action<string> Began;
+        /// <summary>The last moment ended.</summary>
+        public static event Action Ended;
 
         /// <summary>Time scale at progress k (0 = the scale before, 1 = slowed), eased (pure; tested).</summary>
         public static float ScaleAt(float normal, float k) => Mathf.Lerp(normal, Mathf.Min(normal, SlowScale), HudMotion.OutCubic(k));
@@ -27,7 +33,7 @@ namespace AiOn.UI
         public static bool Active => s_count > 0;
 
         /// <summary>Starts a moment; dispose the result to end it. Does nothing outside play mode.</summary>
-        public static IDisposable Begin()
+        public static IDisposable Begin(string topic = null)
         {
             if (!Application.isPlaying) return null;
             if (!s_inst)
@@ -41,6 +47,7 @@ namespace AiOn.UI
                 s_inst._normal = Time.timeScale > 0.01f ? Time.timeScale : 1f;
                 AiOn.Rendering.AtmosphereDirector.Focus(true);
                 UiSound.Play("radio");
+                try { Began?.Invoke(topic); } catch (Exception e) { Debug.LogException(e); }
             }
             return new Handle();
         }
@@ -48,7 +55,11 @@ namespace AiOn.UI
         static void End()
         {
             if (s_count <= 0) return;
-            if (--s_count == 0) AiOn.Rendering.AtmosphereDirector.Focus(false);
+            if (--s_count == 0)
+            {
+                AiOn.Rendering.AtmosphereDirector.Focus(false);
+                try { Ended?.Invoke(); } catch (Exception e) { Debug.LogException(e); }
+            }
         }
 
         /// <summary>Ends every moment at once (the overlay torn down mid-choice: its awaits never resume).</summary>

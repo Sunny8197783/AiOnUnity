@@ -49,11 +49,11 @@ namespace AiOn.UI
             return null;
         }
 
-        protected override object EscapeResult() => "close";
+        protected override object EscapeResult() => _more ? null : "close";
 
         protected override void Build()
         {
-            var body = Terminal.Frame(Window, "생존 가이드 · 상황별 행동 요령", "긴급 재난 단말기", Terminal.Amber);
+            var body = Terminal.Frame(Window, "생존 가이드 · 상황별 행동요령", "긴급 재난 단말기", Terminal.Amber);
             float bw = W - Terminal.Inset * 2, bh = H - Terminal.Inset * 2 - Terminal.HeaderH - 2;
             const float pad = 28, gap = 16, top = 58, foot = 76;
 
@@ -74,7 +74,22 @@ namespace AiOn.UI
 
             var close = Terminal.Button(body, "닫기  ·  Esc", Terminal.Amber, true);
             UiKit.At((RectTransform)close.transform, bw - pad - 240, bh - foot + 16, 240, 48);
-            close.onClick.AddListener(() => Finish("close"));
+            close.onClick.AddListener(() => { if (!_more) Finish("close"); });
+            // 더 알아보기: the archive, the town's people and the drill calendar, without leaving the run
+            var more = Terminal.Button(body, "더 알아보기 · 기록관", Terminal.Amber, false);
+            UiKit.At((RectTransform)more.transform, bw - pad - 240 - 16 - 280, bh - foot + 16, 280, 48);
+            more.onClick.AddListener(OpenMore);
+        }
+
+        bool _more;
+
+        async void OpenMore()
+        {
+            if (_more) return;
+            _more = true;
+            try { await ArchiveUi.OpenFromGame(); }
+            catch (System.Exception e) { Debug.LogException(e); }
+            finally { _more = false; }
         }
 
         static RectTransform Card(Transform parent, GuideCard card, float w, float h)
@@ -99,7 +114,7 @@ namespace AiOn.UI
             float y = 90, textW = w - 40 - 34;
             if (card.Lines.Count == 0)
             {
-                var none = UiKit.Label("None", rt, "이 게임이 확인한 공식 자료에는 이 상황의 행동 요령이 아직 없습니다. 지어낸 문장으로 채우지 않고 비워 둡니다.", 17, Terminal.Muted);
+                var none = UiKit.Label("None", rt, "이 게임이 확인한 공식 자료에는 이 상황의 행동요령이 아직 없습니다. 지어낸 문장으로 채우지 않고 비워 둡니다.", 17, Terminal.Muted);
                 UiKit.At(none.rectTransform, 20, y, w - 40, 80);
                 return rt;
             }
@@ -164,16 +179,107 @@ namespace AiOn.UI
         int _shownPct; // the figure _rateText shows (it starts at "0%")
         readonly List<(RectTransform fill, float value)> _bars = new();
 
+        GameState _g;
+        Text _status;
+
         public static async Task<JToken> Open(JObject _)
         {
             var host = UnityStoryHost.Instance;
-            var data = LearningReport.Build(host ? host.getState?.Invoke() : null);
+            var g = host ? host.getState?.Invoke() : null;
+            var data = LearningReport.Build(g);
             UiSound.Play("report");
-            await Show<ReportScreen>(s => s._d = data, W, H);
+            await Show<ReportScreen>(s => { s._d = data; s._g = g; }, W, H);
             return null;
         }
 
-        protected override object EscapeResult() => "close";
+        static StoryDirector Director()
+        {
+            var runner = Object.FindFirstObjectByType<StoryRunner>();
+            return runner ? runner.Director : null;
+        }
+
+        /// <summary>"story", "demo" (장면 바로가기) or "teacher": what kind of run the export comes from.</summary>
+        static string RunMode()
+        {
+            var d = Director();
+            return d == null ? "story" : d.Ctx.TeacherRun ? "teacher" : d.DemoRun ? "demo" : "story";
+        }
+
+        /// <summary>
+        /// 플레이테스트 기록 내보내기: this run as JSON + CSV under persistentDataPath/exports. Its own status line says where,
+        /// by the file name only (the full path holds the computer's account name); the disclaimer line stays.
+        /// </summary>
+        void Export()
+        {
+            try
+            {
+                var data = PlaytestExport.Build(_g, RunMode(), System.DateTime.UtcNow, seed: Director()?.ExportSeed);
+                string path = PlaytestExport.Write(data, System.IO.Path.Combine(Application.persistentDataPath, PlaytestExport.Folder), System.DateTime.Now);
+                if (_status) { _status.text = PlaytestExport.SavedLine(path); _status.color = Terminal.Emerald; }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                if (_status) { _status.text = "저장하지 못했습니다: " + e.GetType().Name; _status.color = Terminal.Red; }
+            }
+        }
+
+        static Color ChangeColor(string change) => change switch
+        {
+            "learned" => Terminal.Emerald,
+            "kept" or "postRight" => Terminal.Sky,
+            "slipped" => Terminal.Amber,
+            "preOnly" => Terminal.Muted,
+            _ => Terminal.Red,
+        };
+
+        static string Mark(string state) => state switch { "right" => "○", "wrong" => "✕", "unsure" => "?", _ => "–" };
+
+        /// <summary>The quiz plate's height: the rows only once there is a post quiz (before it, the pre answers stay unmarked).</summary>
+        static float QuizPlateH(QuizComparison q) => q.HasPost ? 46 + q.Rows.Count * 28 + 38 : 84;
+
+        /// <summary>
+        /// 사전 → 사후 퀴즈 plate: the headline, then one row per concept (○/✕/? before → after, and the change). With only
+        /// the pre quiz (skipped at the ending, or a class whose post quiz comes after it) the headline and one line, no
+        /// marks: the pre quiz promised its answers only with the post quiz.
+        /// </summary>
+        void QuizPlate(Transform parent, float x, float y, float w, float h)
+        {
+            var q = _d.Quiz;
+            var p = Plate(parent, "사전 → 사후 퀴즈", x, y, w, h);
+            bool postLater = RunMode() == "teacher";
+            if (!q.HasPost)
+            {
+                UiKit.At(UiKit.Label("Head", p, QuizLogic.Headline(q, postLater), 17, Terminal.Ink, TextAnchor.MiddleLeft, FontStyle.Bold).rectTransform, 20, 44, w - 40, 24);
+                return;
+            }
+            UiKit.At(UiKit.Label("Head", p, QuizLogic.Headline(q, postLater), 18, Terminal.Ink, TextAnchor.MiddleRight, FontStyle.Bold).rectTransform, 200, 12, w - 220, 24);
+            float ry = 46;
+            foreach (var row in q.Rows)
+            {
+                Color c = ChangeColor(row.Change);
+                UiKit.At(UiKit.Label("Concept", p, row.Label, 17, Terminal.Ink, TextAnchor.MiddleLeft).rectTransform, 20, ry, w - 360, 24);
+                UiKit.At(UiKit.Label("Marks", p, $"{Mark(row.Pre)} → {Mark(row.Post)}", 17, Terminal.Muted, TextAnchor.MiddleCenter).rectTransform, w - 340, ry, 90, 24);
+                var chip = UiKit.Box("Chip", p, ScreenDecor.Over(Terminal.Plate, c, 0.14f)); HudTheme.Round(chip); // opaque: a translucent tint reads too strong
+                UiKit.At(chip.rectTransform, w - 236, ry, 216, 24);
+                UiKit.Fill(UiKit.Label("T", chip.transform, row.ChangeText, 15, c, TextAnchor.MiddleCenter, FontStyle.Bold).rectTransform);
+                ry += 28;
+            }
+            UiKit.At(UiKit.Label("Note", p, "같은 개념을 처음과 끝에 다른 문장으로 물었습니다 · ○ 맞음 ✕ 틀림 ? 모름", 14, Terminal.Muted, TextAnchor.MiddleLeft).rectTransform, 20, h - 30, w - 40, 20);
+        }
+
+        protected override object EscapeResult() => _homePrep ? null : "close";
+
+        bool _homePrep;
+
+        async void OpenHomePrep()
+        {
+            if (_homePrep) return;
+            _homePrep = true;
+            try { await HomePrepScreen.Open(null); }
+            catch (System.Exception e) { Debug.LogException(e); }
+            finally { _homePrep = false; }
+        }
 
         static Color RateColor(float rate) => rate >= 0.75f ? Terminal.Emerald : rate >= 0.5f ? Terminal.Amber : Terminal.Red;
 
@@ -206,7 +312,7 @@ namespace AiOn.UI
             float lx = pad, mx = lx + lw + gap, rx = mx + mw + gap;
 
             // ---- left: the headline, the golden time, the final condition ----
-            var rateP = Plate(body, "행동 요령 준수율", lx, top, lw, 330);
+            var rateP = Plate(body, "행동요령 준수율", lx, top, lw, 330);
             var gaugeGo = new GameObject("Gauge", typeof(RectTransform), typeof(CanvasRenderer));
             gaugeGo.transform.SetParent(rateP, false);
             _gauge = gaugeGo.AddComponent<TerminalGauge>();
@@ -214,7 +320,7 @@ namespace AiOn.UI
             UiKit.At(_gauge.rectTransform, (lw - 210) / 2, 48, 210, 210);
             _rateText = UiKit.Label("Rate", rateP, _d.Total == 0 ? "–" : "0%", 56, Terminal.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);
             UiKit.At(_rateText.rectTransform, (lw - 210) / 2, 48, 210, 210);
-            string of = _d.Total == 0 ? "판정할 행동 기록이 아직 없습니다" : $"판정한 행동 {_d.Total}개 중 {_d.Ok}개가 행동 요령과 같았습니다";
+            string of = _d.Total == 0 ? "판정할 행동 기록이 아직 없습니다" : $"판정한 행동 {_d.Total}개 중 {_d.Ok}개가 행동요령과 같았습니다";
             UiKit.At(UiKit.Label("Of", rateP, of, 17, Terminal.Muted, TextAnchor.MiddleCenter).rectTransform, 12, 270, lw - 24, 24);
             UiKit.At(UiKit.Label("Note", rateP, "생존 확률이 아니라, 기록된 행동의 비율입니다", 14, Terminal.Tint(Terminal.Muted, 0.75f), TextAnchor.MiddleCenter).rectTransform, 12, 296, lw - 24, 20);
 
@@ -275,10 +381,17 @@ namespace AiOn.UI
                 ay += 34;
             }
 
-            // ---- right: the judged actions ----
+            // ---- right: 사전 → 사후 퀴즈 (when the run has one), then the judged actions ----
+            float ly = top, lh = colH;
+            if (_d.Quiz != null)
+            {
+                float qh = QuizPlateH(_d.Quiz);
+                QuizPlate(body, rx, top, rw, qh);
+                ly += qh + gap; lh -= qh + gap;
+            }
             int bad = _d.Total - _d.Ok;
-            var listP = Plate(body, $"대처 항목     O {_d.Ok}  ·  X {bad}", rx, top, rw, colH);
-            var col = DebriefUi.Scroll(listP, 12, 44, rw - 24, colH - 56, out _, 8);
+            var listP = Plate(body, $"대처 항목     O {_d.Ok}  ·  X {bad}", rx, ly, rw, lh);
+            var col = DebriefUi.Scroll(listP, 12, 44, rw - 24, lh - 56, out _, 8);
             var facts = TerminalData.Facts;
             int n = 0;
             foreach (var row in _d.Rows.OrderBy(r => r.Ok))
@@ -302,7 +415,17 @@ namespace AiOn.UI
             var close = Terminal.Button(body, "닫기  ·  Esc", Terminal.Emerald, true);
             UiKit.At((RectTransform)close.transform, bw - pad - 240, bh - foot + 16, 240, 48);
             close.onClick.AddListener(() => Finish("close"));
-            UiKit.At(UiKit.Label("Fiction", body, "가상의 체험 기록입니다. 실제 상황에서는 정부와 지자체의 안내를 따르세요.", 15, Terminal.Muted, TextAnchor.MiddleLeft).rectTransform, pad, bh - foot + 28, 900, 24);
+            var export = Terminal.Button(body, "기록 내보내기", Terminal.Emerald, false);
+            UiKit.At((RectTransform)export.transform, bw - pad - 240 - 16 - 240, bh - foot + 16, 240, 48);
+            export.onClick.AddListener(Export);
+            // 우리 집 안전 준비 (비상연락카드, 안전 점검표, 안전체험관): from the game to the player's own home
+            var home = Terminal.Button(body, "우리 집 안전 준비", Terminal.Emerald, false);
+            UiKit.At((RectTransform)home.transform, bw - pad - 240 - 16 - 240 - 16 - 240, bh - foot + 16, 240, 48);
+            home.onClick.AddListener(OpenHomePrep);
+            var fiction = UiKit.Label("Fiction", body, "가상의 체험 기록입니다. 실제 상황에서는 정부와 지자체의 안내를 따르세요.", 15, Terminal.Muted, TextAnchor.MiddleLeft);
+            UiKit.At(fiction.rectTransform, pad, bh - foot + 14, bw - pad * 2 - 768, 24);
+            _status = UiKit.Label("Status", body, "", 15, Terminal.Muted, TextAnchor.MiddleLeft);
+            UiKit.At(_status.rectTransform, pad, bh - foot + 40, bw - pad * 2 - 768, 24);
         }
 
         /// <summary>How far the gauge and bars have filled, 0..1, this long after the screen opened (pure; tested).</summary>

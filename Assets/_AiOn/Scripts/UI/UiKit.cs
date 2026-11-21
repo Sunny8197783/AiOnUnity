@@ -97,7 +97,7 @@ namespace AiOn.UI
             var rt = Rect(name, parent);
             var t = rt.gameObject.AddComponent<Text>();
             t.font = Font;
-            t.text = text;
+            t.text = AiOn.Game.EasyKorean.Of(text); // 쉬운 한국어: the plain wording when the mode is on and one exists
             t.fontSize = TextScaler.Register(t, size); // the 글자 크기 setting
             t.color = color;
             t.alignment = align;
@@ -220,7 +220,7 @@ namespace AiOn.UI
             new("Tab", "수첩", "Tab", "수첩", "Tab", "수첩"),
             new("I", "소지품", "I", "소지품", "I", "소지품"),
             new("M", "지도", "M", "지도", "M", "지도"),
-            new("K", "행동요령", "K", "행동 요령 (재난 단말기)", "K", "재난 단말기 — 상황별 행동 요령"),
+            new("K", "행동요령", "K", "행동요령 (재난 단말기)", "K", "재난 단말기 — 상황별 행동요령"),
             new("H", "조작법", "H", "조작법", "H", "이 조작법 다시 보기"),
             new("Esc", "메뉴", "Esc", "이 메뉴", "Esc", "일시정지 · 설정"),
         };

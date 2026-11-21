@@ -30,8 +30,9 @@ namespace AiOn.Tests
         {
             _look = Endure.LookPart; _stops = Escape.NeighbourStops; _traces = Endure.TracesPart; _mountain = Endure.MountainPart;
             Endure.LookPart = null; Escape.NeighbourStops = false; Endure.TracesPart = null; Endure.MountainPart = null;
+            PrebunkScene.Enabled = false; PhoneBattery.Live = false; // 루머 해부 and the battery resource: not in the original
         }
-        [TearDown] public void PutTheStepBack() { Endure.LookPart = _look; Escape.NeighbourStops = _stops; Endure.TracesPart = _traces; Endure.MountainPart = _mountain; }
+        [TearDown] public void PutTheStepBack() { Endure.LookPart = _look; Escape.NeighbourStops = _stops; Endure.TracesPart = _traces; Endure.MountainPart = _mountain; PrebunkScene.Enabled = true; PhoneBattery.Live = true; }
 
         static JObject _golden;
         // Polish pass (port upgrades the original did not have): the wait in the water queue, the knock before 서연's

@@ -147,6 +147,40 @@ namespace AiOn.UI
                     Line(-0.75f, 0.05f, -0.3f, 0.05f, 0.12f, hole); Line(-0.3f, 0.05f, -0.12f, 0.4f, 0.12f, hole);
                     Line(-0.12f, 0.4f, 0.1f, -0.3f, 0.12f, hole); Line(0.1f, -0.3f, 0.28f, 0.05f, 0.12f, hole); Line(0.28f, 0.05f, 0.75f, 0.05f, 0.12f, hole);
                     break;
+                case "card": // a card with a photo square and two lines (비상연락카드)
+                    Box(-0.9f, -0.65f, 0.9f, 0.65f, col); Box(-0.76f, -0.51f, 0.76f, 0.51f, hole);
+                    Box(-0.6f, -0.05f, -0.15f, 0.36f, col); Box(0f, 0.16f, 0.6f, 0.3f, col); Box(0f, -0.12f, 0.6f, 0.02f, col); Box(-0.6f, -0.38f, 0.6f, -0.24f, col);
+                    break;
+                case "book": // an open book (기록관)
+                    Tri(-0.9f, 0.55f, -0.05f, 0.4f, -0.05f, -0.75f, col); Tri(-0.9f, 0.55f, -0.05f, -0.75f, -0.9f, -0.6f, col);
+                    Tri(0.9f, 0.55f, 0.05f, 0.4f, 0.05f, -0.75f, col); Tri(0.9f, 0.55f, 0.05f, -0.75f, 0.9f, -0.6f, col);
+                    Line(-0.72f, 0.22f, -0.22f, 0.15f, 0.08f, hole); Line(-0.72f, -0.08f, -0.22f, -0.15f, 0.08f, hole);
+                    Line(0.22f, 0.15f, 0.72f, 0.22f, 0.08f, hole); Line(0.22f, -0.15f, 0.72f, -0.08f, 0.08f, hole);
+                    break;
+                case "pin": // a map pin (연무동 지도)
+                    Disc(0f, 0.28f, 0.58f, col); Tri(-0.5f, 0.02f, 0.5f, 0.02f, 0f, -0.92f, col); Disc(0f, 0.28f, 0.24f, hole);
+                    break;
+                case "calendar": // a wall calendar (훈련 달력)
+                    Box(-0.85f, -0.8f, 0.85f, 0.62f, col); Box(-0.72f, -0.67f, 0.72f, 0.28f, hole);
+                    Box(-0.52f, 0.5f, -0.34f, 0.9f, col); Box(0.34f, 0.5f, 0.52f, 0.9f, col);
+                    for (int gy = 0; gy < 2; gy++)
+                        for (int gx = 0; gx < 3; gx++)
+                        {
+                            float x0 = -0.58f + gx * 0.42f, y0 = 0.02f - gy * 0.36f;
+                            Box(x0, y0, x0 + 0.3f, y0 + 0.2f, col);
+                        }
+                    break;
+                case "phone": // a handset (신고 번호 카드)
+                    Box(-0.46f, -0.88f, 0.46f, 0.88f, col); Box(-0.34f, -0.6f, 0.34f, 0.66f, hole); Disc(0f, -0.74f, 0.09f, hole);
+                    break;
+                case "lock":
+                    Line(-0.38f, 0.1f, -0.38f, 0.5f, 0.17f, col); Line(0.38f, 0.1f, 0.38f, 0.5f, 0.17f, col);
+                    Line(-0.45f, 0.58f, 0.45f, 0.58f, 0.17f, col); Box(-0.62f, -0.82f, 0.62f, 0.14f, col);
+                    Disc(0f, -0.25f, 0.15f, hole); Box(-0.06f, -0.6f, 0.06f, -0.3f, hole);
+                    break;
+                case "person":
+                    Disc(0f, 0.42f, 0.34f, col); Disc(0f, -0.62f, 0.62f, col); Box(-0.9f, -0.95f, 0.9f, -0.62f, hole);
+                    break;
                 case "clock":
                     Disc(0, 0, 0.9f, col); Disc(0, 0, 0.68f, hole); Line(0, 0, 0, 0.5f, 0.16f, col); Line(0, 0, 0.36f, -0.12f, 0.16f, col);
                     break;

@@ -84,8 +84,12 @@ namespace AiOn.Story
                 await ctx.Goto("apartment", "home", "interiorDark");
                 ctx.Refresh();
                 var how = await CampFood(ctx);
-                if (how == "radio") await NoticeCard(ctx, how);
-                else if (how == null)
+                if (how != null)
+                {
+                    if (how == "radio") await NoticeCard(ctx, how);
+                    await ctx.Modal(() => PrebunkScene.Show(ctx, "camp_food")); // 루머 해부 (checked on the radio or at the board)
+                }
+                else
                 {
                     var memo = Rumors.Posts(G, "camp_food").First(p => p.Key == "seoyeon");
                     await ctx.Say(memo.From, new[] { "현관문 틈에 서연이 끼워 둔 메모가 있다.", memo.Text, "희망하는 주민은 생활문화센터 임시 거처로 옮길 수 있다고 한다. 권고이고, 명령은 아니라고 했다." }, null, memo.Meta);
@@ -237,6 +241,7 @@ namespace AiOn.Story
             {
                 G.SetKnow("misled", null); GameRules.RecordEvent(G, "rumor_corrected", new JObject { ["id"] = "camp_food" });
                 await ctx.Caption("점심과 저녁에 배식 줄이 섰다. 급식이 끊겼다던 SNS 글과는 달랐다.", null, 3800);
+                await ctx.Modal(() => PrebunkScene.Show(ctx, "camp_food")); // 루머 해부
             }
             // People get to their feet; the fire is shown before the drill asks what to do about it.
             const string fireLine = "저녁. 주차장 구석에서 누군가 휴대용 버너로 라면을 끓이다 쌓아 둔 상자에 불이 옮겨 붙었다. 불길이 천장 배관에 닿는다.";
@@ -403,6 +408,7 @@ namespace AiOn.Story
             {
                 @checked = true; G.SetKnow("evacClosuresKnown", true); Rumors.Verify(G, "evac_shortcut");
                 ctx.Toast($"라디오: 오늘 통제 구간에 {shortcut}도 들어 있다. 풀렸다는 글은 사실이 아니었다.", "official", 5200);
+                await ctx.Modal(() => PrebunkScene.Show(ctx, "evac_shortcut")); // 루머 해부
             }
             bool noted = false, said = false, handed = false;
             // The last choice is yours: the bus is one way out, not the answer. Each path ends the story differently.
@@ -445,6 +451,7 @@ namespace AiOn.Story
                 {
                     @checked = true; Rumors.Verify(G, "evac_shortcut");
                     if (claim.Taken) ctx.Toast($"{shortcut}은 오늘도 통제 중이다. 단체방 글과 달랐다.", "self", 4800);
+                    await PrebunkScene.Show(ctx, "evac_shortcut"); // 루머 해부 (a roam handler: already modal)
                 }
                 Show();
                 return null;
@@ -497,7 +504,7 @@ namespace AiOn.Story
                         Speaker = "박영수 소장", Role = "관리사무소", Lines = { site.Text, "저는 남아요. 건물 지키는 사람도 있어야죠. 조심히 가요, 302호." },
                         Choices = Choices(("go", "소장님도 조심하세요"), ("stay", "저도 남겠습니다. 같이 지켜요")),
                     });
-                    if (!@checked) { @checked = true; Rumors.Verify(G, "evac_shortcut"); Show(); }
+                    if (!@checked) { @checked = true; Rumors.Verify(G, "evac_shortcut"); Show(); await PrebunkScene.Show(ctx, "evac_shortcut"); }
                     // Only staying is something 정민 does for the building; the manager's own work is not 정민's help (F7).
                     if (pick == "stay") { GameRules.RecordEvent(G, "help", new JObject { ["who"] = "manager", ["what"] = "박 소장과 함께 남아 건물을 지키기로 했다" }); return "stay"; }
                     if (!handed && HomeOf(G, Water) >= 2 && HomeOf(G, Food) >= 2)
@@ -644,12 +651,38 @@ namespace AiOn.Story
             await ctx.Engine.FadeTo(1, 1.0); // a second of black between the last shot and the ending sheet
             if (ctx.RecordRun != null) await ctx.RecordRun(); // the ending gallery (and the records) count the run once its closing scene has played
             var record = Debrief.EndingRecord(ctx.Rules, G, id => ctx.Facts.Text(id), id => ctx.Facts.SourceId(id));
-            var picked = await ctx.Modal(() => ctx.Ui.Open("ending", new JObject
-            {
-                ["record"] = JObject.FromObject(record), ["sources"] = JArray.FromObject(ctx.Facts.Sources),
-            }));
+            var picked = await EndingDocument(ctx, record);
             _ = ctx.Engine.FadeTo(0, 0.4);
             return picked;
+        }
+
+        /// <summary>
+        /// The ending document lands first (its silent hold), then the 사후 퀴즈 is offered once (StoryContext.PostQuiz,
+        /// skippable): its own footer button, or the first press of 학습 리포트 / 메인 메뉴 / 처음부터 다시 while it is still
+        /// pending. After the quiz the document comes back (a short hold), and 학습 리포트 opens with the comparison in it;
+        /// 메인 메뉴 / 처음부터 다시 go on to what was pressed.
+        /// </summary>
+        public static async Task<JToken> EndingDocument(StoryContext ctx, object record)
+        {
+            bool offered = false, again = false, report = false;
+            while (true)
+            {
+                bool pending = !offered && ctx.PostQuiz != null && ctx.PostQuizPending != null && ctx.PostQuizPending();
+                var o = new JObject { ["record"] = JObject.FromObject(record), ["sources"] = JArray.FromObject(ctx.Facts.Sources) };
+                if (pending) o["postQuiz"] = true;
+                if (again) o["again"] = true;
+                if (report) o["openReport"] = true;
+                var picked = await ctx.Modal(() => ctx.Ui.Open("ending", o));
+                string p = picked?.Type == JTokenType.String ? (string)picked : null;
+                if (pending && (p == "quiz" || p == "report" || p == "menu" || p == "restart"))
+                {
+                    offered = true;
+                    await ctx.PostQuiz();
+                    if (p == "menu" || p == "restart") return picked;
+                }
+                else if (p != "quiz" && p != "report") return picked;
+                again = true; report = p == "report";
+            }
         }
     }
 }

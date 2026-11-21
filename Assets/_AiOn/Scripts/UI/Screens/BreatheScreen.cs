@@ -50,7 +50,7 @@ namespace AiOn.UI
             ["played"] = _b != null && _b.Breaths > 0, ["breaths"] = _b?.Breaths ?? 0, ["mode"] = _b != null && _b.Toggle ? "toggle" : "hold", ["short"] = _b?.Short ?? 0,
         };
 
-        string Fact(string id) => _o?["facts"]?[id]?["text"]?.ToString();
+        string Fact(string id) => EasyKorean.Of(_o?["facts"]?[id]?["text"]?.ToString()); // 쉬운 한국어
         string Source(string id) => _o?["facts"]?[id]?["source"]?.ToString();
         bool B(string k) => _o[k]?.Type == JTokenType.Boolean && (bool)_o[k];
 

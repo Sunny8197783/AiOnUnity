@@ -170,6 +170,9 @@ namespace AiOn.UI
             var made = new List<Button>();
             float x = WindowW - 40, y = WindowH - 92;
             var widths = buttons.Select(b => DebriefUi.ButtonWidth(b.label)).ToArray();
+            // a long row (the ending document with its 사후 퀴즈 button) narrows its buttons to stay inside the window
+            float room = WindowW - 80 - 12 * (buttons.Length - 1), want = widths.Sum();
+            if (want > room) for (int i = 0; i < widths.Length; i++) widths[i] *= room / want;
             float total = widths.Sum() + 12 * (buttons.Length - 1);
             x -= total;
             for (int i = 0; i < buttons.Length; i++)
@@ -219,6 +222,9 @@ namespace AiOn.UI
             if (!this) return;
             // Not on the frame that opened the screen: the Enter that picked 엔딩 기록 / 라운지 in the menu must not press 닫기.
             if (Time.unscaledTime - OpenedAt < 0.2f) return;
+            // Only the top screen takes keys: the ending document stays open under the learning report and 우리 집 안전
+            // 준비, and a space typed in the family card must not press its focused 처음부터 다시.
+            if (!IsTop) return;
             Keys.Tick();
             if (EscCloses && Time.unscaledTime - OpenedAt > 0.2f && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) Finish(null);
         }
@@ -330,21 +336,29 @@ namespace AiOn.UI
     }
 
     /// <summary>
-    /// ending(record, sources) -> 'restart' | 'menu'. Options: { record, sources } or the record itself with a
+    /// ending(record, sources, postQuiz?, again?, openReport?) -> 'restart' | 'menu' (| 'quiz' | 'report' with postQuiz). Options: { record, sources } or the record itself with a
     /// sources array beside its fields. The printable 생존 기록 on paper, then 결과 복사 (when there is a share text),
     /// 인쇄하기 (saves the document as a text file and opens it for printing), 메인 메뉴, 처음부터 다시 (focused).
     /// </summary>
     public class EndingScreen : DebriefScreenBase
     {
         EndingDocView _v;
+        /// <summary>postQuiz: the run still has its 사후 퀴즈 (Evac.EndingDocument): a '사후 퀴즈' button (focused), and
+        /// 학습 리포트 hands "report" back so the quiz is offered first. again: shown once more after the quiz (a short
+        /// hold). openReport: opens the learning report as soon as the buttons are live.</summary>
+        bool _postQuiz, _again, _openReport;
 
         public static async Task<JToken> Open(JObject options)
         {
             var (record, sources) = DebriefLogic.EndingArgs(options);
             Func<string, string> fact = id => GameSession.Current ? GameSession.Current.Fact(id) : null;
             var view = DebriefLogic.Ending(record, sources, fact, w => $"<b><color={DebriefUi.Rgb(DebriefUi.PaperHead)}>{w}</color></b>");
-            return Result(await Show<EndingScreen>(s => s._v = view, 1320, 1010));
+            bool Flag(string k) => options?[k]?.Type == JTokenType.Boolean && (bool)options[k];
+            bool quiz = Flag("postQuiz"), again = Flag("again"), report = Flag("openReport");
+            return Result(await Show<EndingScreen>(s => { s._v = view; s._postQuiz = quiz; s._again = again; s._openReport = report; }, 1320, 1010));
         }
+
+        float HoldFor => _again ? 0.4f : Hold;
 
         protected override void Build()
         {
@@ -368,10 +382,11 @@ namespace AiOn.UI
             var buttons = new List<(string, bool, bool, Action)>();
             Button copy = null;
             if (!string.IsNullOrEmpty(_v.Share)) buttons.Add(("결과 복사", false, false, () => Copy(copy)));
-            buttons.Add(("학습 리포트", false, false, () => { if (Ready && Time.unscaledTime - OpenedAt >= Hold) _ = ReportScreen.Open(null); }));
+            buttons.Add(("학습 리포트", false, false, () => { if (_postQuiz) Go("report"); else if (Ready && Time.unscaledTime - OpenedAt >= HoldFor) _ = ReportScreen.Open(null); }));
             buttons.Add(("인쇄하기", false, false, Print));
             buttons.Add(("메인 메뉴", false, false, () => Go("menu")));
-            buttons.Add(("처음부터 다시", true, true, () => Go("restart")));
+            buttons.Add(("처음부터 다시", !_postQuiz, !_postQuiz, () => Go("restart")));
+            if (_postQuiz) buttons.Add(("사후 퀴즈 · 1분", true, true, () => Go("quiz")));
             var made = Footer(buttons.ToArray());
             if (!string.IsNullOrEmpty(_v.Share)) copy = made[0];
             // a silent hold on the record before anything can be pressed: the climax lands, then the buttons fade in
@@ -392,10 +407,11 @@ namespace AiOn.UI
             if (!_armed && _buttons != null)
             {
                 float t = Time.unscaledTime - OpenedAt;
-                float a = Mathf.Clamp01((t - Hold) / FadeIn);
+                float a = Mathf.Clamp01((t - HoldFor) / FadeIn);
                 foreach (var b in _buttons) if (b) b.GetComponent<CanvasGroup>().alpha = a;
-                if (t >= Hold) foreach (var b in _buttons) if (b) b.interactable = true;
+                if (t >= HoldFor) foreach (var b in _buttons) if (b) b.interactable = true;
                 if (a >= 1) _armed = true;
+                if (t >= HoldFor && _openReport) { _openReport = false; _ = ReportScreen.Open(null); } // back from the quiz: the report it was asked for
             }
             base.Update();
         }
@@ -424,7 +440,7 @@ namespace AiOn.UI
             if (s.Tail != null) UiKit.Label("Tail", box, s.Tail.Text, 21, s.TailMuted ? DebriefUi.PaperDim : DebriefUi.PaperInk);
         }
 
-        void Go(string id) { if (Ready && Time.unscaledTime - OpenedAt >= Hold) Finish(id); }
+        void Go(string id) { if (Ready && Time.unscaledTime - OpenedAt >= HoldFor) Finish(id); }
 
         void Copy(Button b)
         {

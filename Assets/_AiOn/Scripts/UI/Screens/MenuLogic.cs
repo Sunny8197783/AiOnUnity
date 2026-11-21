@@ -128,6 +128,8 @@ namespace AiOn.UI
             // judge / classroom entry (competition upgrade): prepared states, never the main save
             list.Add(new MenuButton("scenes", "장면 바로가기", ghost: true));
             list.Add(new MenuButton("teacher", "교사용 30분 모드", ghost: true));
+            // 더 알아보기: one entry for the extras (기록관, 연무동 지도와 사람들, 훈련 달력, 우리 집 안전 준비) so the title stays tidy
+            list.Add(new MenuButton(AiOn.Game.Archive.Screen, AiOn.Game.Archive.Heading, ghost: true));
             list.Add(new MenuButton("records", $"도전 과제 {challenges}/{challengeTotal}", ghost: true));
             list.Add(new MenuButton("lounge", "대피소 라운지", ghost: true));
             if (endings > 0) list.Add(new MenuButton("gallery", $"엔딩 기록 {endings}/{AiOn.Game.Endings.All.Count}", ghost: true));
@@ -296,7 +298,12 @@ namespace AiOn.UI
             ["quality"] = "medium", ["volume"] = 0.7, ["mute"] = false, ["captions"] = true, ["reduceMotion"] = false, ["textScale"] = 1,
             ["view"] = "third", ["sensitivity"] = 1, ["minimap"] = true, ["volAmbience"] = 1, ["volEffects"] = 1, ["volUi"] = 1,
             ["profile"] = "none", ["memoryCue"] = true,
+            // competition upgrade (after the original's keys): 쉬운 한국어, 도우미 모드
+            [AiOn.Game.EasyKorean.SettingKey] = false, [AiOn.Game.Companion.SettingKey] = false,
         };
+
+        /// <summary>The left column's last group (competition upgrade): reading and playing together.</summary>
+        public const string TogetherLegend = "쉽게 읽기 · 함께 하기";
 
         public readonly JObject Cur;
         public readonly List<RadioGroup> LeftRadios;
@@ -304,6 +311,8 @@ namespace AiOn.UI
         public readonly RangeDef[] BusRanges;
         public readonly ToggleDef Minimap, Mute;
         public readonly ToggleDef[] AccessToggles;
+        /// <summary>쉬운 한국어 and 도우미 모드 (TogetherLegend, under the experience modes).</summary>
+        public readonly ToggleDef[] TogetherToggles;
 
         /// <summary>Selected radio value per group (null = none checked, like a value no option matches).</summary>
         public readonly Dictionary<string, string> Radio = new();
@@ -350,7 +359,12 @@ namespace AiOn.UI
                 new ToggleDef { Name = "reduceMotion", Label = "움직임 줄이기", Sub = "화면 흔들림, 머리 흔들림, 깜빡임과 전환 효과를 줄입니다." },
                 new ToggleDef { Name = "memoryCue", Label = "기억 알림", Sub = "누군가 내 행동을 기억할 때 짧게 알려 줍니다." },
             };
-            foreach (var t in new[] { Minimap, Mute }.Concat(AccessToggles)) Toggle[t.Name] = UiJs.Truthy(Cur[t.Name]);
+            TogetherToggles = new[]
+            {
+                new ToggleDef { Name = AiOn.Game.EasyKorean.SettingKey, Label = AiOn.Game.EasyKorean.Label, Sub = AiOn.Game.EasyKorean.Sub },
+                new ToggleDef { Name = AiOn.Game.Companion.SettingKey, Label = AiOn.Game.Companion.Label, Sub = AiOn.Game.Companion.Sub },
+            };
+            foreach (var t in new[] { Minimap, Mute }.Concat(AccessToggles).Concat(TogetherToggles)) Toggle[t.Name] = UiJs.Truthy(Cur[t.Name]);
             Toggle["memoryCue"] = !(Cur["memoryCue"]?.Type == JTokenType.Boolean && !(bool)Cur["memoryCue"]); // cur.memoryCue !== false
         }
 
@@ -394,6 +408,7 @@ namespace AiOn.UI
             o["volAmbience"] = Clean(Range["volAmbience"] / 100.0);
             o["volEffects"] = Clean(Range["volEffects"] / 100.0);
             o["volUi"] = Clean(Range["volUi"] / 100.0);
+            foreach (var t in TogetherToggles) o[t.Name] = Toggle[t.Name];
             return o;
         }
 

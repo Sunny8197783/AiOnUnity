@@ -370,6 +370,7 @@ namespace AiOn.Tests
             Assert.That(r.Host.Saves, Is.EqualTo(0));
             Assert.That(r.Store.Get(StoryDirector.GalleryKey), Is.Null, "no ending recorded");
             Assert.That(r.Store.Get(StoryDirector.RecordsKey), Is.Null, "no records");
+            Assert.That(r.Store.Get(AiOn.Game.Archive.Key), Is.Null, "no 기록관 unlocks (더 알아보기 keeps the player's own runs only)");
             Assert.That(r.Store.Get(SceneSelect.SaveKey), Is.EqualTo(""), "the demo slot is cleared after");
             Assert.That(r.D.DemoRun, Is.False);
             Assert.That(r.D.G, Is.Null);

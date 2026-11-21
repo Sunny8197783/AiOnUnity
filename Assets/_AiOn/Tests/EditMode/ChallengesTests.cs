@@ -63,6 +63,24 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void Info_first_needs_the_blackout_radio_and_the_shelter_rumour_checked_not_any_rumour()
+        {
+            // "정전되면 라디오부터 켜고, 대피소 소문은 공식 안내로 확인하기": the 뒷산 rumour (3장 D+2), the camp food one
+            // (4장) and the evacuation shortcut (5장) are other rumours; checking one of them alone does not earn it.
+            foreach (var other in new[] { "mountain_raid", "camp_food", "evac_shortcut" })
+            {
+                var g = Run("stay", "blackout_radio");
+                GameRules.RecordEvent(g, "rumor_checked", new JObject { ["id"] = other });
+                CollectionAssert.DoesNotContain(Challenges.RunChallenges(g, 0), "info_first", other);
+                GameRules.RecordEvent(g, "rumor_checked", new JObject { ["id"] = "shelter_closed" });
+                CollectionAssert.Contains(Challenges.RunChallenges(g, 0), "info_first", other + " then the shelter rumour");
+            }
+            var noRadio = Run("stay");
+            GameRules.RecordEvent(noRadio, "rumor_checked", new JObject { ["id"] = "shelter_closed" });
+            CollectionAssert.DoesNotContain(Challenges.RunChallenges(noRadio, 0), "info_first", "the radio first is half of it");
+        }
+
+        [Test]
         public void Run_stats_add_chapter_times_and_a_chapter_continued_mid_way_leaves_the_run_incomplete()
         {
             var g = Timed(Run("bus"), 90000, 1);

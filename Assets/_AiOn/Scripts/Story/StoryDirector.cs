@@ -329,6 +329,7 @@ namespace AiOn.Story
             // the context's engine runs DropHeld before Enter.
             var ctxEngine = Engine is ICineFx ? new DirectorEngineFx(Engine, this) : new DirectorEngine(Engine, this);
             Ctx = new StoryContext(Rules, () => G, g => G = g, Facts, ctxEngine, Hud, Ui, Audio, this, StorySettings);
+            Ctx.EventsChanged = AnnounceArchive;
             // The 서연 interlude swaps who you are; the engine keeps one controller, so swap the model it drives.
             Ctx.SetPlayer = preset => { Pov = preset; Engine.SetPlayerPreset(preset); ApplyBody(); };
             // 304호 어르신's slow steps (ElderPovScene): walking only while she is the player.
@@ -362,7 +363,11 @@ namespace AiOn.Story
                 };
             }
             Ctx.RecordRun = () => { RecordRun(); return Task.CompletedTask; };
+            Ctx.PostQuiz = OfferPostQuiz;
+            Ctx.PostQuizPending = PostQuizPending;
             Ctx.Speak = SpeakIf;
+            // the host's dialogue box and cards read themselves in low vision (UnityStoryHost hands talks and cards to its StoryOverlay)
+            Ctx.UiReadsAloud = Ui is AiOn.UI.StoryOverlay || Ui is UnityStoryHost;
             Ctx.MindMeter = on => { if (_rawHud is AiOn.UI.StoryOverlay so) so.SetMindMode(on); };
             // settings.view after 서연's re-read: the original read ctx.settings.view; StorySettings has none, so SeoyeonRelay
             // asks through its hook, and this director answers for its own context (another context gets SeoyeonRelay's default).
@@ -416,6 +421,9 @@ namespace AiOn.Story
             StorySettings.Profile = Profile == "none" ? "" : Profile;
             StorySettings.MemoryCue = Settings["memoryCue"]?.Type != JTokenType.Boolean || (bool)Settings["memoryCue"];
             StorySettings.ReduceMotion = Truthy(Settings["reduceMotion"]);
+            // competition upgrade: 쉬운 한국어 and 도우미 모드 are read where text is shown (StoryOverlay, UiKit, CompanionPanel)
+            AiOn.Game.EasyKorean.On = Truthy(Settings[AiOn.Game.EasyKorean.SettingKey]);
+            AiOn.Game.Companion.On = Truthy(Settings[AiOn.Game.Companion.SettingKey]);
             Engine.SetView(View);
             ApplyHostSettings?.Invoke((JObject)Settings.DeepClone(), Body(p));
             AiOn.UI.UiKeys.OtherPov = OtherPov; AiOn.UI.UiKeys.WalkOnly = _walkOnly;
@@ -610,12 +618,52 @@ namespace AiOn.Story
             var seen = Rumors.SeenRumors(G);
             foreach (var r in seen.Skip(Math.Max(0, seen.Count - 3)))
                 messages.Add(new JObject { ["from"] = r.Claim.From, ["kind"] = "sns", ["time"] = r.Claim.Meta, ["text"] = r.Claim.Text });
+            // 휴대폰 배터리 자원: in the blackout reading the texts costs a little, the chat and the FM app more (and wait at
+            // low battery), and 절전 모드 can be switched here (PhoneBattery)
+            bool blackout = PhoneBattery.Live && PhoneBattery.Blackout(G.Chapter, Ctx.Power);
+            if (blackout) { StoryCommon.DrainBattery(G, PhoneBattery.Sip(G.Phone.Battery, PhoneBattery.Cost(G, "text"))); Ctx.Refresh(); } // never the last percent
+            var actions = new JArray();
+            if (!blackout) actions.Add(new JObject { ["id"] = "radio", ["label"] = "FM 라디오 앱" });
+            else
+            {
+                if (PhoneBattery.Extras(G.Phone.Battery))
+                {
+                    actions.Add(new JObject { ["id"] = "sns", ["label"] = $"단톡방 보기 −{PhoneBattery.Cost(G, "sns")}%" });
+                    actions.Add(new JObject { ["id"] = "radio", ["label"] = $"FM 라디오 −{PhoneBattery.Cost(G, "fm")}%" });
+                }
+                // 절전 모드 켜기 is the suggested press; once it is on, 끄기 comes after 닫기 so it is never the first one
+                if (!PhoneBattery.Saver(G)) actions.Add(new JObject { ["id"] = "saver", ["label"] = "절전 모드 켜기", ["primary"] = true });
+            }
+            actions.Add(new JObject { ["id"] = "close", ["label"] = "닫기" });
+            if (blackout && PhoneBattery.Saver(G)) actions.Add(new JObject { ["id"] = "saver", ["label"] = "절전 모드 끄기" });
             var pick = Str(await Ui.Open("phone", new JObject
             {
                 ["battery"] = G.Phone.Battery, ["signal"] = string.IsNullOrEmpty(G.Phone.Signal) ? "ok" : G.Phone.Signal, ["messages"] = messages,
-                ["actions"] = new JArray(new JObject { ["id"] = "radio", ["label"] = "FM 라디오 앱" }, new JObject { ["id"] = "close", ["label"] = "닫기" }),
+                ["actions"] = actions,
             }));
             if (pick == "radio") await StoryCommon.RadioScene(Ctx, StoryCommon.CurrentBroadcast(G), "휴대폰", "phone");
+            else if (pick == "sns") await ScrollChat();
+            else if (pick == "saver")
+            {
+                bool on = !PhoneBattery.Saver(G);
+                bool first = on && !G.Events.Any(e => e.Type == PhoneBattery.Event && JsSem.Is(e.Details?["what"], "saver"));
+                PhoneBattery.SetSaver(G, on);
+                Ctx.Toast(on ? PhoneBattery.SaverOnLine : PhoneBattery.SaverOffLine, "self", 3600);
+                if (first) await StoryCommon.FactCard(Ctx, "배터리 아끼기", new[] { PhoneBattery.FactId }, note: false); // a US source: a notice, not a 안전안내문자 in the phone
+            }
+        }
+
+        /// <summary>P › 단톡방 보기 in the blackout: the day's chat, at the chat's battery cost (PhoneBattery "sns").</summary>
+        async Task ScrollChat()
+        {
+            var cost = PhoneBattery.Use(G, "sns");
+            Ctx.Refresh();
+            await Ui.Talk(new TalkOptions
+            {
+                Speaker = "103동 단톡방", Role = $"알림 {(30 + G.Day * 17).ToString(System.Globalization.CultureInfo.InvariantCulture)}개 · 휴대폰",
+                Lines = PhoneBattery.ChatLines(G.Day).ToList(),
+            });
+            Ctx.Toast(PhoneBattery.UseLine("sns", cost, G.Phone.Battery) + " · 새로 확인된 소식은 없다.", "self", 4200);
         }
 
         /// <summary>Escape: the pause menu (settings, save, lounge, back to the title). Its time is left out of chapter times.</summary>
@@ -918,6 +966,108 @@ namespace AiOn.Story
         {
             if (G == null) return;
             Store.Set(ActiveSaveKey, new JObject { ["index"] = Index, ["G"] = JObject.Parse(SaveCodec.Save(G)), ["snap"] = Ctx.Snap?.DeepClone() ?? JValue.CreateNull() }.ToString(Formatting.None));
+            KeepArchive();
+        }
+
+        // ------------------------------------------------------------------ 더 알아보기: 기록관, 번호 카드, 주민
+
+        /// <summary>
+        /// Adds what this run has unlocked so far to the stored archive (Archive.Key). Only the player's own runs: a
+        /// prepared run (scene select, teacher mode) shows its unlocks while it plays (ArchiveView) but keeps none.
+        /// </summary>
+        void KeepArchive()
+        {
+            if (DemoRun || G == null) return;
+            try { Store.Set(Archive.Key, Archive.Merge(Archive.Read(Store.Get(Archive.Key)), Archive.Scan(G)).ToJson()); }
+            catch (Exception err) { Log?.Invoke("[archive] not saved", err); }
+        }
+
+        /// <summary>
+        /// The run the archive reads: the one being played, or at the title the player's saved run (이어하기), so a save
+        /// made before the archive existed still counts.
+        /// </summary>
+        GameState ArchiveRun()
+        {
+            if (G != null) return G;
+            try
+            {
+                var sg = SafeParse(Store.Get(SaveKey))["G"];
+                return sg is JObject ? SaveCodec.Load(sg.ToString(Formatting.None), Rules.Db) : null;
+            }
+            catch (Exception) { return null; }
+        }
+
+        /// <summary>The stored archive with the run being played (or the saved one) on top: what the 더 알아보기 screens show.</summary>
+        public ArchiveProgress ArchiveView()
+        {
+            var stored = Archive.Read(Store.Get(Archive.Key));
+            var run = ArchiveRun();
+            return run != null ? Archive.Merge(stored, Archive.Scan(run)) : stored;
+        }
+
+        /// <summary>The player has opened the archive: what it showed is no longer "새로" (stored).</summary>
+        public void ArchiveSeen(ArchiveProgress shown)
+        {
+            if (shown == null) return;
+            var stored = Archive.Read(Store.Get(Archive.Key));
+            // the player's own run keeps what it showed; a prepared run's unlocks are not the player's, so stay unmarked
+            if (!DemoRun && ArchiveRun() is GameState run) stored = Archive.Merge(stored, Archive.Scan(run));
+            foreach (var id in shown.Entries.Concat(shown.Cards))
+                if (stored.Has(id) && !stored.Viewed.Contains(id)) stored.Viewed.Add(id);
+            Store.Set(Archive.Key, stored.ToJson());
+        }
+
+        /// <summary>
+        /// The chapter the hub should not spoil past: the one being played in the player's own run, or null (the title,
+        /// teacher mode and scene select show every hint and the 모두 펼쳐 보기 toggle).
+        /// </summary>
+        public string ArchiveChapter => G != null && !DemoRun ? G.Chapter : null;
+
+        /// <summary>The hub's options: the progress to show and the chapter not to spoil past.</summary>
+        public JObject MoreOptions(ArchiveProgress view) =>
+            new JObject { ["progress"] = view.ToJObject(), ["chapter"] = ArchiveChapter != null ? (JToken)ArchiveChapter : JValue.CreateNull() };
+
+        /// <summary>
+        /// 더 알아보기 (title, or the guide terminal): the hub over the archive, the map, the calendar and 우리 집 안전 준비.
+        /// The hub answers MoreSeen when the player opened the 기록관 in it; only then are its "새로" marks spent.
+        /// </summary>
+        public async Task<JToken> OpenMore()
+        {
+            var view = ArchiveView();
+            var r = await Ui.Open(Archive.Screen, MoreOptions(view));
+            if (JsSem.Is(r, MoreSeen)) ArchiveSeen(view);
+            return r;
+        }
+
+        /// <summary>The hub's answer when the 기록관 was opened in it.</summary>
+        public const string MoreSeen = "seen";
+
+        /// <summary>Unlocks already shown or announced in this run (null until the run starts).</summary>
+        HashSet<string> _archiveKnown;
+
+        /// <summary>A run (re)starts: what it and the stored archive already hold is not news.</summary>
+        void ArchiveBaseline()
+        {
+            try { var v = ArchiveView(); _archiveKnown = new HashSet<string>(v.Entries.Concat(v.Cards)); }
+            catch (Exception) { _archiveKnown = null; }
+        }
+
+        /// <summary>
+        /// After the story records something (StoryContext.Refresh): a card or entry the run has just opened gets one
+        /// toast, so the 'right channel, then the card' loop shows while playing (prepared runs too; they keep nothing).
+        /// </summary>
+        void AnnounceArchive()
+        {
+            if (G == null || _archiveKnown == null) return;
+            try
+            {
+                var run = Archive.Scan(G);
+                var fresh = run.Entries.Concat(run.Cards).Where(id => !_archiveKnown.Contains(id)).ToList();
+                if (fresh.Count == 0) return;
+                foreach (var id in fresh) _archiveKnown.Add(id);
+                Ctx.Toast(Archive.Notice(fresh), "self", 5200);
+            }
+            catch (Exception err) { Log?.Invoke("[archive] notice", err); }
         }
 
         /// <summary>persist.checkpoint: a retry point (game copy + runtime snapshot), saved at once.</summary>
@@ -963,6 +1113,7 @@ namespace AiOn.Story
         public void ResetRun(JToken snap)
         {
             Ctx.CueSync(); // first: the HUD refresh below would toast deeds past an old cue mark
+            Ctx.BatterySync(); // and the low-battery note would compare with the previous run's battery
             Ctx.LightSource = null; Ctx.SeoyeonAsk = null; Ctx.Trail = null; Ctx.Snap = null;
             Ctx.LevelStates = new Dictionary<string, Dictionary<string, JToken>>();
             Ctx.Power = true; Ctx.OutdoorEnv = "day"; Ctx.IndoorEnv = "interior"; Ctx.Rate = 0;
@@ -970,6 +1121,7 @@ namespace AiOn.Story
             // Saves from before the snapshot existed: the light in hand follows from G.
             if (Ctx.LightSource == null && G.Events.Any(e => e.Type == "blackout")) Ctx.LightSource = StoryCommon.LightSource(Ctx);
             ResetTransient();
+            ArchiveBaseline();
         }
 
         // ------------------------------------------------------------------ the run record
@@ -987,6 +1139,7 @@ namespace AiOn.Story
                 Store.Set(GalleryKey, JsonConvert.SerializeObject(fr.Gal));
                 Store.Set(RecordsKey, JsonConvert.SerializeObject(fr.Rec));
                 GameRules.RecordEvent(G, "run_recorded", JObject.FromObject(fr.News));
+                KeepArchive();
             }
             catch (Exception err) { Log?.Invoke("[gallery] not saved", err); }
         }
@@ -1001,6 +1154,7 @@ namespace AiOn.Story
         public async Task<string> RunChapters(int start, string resumeKey, int end = -1)
         {
             int stop = end < 0 || end > Chapters.Count ? Chapters.Count : end; // teacher mode plays one chapter at a time
+            AiOn.Game.Companion.RunActive = true; // 도우미 모드's chip and F1 (until the title resets it)
             for (int i = start; i < stop; i++)
             {
                 var ch = Chapters[i];
@@ -1109,6 +1263,8 @@ namespace AiOn.Story
         /// </summary>
         public async Task<string> TitleOnce()
         {
+            // 도우미 모드 forgets the last run (its goal, screens, talks) and hides its chip on the title and its menus
+            AiOn.Game.Companion.Reset();
             // a prepared run left through the pause menu's reload (or a closed app) never reached its cleanup
             if (!string.IsNullOrEmpty(Store.Get(SceneSelect.SaveKey))) Store.Set(SceneSelect.SaveKey, "");
             RestoreTeacherSettings();
@@ -1122,6 +1278,8 @@ namespace AiOn.Story
             if (pick == "gallery") { await Ui.Open("gallery", new JObject { ["view"] = JArray.FromObject(seen) }); return pick; }
             if (pick == "records") { await Ui.Open("records", JObject.FromObject(rec)); return pick; }
             if (pick == "lounge") { await OpenLounge(); return pick; }
+            if (pick == FamilyCard.Screen) { await Ui.Open(FamilyCard.Screen, new JObject()); return pick; } // 우리 집 안전 준비
+            if (pick == Archive.Screen) { await OpenMore(); return pick; } // 더 알아보기 (기록관, 지도와 사람들, 훈련 달력, 우리 집 안전 준비)
             if (pick == "settings") { UpdateSettings(await Ui.Open("settings", (JObject)Settings.DeepClone())); return pick; }
             if (pick == "about") { await Ui.Open("about", new JObject { ["sources"] = JArray.FromObject(Facts.Sources) }); return pick; }
             if (pick == "scenes")
@@ -1160,11 +1318,15 @@ namespace AiOn.Story
             var p = Prepared(m);
             if (p == null) { await Ui.Card(new CardOptions { Kind = "notice", Title = "장면을 열 수 없습니다", Body = { "준비된 상태를 읽지 못했습니다." } }); return "menu"; }
             DemoRun = true; _stopAt = stopAt;
+            // every prepared save ships with the same seed: a moment's export gets its own anonymous id (a class keeps its own)
+            if (!Ctx.TeacherRun) _exportSeed = NextExportSeed();
             _echo?.Hold(true);
             try
             {
                 G = SaveCodec.Load(p.Saved["G"].ToString(Formatting.None), Rules.Db);
                 SaveCodec.Restore(G);
+                // a class's 사전 퀴즈 goes into each step's run, so the report (and its export) at a step's ending has it
+                if (Ctx.TeacherRun && _classPre != null && QuizLogic.Find(G, QuizLogic.Pre) == null) GameRules.RecordEvent(G, QuizLogic.Event, _classPre.ToJson());
                 Store.Set(SceneSelect.SaveKey, p.Saved.ToString(Formatting.None));
                 ResetRun(p.Saved["snap"]);
                 Engine.SetView(View);
@@ -1179,6 +1341,8 @@ namespace AiOn.Story
                 Store.Set(SceneSelect.SaveKey, "");
                 DemoRun = false; _stopAt = null;
                 _echo?.Hold(false);
+                LastPrepared = G;
+                if (Ctx.TeacherRun && G != null) _classSteps.Add((m.Id, G)); else _exportSeed = null;
                 G = null; Ctx.Rate = 0;
             }
         }
@@ -1204,9 +1368,14 @@ namespace AiOn.Story
             // the player's own experience mode, kept until the class is over (also across a menu reload or a closed app)
             Store.Set(SceneSelect.TeacherRestoreKey, new JObject { ["profile"] = Settings["profile"]?.DeepClone(), ["captions"] = Settings["captions"]?.DeepClone() }.ToString(Formatting.None));
             Ctx.TeacherRun = true;
+            _classPre = null; _classSteps.Clear();
+            LastPrepared = null;
+            uint classSeed = NextExportSeed();
+            _exportSeed = classSeed; // the class's anonymous id, for every export made during it
             try
             {
                 await ProfileCard();
+                _classPre = await TakeQuiz(QuizLogic.Pre, classSeed, null, null);
                 var ids = Chapters.Select(c => c.Id).ToList();
                 var route = SceneSelect.TeacherRoute;
                 string result = null;
@@ -1220,9 +1389,90 @@ namespace AiOn.Story
                     await LessonCard(i);
                 }
                 await TeacherSummary();
+                // 사후 퀴즈 after the class: the same concepts in other words, the comparison, the facts and the export
+                // (the last step's report, and every step's rows)
+                var basis = ExportBasis(LastPrepared, "teacher");
+                if (basis != null) PlaytestExport.WithSteps(basis, _classSteps);
+                await TakeQuiz(QuizLogic.Post, classSeed, _classPre, basis);
                 return result;
             }
-            finally { Ctx.TeacherRun = false; RestoreTeacherSettings(); }
+            finally { Ctx.TeacherRun = false; _classPre = null; _classSteps.Clear(); _exportSeed = null; RestoreTeacherSettings(); }
+        }
+
+        // ------------------------------------------------------------------ 사전/사후 퀴즈 (QuizLogic, QuizScreen)
+
+        /// <summary>The state the last prepared run (a moment, a class's step) ended with; the class's export reads it.</summary>
+        public GameState LastPrepared { get; private set; }
+
+        uint ClassSeed() => (uint)Math.Floor(Random() * 4294967295.0);
+
+        QuizAnswers _classPre;
+        readonly List<(string moment, GameState g)> _classSteps = new();
+        uint? _exportSeed;
+
+        /// <summary>
+        /// The seed an export's anonymous run id is made from: a class's own (drawn when it starts) or a 장면 바로가기 run's
+        /// (drawn when it starts: the prepared saves all ship with one seed); null in a story run (its G.Seed).
+        /// </summary>
+        public uint? ExportSeed => _exportSeed;
+
+        uint _exportRuns;
+
+        /// <summary>A fresh seed for a moment's or a class's anonymous id: the random draw, mixed with a count of the ones
+        /// drawn in this session so that two in a row never share it.</summary>
+        public uint NextExportSeed() => unchecked(ClassSeed() ^ (++_exportRuns * 2654435761u));
+
+        /// <summary>
+        /// Opens the quiz screen for a phase; returns the answers, or null when it was skipped (the fake host's {} too).
+        /// export: what the result page's 기록 내보내기 writes besides the quiz (PlaytestExport.Build of the run).
+        /// </summary>
+        async Task<QuizAnswers> TakeQuiz(string phase, uint seed, QuizAnswers pre, JObject export)
+        {
+            var o = new JObject { ["phase"] = phase, ["seed"] = seed, ["profile"] = Profile, ["mode"] = Ctx.TeacherRun ? "teacher" : DemoRun ? "demo" : "story" };
+            if (Ctx.TeacherRun) o["concepts"] = new JArray(QuizLogic.ClassConcepts); // a class is asked what it plays
+            if (_exportSeed.HasValue) o["exportSeed"] = _exportSeed.Value;
+            if (pre != null) o["pre"] = pre.ToJson();
+            if (export != null) o["export"] = export;
+            JToken r;
+            try { r = await Ui.Open(QuizLogic.Screen, o); }
+            catch (StoryFail) { throw; }
+            catch (Exception e) { Log?.Invoke("[quiz] screen failed; the run goes on", e); return null; }
+            var a = QuizAnswers.Read(r);
+            if (a == null) return null;
+            a.Phase = phase; a.Seed = seed;
+            return a;
+        }
+
+        JObject ExportBasis(GameState g, string mode)
+        {
+            try { return PlaytestExport.Build(g, mode, DateTime.UtcNow, seed: _exportSeed); }
+            catch (Exception e) { Log?.Invoke("[quiz] export basis", e); return null; }
+        }
+
+        /// <summary>사전 퀴즈 before a new run (skippable): the answers stay in the run as a "quiz" event.</summary>
+        async Task OfferPreQuiz()
+        {
+            if (G == null) return;
+            var a = await TakeQuiz(QuizLogic.Pre, G.Seed, null, null);
+            if (a != null) GameRules.RecordEvent(G, QuizLogic.Event, a.ToJson());
+        }
+
+        /// <summary>Whether the ending document still offers a 사후 퀴즈: once per run, not in a class (the class asks after its
+        /// summary) and not in a 장면 바로가기 run that had no pre quiz.</summary>
+        bool PostQuizPending()
+        {
+            if (G == null || Ctx.TeacherRun) return false;
+            if (DemoRun && QuizLogic.Find(G, QuizLogic.Pre) == null) return false;
+            return QuizLogic.Find(G, QuizLogic.Post) == null;
+        }
+
+        /// <summary>사후 퀴즈 from the ending document (Evac.EndingDocument), after the document has landed.</summary>
+        async Task OfferPostQuiz()
+        {
+            if (!PostQuizPending()) return;
+            var pre = QuizLogic.Find(G, QuizLogic.Pre);
+            var a = await TakeQuiz(QuizLogic.Post, pre?.Seed ?? G.Seed, pre, ExportBasis(G, DemoRun ? "demo" : "story"));
+            if (a != null) GameRules.RecordEvent(G, QuizLogic.Event, a.ToJson());
         }
 
         /// <summary>The class's experience mode was for the class: puts the player's own profile and captions back (once).</summary>
@@ -1287,7 +1537,7 @@ namespace AiOn.Story
             if (fresh) _echo?.Begin(); else _echo?.Resume();
             ResetRun(G.Checkpoint != null ? saved["snap"] : null);
             Engine.SetView(View);
-            if (fresh) { Engine.SetControls(false); await Intro(); Engine.SetControls(true); }
+            if (fresh) { Engine.SetControls(false); await OfferPreQuiz(); await Intro(); Engine.SetControls(true); }
             Hud.Show();
             string result;
             try { result = await RunChapters(start, resume); }

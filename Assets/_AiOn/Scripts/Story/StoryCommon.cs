@@ -100,7 +100,8 @@ namespace AiOn.Story
                 {
                     Speaker = title, Role = "라디오 없음",
                     Lines = { "쓸 수 있는 라디오가 없다. 휴대폰 FM 라디오 앱으로 들어 볼까?", $"(배터리가 닳는다 · 지금 {F(g.Phone.Battery)}%)" },
-                    Choices = new List<TalkChoice> { new("phone", "휴대폰 FM 라디오를 켠다"), new("no", "그만둔다") },
+                    // 휴대폰 배터리 자원: at low battery in the blackout the FM app waits (texts and 112·119 keep the rest)
+                    Choices = new List<TalkChoice> { new("phone", "휴대폰 FM 라디오를 켠다", LowInBlackout(ctx), LowInBlackout(ctx) ? PhoneBattery.LowWhy : null), new("no", "그만둔다") },
                 });
                 if (pick != "phone") return null;
                 dev = "phone";
@@ -120,10 +121,16 @@ namespace AiOn.Story
                 },
             });
             // The app costs battery only once it was switched on (opening and closing it at once is free); a result without the flag (an older screen) still pays.
-            if (dev == "phone") { if (!(res is JObject rp && rp["powered"]?.Type == JTokenType.Boolean && !(bool)rp["powered"])) { DrainBattery(g, 3); ctx.Refresh(); } }
+            if (dev == "phone") { if (!(res is JObject rp && rp["powered"]?.Type == JTokenType.Boolean && !(bool)rp["powered"])) { DrainBattery(g, PhoneBattery.Cost(g, "fm")); ctx.Refresh(); } }
             else
             {
                 ctx.Rules.Use(g, "radio");
+                // 휴대폰 배터리 자원: the first time the radio carries the news in the blackout, say what it saved
+                if (PhoneBattery.Live && PhoneBattery.Blackout(g.Chapter, ctx.Power) && !g.Knows(PhoneBattery.RadioKnow))
+                {
+                    g.SetKnow(PhoneBattery.RadioKnow, true);
+                    ctx.Toast(PhoneBattery.RadioHabit, "self", 4200);
+                }
                 if (ctx.Rules.DrainCharge(g, "radio", RadioDrain) == 0) ctx.Toast("라디오 소리가 점점 작아지더니 꺼졌다. 건전지가 다 닳았다.", "self", 4800);
             }
             bool official = res is JObject ro && Truthy(ro["official"]);
@@ -155,14 +162,21 @@ namespace AiOn.Story
             await ctx.Modal(() => ctx.Ui.Open("emergencyAlert", new JObject { ["kind"] = kind, ["text"] = text, ["time"] = time }));
         }
 
-        /// <summary>Official guidance arrives as notices that do not stop play (one toast every 2.6 s), and lands in the phone's messages.</summary>
-        public static Task FactCard(StoryContext ctx, string title, IEnumerable<string> ids)
+        /// <summary>
+        /// Official guidance arrives as notices that do not stop play (one toast every 2.6 s), and lands in the phone's
+        /// messages. <paramref name="shown"/>: ids a card on screen just showed with their sources (noted, not toasted
+        /// again). <paramref name="note"/> false: toasts only (guidance from abroad is not a Korean text in the phone).
+        /// </summary>
+        public static Task FactCard(StoryContext ctx, string title, IEnumerable<string> ids, IEnumerable<string> shown = null, bool note = true)
         {
-            var lines = ids.Select(id => ctx.Facts.Text(id)).Where(t => !string.IsNullOrEmpty(t)).ToList();
+            var skip = new HashSet<string>(shown ?? Enumerable.Empty<string>());
+            var all = ids.Where(id => !string.IsNullOrEmpty(ctx.Facts.Text(id))).ToList();
+            if (note) foreach (var id in all.Where(skip.Contains)) GameRules.Note(ctx.G, ctx.Facts.Text(id), "official", ctx.Engine.LevelId);
+            var lines = all.Where(id => !skip.Contains(id)).Select(id => ctx.Facts.Text(id)).ToList();
             for (int i = 0; i < lines.Count; i++)
             {
                 var t = lines[i];
-                GameRules.Note(ctx.G, t, "official", ctx.Engine.LevelId);
+                if (note) GameRules.Note(ctx.G, t, "official", ctx.Engine.LevelId);
                 var text = i > 0 ? t : $"{title} — {t}";
                 if (i == 0) ctx.Toast(text, "official", 6500);
                 else ctx.After(i * 2.6, () => ctx.Toast(text, "official", 6500));
@@ -171,6 +185,10 @@ namespace AiOn.Story
         }
 
         public static void DrainBattery(GameState g, double n) => g.Phone.Battery = Math.Max(0, g.Phone.Battery - n);
+
+        /// <summary>The blackout's low battery (PhoneBattery): the phone's extra info choices (the chat, the FM app) wait.</summary>
+        public static bool LowInBlackout(StoryContext ctx) =>
+            PhoneBattery.Live && PhoneBattery.Blackout(ctx.G.Chapter, ctx.Power) && !PhoneBattery.Extras(ctx.G.Phone.Battery);
 
         /// <summary>Last year's bag snack is past its date (old_bars): eating one is unpleasant, never a fail.</summary>
         public static bool EatOldBars(StoryContext ctx)

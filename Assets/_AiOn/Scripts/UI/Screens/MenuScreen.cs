@@ -102,9 +102,9 @@ namespace AiOn.UI
                 var b = MenuBits.Btn(Window, mb.Label, mb.Primary, mb.Ghost, () => { MenuBits.Cue(); Finish(id); }, mb.Ghost ? 22 : 28);
                 var rt = (RectTransform)b.transform;
                 if (!mb.Primary) b.GetComponent<Image>().color = new Color(0.03f, 0.05f, 0.07f, ScreenDecor.A(mb.Ghost ? 0.75f : 0.85f)); // dark fill: the skyline never reads through
-                if (id == "scenes" || id == "teacher")
+                if (id == "scenes" || id == "teacher" || id == FamilyCard.Screen || id == Archive.Screen)
                 {
-                    // the judge / classroom entry reads as its own pair: a teal-tinted fill and teal text
+                    // the judge / classroom / learning entries read as their own row: a teal-tinted fill and teal text
                     b.GetComponent<Image>().color = new Color(0.05f, 0.13f, 0.13f, ScreenDecor.A(0.85f));
                     var t = b.GetComponentInChildren<Text>(); if (t) t.color = MenuBits.Hex("#6fe0d2");
                 }
@@ -407,6 +407,12 @@ namespace AiOn.UI
             // 접근성. Measured at the default text size: left about 645 px, right about 730 px, both inside the 770 px views,
             // so nothing starts cut off under the fade; a larger text size still scrolls with the cue.
             foreach (var g in _form.LeftRadios) RadioGroupUi(left, g, W);
+            // 쉬운 한국어 · 도우미 모드 (competition upgrade): one row of two switches, so the left column still fits its view
+            Legend(left, SettingsForm.TogetherLegend);
+            var together = UiKit.Rect("Together", left);
+            UiKit.Height(together, TogetherH);
+            float half = (W - 8) / 2;
+            for (int i = 0; i < _form.TogetherToggles.Length; i++) ToggleUi(left, _form.TogetherToggles[i], half, together, i * (half + 8));
 
             Legend(right, SettingsForm.ControlsLegend);
             RangeUi(right, _form.Sensitivity, W);
@@ -525,11 +531,15 @@ namespace AiOn.UI
             }, Submit);
         }
 
-        void ToggleUi(RectTransform col, ToggleDef t, float width)
+        const float TogetherH = 56;
+
+        /// <summary>A switch row in a column, or (row given) one of several side by side in that row at x.</summary>
+        void ToggleUi(RectTransform col, ToggleDef t, float width, RectTransform row = null, float x = 0)
         {
-            var b = UiKit.Button("Toggle_" + t.Name, col, "", 22, ScreenDecor.Over(ListBg, Color.white, 0.04f), UiKit.Ink);
+            var b = UiKit.Button("Toggle_" + t.Name, row ? row : col, "", 22, ScreenDecor.Over(ListBg, Color.white, 0.04f), UiKit.Ink);
             var nav = b.navigation; nav.mode = Navigation.Mode.None; b.navigation = nav;
-            UiKit.Height(b, 60);
+            if (row) UiKit.At((RectTransform)b.transform, x, 0, width, TogetherH);
+            else UiKit.Height(b, 60);
             var rt = (RectTransform)b.transform;
             var label = b.GetComponentInChildren<Text>();
             label.alignment = TextAnchor.MiddleLeft;

@@ -61,17 +61,20 @@ namespace AiOn.UI
             StatusBar(frame, fw);
 
             // Actions and the home bar along the bottom.
-            const float homeH = 26, actH = 74;
+            // up to three buttons in one row; more (the blackout's chat, FM, 절전 모드, 닫기) wrap two to a row
+            int perRow = _v.Actions.Count > 3 ? 2 : _v.Actions.Count, rows = (_v.Actions.Count + perRow - 1) / perRow;
+            const float homeH = 26, rowH = 64;
+            float actH = 10 + rows * rowH;
             float actY = fh - homeH - actH;
             var acts = UiKit.Box("Actions", frame, Hex("#0c1214")).rectTransform;
             UiKit.At(acts, 0, actY, fw, actH);
-            float gap = 10, bw = (fw - 36 - gap * (_v.Actions.Count - 1)) / _v.Actions.Count;
+            float gap = 10, bw = (fw - 36 - gap * (perRow - 1)) / perRow;
             for (int i = 0; i < _v.Actions.Count; i++)
             {
                 var a = _v.Actions[i];
-                var b = UiKit.Button("Act_" + i, acts, a.Label, 22, a.Primary ? UiKit.Teal : new Color(1, 1, 1, 0.08f),
+                var b = UiKit.Button("Act_" + i, acts, a.Label, rows > 1 ? 20 : 22, a.Primary ? UiKit.Teal : new Color(1, 1, 1, 0.08f),
                     a.Primary ? new Color(0.04f, 0.08f, 0.08f) : UiKit.Ink);
-                UiKit.At((RectTransform)b.transform, 18 + i * (bw + gap), 10, bw, 56);
+                UiKit.At((RectTransform)b.transform, 18 + (i % perRow) * (bw + gap), 10 + (i / perRow) * rowH, bw, 54);
                 var id = a.Id;
                 b.onClick.AddListener(() => Press(id));
                 b.gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, 0);

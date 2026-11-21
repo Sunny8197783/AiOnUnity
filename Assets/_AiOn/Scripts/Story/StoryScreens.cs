@@ -59,6 +59,9 @@ namespace AiOn.Story
             NotebookScreens.Register(host);     // notebook, inventory
             ShopScreen.Register(host);         // shop
             GuideScreen.Register(host);        // guide (K), report
+            QuizScreen.Register(host);         // quiz (사전/사후 퀴즈, 플레이테스트 기록 내보내기)
+            HomePrepScreen.Register(host);     // homeprep (우리 집 안전 준비: 비상연락카드, 피난시설 체크리스트, 안전체험관 안내)
+            MoreScreen.Register(host);         // more (더 알아보기: 기록관·신고 번호 카드, 연무동 지도와 사람들, 훈련 달력, 우리 집 안전 준비)
         }
 
         static Task<JToken> Bag(JObject o, GameSession session)

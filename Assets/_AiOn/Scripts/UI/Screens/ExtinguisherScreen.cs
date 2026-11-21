@@ -61,7 +61,7 @@ namespace AiOn.UI
 
         protected override object EscapeResult() => L?.Result();
 
-        static string Fact(string id) => GameSession.Current != null ? GameSession.Current.Fact(id) : null;
+        static string Fact(string id) => GameSession.Current != null ? EasyKorean.Of(GameSession.Current.Fact(id)) : null; // 쉬운 한국어
         static List<string> Facts(DrillStep s) => ExtinguisherLogic.FactTexts(s?.Facts, Fact);
 
         // ---------- layout ----------

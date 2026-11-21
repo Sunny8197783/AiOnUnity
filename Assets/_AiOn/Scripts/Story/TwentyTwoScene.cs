@@ -50,7 +50,7 @@ namespace AiOn.Story
             var l = lines.ToList();
             var said = speaker + ". " + string.Join(" ", l);
             if (choices != null && choices.Count > 0) said += " 고르세요. " + string.Join(" ", choices.Select((c, i) => $"{i + 1}번, {c.Label}."));
-            Read(ctx, said);
+            if (!ctx.UiReadsAloud) Read(ctx, said); // the host's talk box reads itself (StoryOverlay)
             return ctx.Say(speaker, l, choices, role);
         }
 
@@ -59,7 +59,7 @@ namespace AiOn.Story
 
         static Task<string> Card(StoryContext ctx, CardOptions o)
         {
-            Read(ctx, o.Title + ". " + string.Join(" ", o.Body ?? new List<string>()));
+            if (!ctx.UiReadsAloud) Read(ctx, o.Title + ". " + string.Join(" ", o.Body ?? new List<string>()));
             return ctx.Card(o);
         }
 
@@ -104,6 +104,7 @@ namespace AiOn.Story
                 "\"이거 뭐예요? 어디로 대피하라는 거예요?\"",
                 "\"애들 깨워서 옷은 입혔는데 어디로 가요?\"",
                 "\"오발령 아닌가요? 그냥 자요.\"",
+                $"\"{RumorAnatomy.PhotoPostText}\" {RumorAnatomy.PhotoSeen}", // taken apart after the correction (루머 해부)
             }, null, "06:42 · 알림 37개");
 
             ctx.Pass(1); // a minute of reading the chat
@@ -235,6 +236,7 @@ namespace AiOn.Story
                 "\"오발령이래요. 왜 그랬는지는 안 나와 있네요.\"",
                 "\"택시 타고 가던 중이었어요. 허탈하네.\"",
                 "\"다음엔 문자 와도 그냥 잘래요.\"",
+                RumorAnatomy.PhotoCorrection, // the poster checked the photo's original post (not another '~래요')
             }, null, Clock(ctx.G.Minute));
             if (run.WithElder)
             {
@@ -267,6 +269,9 @@ namespace AiOn.Story
                 Kind = "record", Title = TwentyTwoLogic.ReviewTitle, Meta = TwentyTwoLogic.ReviewMeta, Body = ReviewLines(ctx, run.Picks),
                 Actions = new List<CardAction> { new("ok", "확인", true) },
             });
+            // 루머 해부: the photo post, answered by its poster. After the review, so the elder's thanks and the order of
+            // response land first; the side lesson comes last, before the day moves on.
+            await ctx.Modal(() => PrebunkScene.Show(ctx, RumorAnatomy.PhotoPost));
             await ctx.Skip("D-1 목 아침", "D-1 목 09:00", new[] { "아침 뉴스는 오발령 이야기로 가득했다. 정민은 거실 벽의 달력 앞에 섰다." });
             ctx.Hud.SetChapter("1장", "준비 — 남은 시간 여섯 칸");
         }

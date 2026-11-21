@@ -36,7 +36,7 @@ namespace AiOn.UI
 
         protected override object EscapeResult() => new JObject();
 
-        string Fact(string id) => _o?["facts"]?[id]?["text"]?.ToString();
+        string Fact(string id) => EasyKorean.Of(_o?["facts"]?[id]?["text"]?.ToString()); // 쉬운 한국어
         string Source(string id) => _o?["facts"]?[id]?["source"]?.ToString();
 
         protected override void Build()

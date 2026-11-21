@@ -249,7 +249,7 @@ namespace AiOn.Game
 
                 // The power hour.
                 if (plan.Power == "phone" || (!bank && !radioOn)) phone = 100;
-                else phone = Math.Max(0, phone - (bank ? 6 : 12));
+                else phone = Math.Max(0, phone - PhoneBattery.Standby(g, bank)); // 절전 모드 halves the standby (competition upgrade)
                 // The charged bank tops the phone up once when it runs low (and is charged again in the power hour).
                 if (bank && !topped && phone <= BankLow) { phone = Math.Min(100, phone + BankTop); topped = true; }
                 if (radioOn && radioCharge > 0) { radioCharge = Math.Max(0, radioCharge - RadioPerDay); radioDays++; tension -= 2; }
@@ -287,6 +287,7 @@ namespace AiOn.Game
             else if (radioOn) lines.Add(radioCharge == 0 ? "매일 라디오를 듣다 보니 건전지가 다 닳았다." : $"매일 라디오로 안내를 들었다. 건전지가 {JsNumber(radioCharge)}% 남았다.");
             if (plan.Power == "powerbank" && !bank) lines.Add("보조배터리가 없어 그 시간에 휴대폰을 충전했다.");
             else if (topped) lines.Add("휴대폰이 꺼져 갈 때 보조배터리로 한 번 채웠다.");
+            if (PhoneBattery.Saver(g) && plan.Power != "phone") lines.Add("절전 모드 덕분에 휴대폰 배터리가 덜 닳았다.");
 
             return new LedgerResult
             {

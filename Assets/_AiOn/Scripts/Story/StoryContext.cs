@@ -132,8 +132,17 @@ namespace AiOn.Story
         /// <summary>(x, z, size)</summary>
         public Action<double, double, double> Boom;
         public Func<Task> RecordRun;
+        /// <summary>The 사후 퀴즈, offered from the ending document (the director fills it; null in chapter tests = none).</summary>
+        public Func<Task> PostQuiz;
+        /// <summary>Whether the run still has a 사후 퀴즈 to offer (not taken, not a class, not a 장면 바로가기 run without a pre quiz).</summary>
+        public Func<bool> PostQuizPending;
         /// <summary>Read aloud (the director passes it to the host's voice only in the low-vision profile).</summary>
         public Action<string> Speak;
+        /// <summary>
+        /// The host's dialogue box and cards read themselves aloud in the low-vision profile (StoryOverlay), so a scene
+        /// does not read its own talks and cards again (it still reads toasts, texts and goals). False in tests.
+        /// </summary>
+        public bool UiReadsAloud;
         /// <summary>
         /// 「임시 거처의 하루」 (ShelterLifeScene): true shows the HUD's 긴장 row as 마음 (차분 · 조금 불안 · 불안), false puts it back.
         /// The same tension stat, read in calm words; no new meter.
@@ -144,6 +153,7 @@ namespace AiOn.Story
         public Func<string, string, IReadOnlyList<string>, Task> SkipOverride;
 
         double _acc;
+        double _lastBattery = double.NaN;
         int _lastSeq; // the remembered-action cue toasts deeds recorded after this event seq
         readonly Dictionary<string, HashSet<string>> _applied = new(); // levelId -> keys set on the live level
         readonly List<(double left, Action fire)> _timers = new();
@@ -219,6 +229,11 @@ namespace AiOn.Story
             Hud.SetClock(GameRules.FormatClock(g));
             Hud.SetStats(g.Stats);
             Hud.SetBattery(g.Phone.Battery);
+            // 휴대폰 배터리 자원: one note when the blackout's battery drops into low (PhoneBattery.Low)
+            double batt = g.Phone.Battery;
+            if (PhoneBattery.Live && PhoneBattery.CrossedLow(_lastBattery, batt) && PhoneBattery.Blackout(g.Chapter, Power))
+                Toast(PhoneBattery.LowLine(batt), "self", 5200);
+            _lastBattery = batt;
             var load = Rules.BagLoad(g);
             bool bagOn = g.Knows("bagOn");
             Hud.SetBag(bagOn ? load.WeightKg : (double?)null, Rules.Db.bagLimitKg);
@@ -232,11 +247,18 @@ namespace AiOn.Story
                 var id = Settings.MemoryCue ? Deeds.NewDeeds(g, _lastSeq).FirstOrDefault(d => Deeds.CueText(d.Id) != null)?.Id : null;
                 if (id != null) Toast(Deeds.CueText(id), "neighbor", 3600);
                 _lastSeq = seq;
+                EventsChanged?.Invoke();
             }
         }
 
+        /// <summary>Called by Refresh when the story recorded something new (the director's 기록관 notice).</summary>
+        public Action EventsChanged;
+
         /// <summary>Marks every event so far as already cued (no "will remember" toast for them).</summary>
         public void CueSync() { var g = G; _lastSeq = g.Events.Count > 0 ? g.Events[^1].Seq : 0; }
+
+        /// <summary>A run (re)starts with this G: the low-battery note compares against its battery, not the last run's.</summary>
+        public void BatterySync() => _lastBattery = G?.Phone?.Battery ?? double.NaN;
 
         /// <summary>Deeds.Remember: the deed event as JSON, or null when it was already remembered.</summary>
         public JObject Remember(string id, JObject details = null)

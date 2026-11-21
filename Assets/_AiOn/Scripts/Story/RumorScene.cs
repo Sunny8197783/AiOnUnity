@@ -53,6 +53,14 @@ namespace AiOn.Story
             var claim = Rumors.Posts(g, id)[0];
             bool phoneOn = g.Phone.Battery > 0; // without the phone the same post reaches 정민 by word of mouth
             bool guided = Drills.LadderStage(g, "info") != "free";
+            // 휴대폰 배터리 자원: in the blackout a chat thread read on the phone costs battery (PhoneBattery "chat"), only
+            // while there is some to spare: at low battery the notification is read as a preview, free (never empties it)
+            if (phoneOn && PhoneBattery.Live && PhoneBattery.Blackout(g.Chapter, ctx.Power) && PhoneBattery.ChargesIncoming(g.Phone.Battery))
+            {
+                var cost = PhoneBattery.Use(g, "chat");
+                ctx.Refresh();
+                ctx.Toast(PhoneBattery.UseLine("chat", cost, g.Phone.Battery), "self", 3600);
+            }
             var lines = new List<string>();
             lines.AddRange(phoneOn ? (lead ?? Array.Empty<string>()) : new[] { "복도에서 누군가 큰 소리로 전하는 말이 들린다." });
             lines.Add($"\"{claim.Text}\"");
