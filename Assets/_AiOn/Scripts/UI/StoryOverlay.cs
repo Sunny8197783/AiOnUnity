@@ -112,7 +112,9 @@ namespace AiOn.UI
         float _hurtLevel, _tension;
         static readonly Color HurtTint = new Color(0.16f, 0.13f, 0.1f);
         int _captionToken;
-        bool _hidden, _batteryWanted, _bagWanted;
+        bool _hidden, _batteryWanted, _bagWanted, _statsWanted = true;
+        Text _keysText;
+        bool _keysPov, _keysWalk;
 
         // Compass strip, minimap, stamina bar and key strip (original hud.js 59-68): each is wanted by the story or the
         // player's state, and shows only while the HUD is up and no cutscene runs.
@@ -343,6 +345,7 @@ namespace AiOn.UI
             var pf = plate.gameObject.AddComponent<ContentSizeFitter>();
             pf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; pf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var keys = UiKit.Label("Text", plate.transform, UiKeys.StripText(6), 16, new Color(0.72f, 0.77f, 0.8f), TextAnchor.LowerRight);
+            _keysText = keys;
             keys.lineSpacing = 1.15f;
             keys.horizontalOverflow = HorizontalWrapMode.Overflow; // three fixed rows: a key never parts from its word
             _keysGroup = plate.gameObject.AddComponent<CanvasGroup>(); _keysGroup.alpha = 0; _keysGroup.blocksRaycasts = false;
@@ -485,9 +488,25 @@ namespace AiOn.UI
 
         public void SetClock(string text) => _clock.text = text ?? "";
 
+        bool _mind;
+        Stats _lastStats;
+
+        /// <summary>
+        /// 「임시 거처의 하루」: the tension row reads 마음 with calm words (ShelterLifeLogic.MindWord) while on. The same stat
+        /// and colours as 긴장; nothing else on the plate changes.
+        /// </summary>
+        public void SetMindMode(bool on)
+        {
+            if (_mind == on) return;
+            _mind = on;
+            if (_lastStats != null) SetStats(_lastStats);
+        }
+
         public void SetStats(Stats s)
         {
             if (s == null) return;
+            _lastStats = s;
+            if (!_statsWanted) { _statsWanted = true; ShowPart(_stats, !_hidden); }
             _health = (float)s.Health;
             string hw = GameRules.StatWord("health", s.Health); // the one word table, shared with the cards and the debrief
             SetMeter(_healthRow, _health / 100f, HudTheme.StatColor(hw), hw);
@@ -496,7 +515,8 @@ namespace AiOn.UI
                 if (!_miniStats.TryGetValue(key, out var t)) continue;
                 double v = key switch { "thirst" => s.Thirst, "fatigue" => s.Fatigue, _ => s.Tension };
                 string w = GameRules.StatWord(key, v);
-                string text = $"{label}  <b><color=#{ColorUtility.ToHtmlStringRGB(HudTheme.StatColor(w))}>{w}</color></b>";
+                bool mind = _mind && key == "tension";
+                string text = $"{(mind ? "마음" : label)}  <b><color=#{ColorUtility.ToHtmlStringRGB(HudTheme.StatColor(w))}>{(mind ? ShelterLifeLogic.MindWord(v) : w)}</color></b>";
                 if (t.text != text) t.text = text;
             }
         }
@@ -508,6 +528,13 @@ namespace AiOn.UI
             int p = (int)Math.Floor(PhoneLogic.ClampBattery(percent) + 0.5); // the phone screen's rounding (JS Math.round), so both read the same %
             _battery.text = $"휴대폰 {p}%";
             _battery.color = p <= 15 ? Red : p <= 30 ? UiKit.Amber : UiKit.Ink;
+        }
+
+        /// <summary>Hides the stats panel until the next SetStats (someone else's POV: not their health or fatigue).</summary>
+        public void HideStats()
+        {
+            _statsWanted = false;
+            ShowPart(_stats, false);
         }
 
         /// <summary>Hides the phone chip until the next SetBattery (someone else's POV: it is not their phone).</summary>
@@ -701,7 +728,7 @@ namespace AiOn.UI
             _cineHidden.Clear();
             // a hidden HUD (after the run, the gallery, the records) stays hidden when the letterbox lifts
             _topLeft.SetActive(!_hidden); _toasts.gameObject.SetActive(true);
-            _stats.SetActive(!_hidden);
+            _stats.SetActive(!_hidden && _statsWanted);
             if (_mapWanted) _mapDirty = true;
         }
 
@@ -713,7 +740,7 @@ namespace AiOn.UI
             // puts back what the story set while hidden (the overlay starts hidden, so the first objective may come first)
             _hidden = false;
             ShowPart(_topLeft, true);
-            ShowPart(_stats, true);
+            ShowPart(_stats, _statsWanted);
             ShowPart(_batteryChip, _batteryWanted);
             ShowPart(_bagChip, _bagWanted);
             ShowPart(_torchChip, _torchOn);
@@ -840,6 +867,12 @@ namespace AiOn.UI
             var kb = Keyboard.current;
             if (kb != null && kb.hKey.wasPressedThisFrame) _keyTimer.Show(KeyStripTimer.Again);
             bool roaming = up && _compassWanted && !InputGate.Blocked;
+            if (UiKeys.OtherPov != _keysPov || UiKeys.WalkOnly != _keysWalk) // someone else's turn: only their keys
+            {
+                _keysPov = UiKeys.OtherPov; _keysWalk = UiKeys.WalkOnly;
+                if (_keysText) _keysText.text = UiKeys.StripText(6, _keysPov, _keysWalk);
+                _keyTimer.Show(KeyStripTimer.Again);
+            }
             bool keys = HudVisibility.KeyStrip(up, roaming, _keyTimer.Tick(roaming, dt)) && !UiKeys.StripSuppressed;
             float ka = Mathf.MoveTowards(_keysGroup.alpha, keys ? 1 : 0, dt / (keys ? 0.25f : 0.8f));
             if (ka != _keysGroup.alpha) _keysGroup.alpha = ka;
@@ -1150,7 +1183,7 @@ namespace AiOn.UI
         static string KindLabel(string kind) => kind switch
         {
             // the original ui/dialog.js KIND table; anything else shows as info. "decision" is the port's choice card.
-            "alert" => "경보", "news" => "뉴스", "notice" => "안내문", "sms" => "문자", "decision" => "선택", _ => "알아 둘 것",
+            "alert" => "경보", "news" => "뉴스", "notice" => "안내문", "sms" => "문자", "decision" => "선택", "record" => "기록 카드", _ => "알아 둘 것",
         };
 
         /// <summary>

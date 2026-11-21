@@ -186,6 +186,17 @@ namespace AiOn.Tests
             ("relief", "volunteer", new[] { "driver_text", "yoon_reply", "sort_supplies" }, null),
             ("board", "stay", new[] { "signals_clear", "rumor_checked", "handover_precise", "card_meet", "blackout_radio" }, null),
             ("shut", "stay", new[] { "hoard" }, new[] { ("violence", "{how:'punch',ko:true}") }),
+            // the port's two endings (competition upgrade, Endings.PortAdded): their own moments' events open the gate
+            ("report", "stay", new[] { "handover_precise" }, new[]
+            {
+                ("twentytwo", "{played:true,verdict:'good'}"), ("fire_report", "{played:true,fire:true,place:true,what:true,people:true,line:true,guess:false,hangup:false,vague:false,score:5}"),
+                ("unknown_object", "{reported:'1338'}"), ("looter", "{result:'escaped',how:'report'}"), ("shelter_life", "{played:true,notice:'read'}"),
+                ("sighting", "{played:true,score:8,full:12,guesses:0}"), ("intercom", "{asked:true,opened:false,office:true}"), ("rumor_checked", "{id:'mountain_raid'}"),
+            }),
+            ("care", "stay", new[] { "elder_alert_knock", "register_helped", "shelter_water_given", "queue_carry_elder", "stairs_asked", "elder_visit" }, new[]
+            {
+                ("cpr", "{played:true,swaps:1}"), ("elder_pov", "{played:true}"), ("shelter_life", "{played:true,child:'watch',outlet:'yield',water:'carry'}"),
+            }),
         };
 
         public static GameState Build(string endingId, long seed = 3)

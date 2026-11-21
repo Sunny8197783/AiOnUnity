@@ -37,9 +37,12 @@ namespace AiOn.Tests
         [Test]
         public void There_are_11_endings_in_order_and_each_is_reached_by_a_minimal_run()
         {
-            CollectionAssert.AreEqual(Enumerable.Range(1, 11), Endings.All.Select(e => e.No));
+            // the original 11, then the port's (report, care: 갈라짐 기록)
+            CollectionAssert.AreEqual(Enumerable.Range(1, 11 + Endings.PortAdded.Count), Endings.All.Select(e => e.No));
+            CollectionAssert.AreEqual(new[] { "report", "care" }, Endings.PortAdded);
+            CollectionAssert.AreEqual(Endings.PortAdded, Endings.All.Skip(11).Select(e => e.Id));
             CollectionAssert.AreEqual(GoldenRuns.Fix.Select(f => f.id), Endings.All.Select(e => e.Id));
-            Assert.AreEqual(11, Endings.All.Select(e => e.Title).Distinct().Count());
+            Assert.AreEqual(Endings.All.Count, Endings.All.Select(e => e.Title).Distinct().Count());
             foreach (var e in Endings.All)
             {
                 var f = Pick(GoldenRuns.Build(e.Id));
@@ -118,8 +121,13 @@ namespace AiOn.Tests
                 new[] { "store_paid", "store_iou", "store_took" }, new[] { "handover_precise", "handover_partial", "handover_overgeneral" }, new[] { "stairs_asked", "stairs_carried" },
                 new[] { "looter_gave", "looter_escaped", "looter_fought", "looter_reported", "looter_neighbors", "looter_argued" }, new[] { "rumor_checked", "rumor_spread" }, new[] { "water_for_seoyeon", "water_declined" },
                 new[] { "shelter_water_given", "shelter_water_received" }, new[] { "elder_alert_knock", "elder_alert_told" },
+                new[] { "sighting_reported", "sighting_honest" }, new[] { "intercom_checked", "intercom_police" }, new[] { "shelter_child_care", "shelter_child_referred" },
             };
-            var branch = new Dictionary<string, string[]> { ["stay"] = new[] { "rounds_with_manager", "smoke_judged" }, ["move"] = new[] { "sort_supplies", "shelter_fire_judged", "fire_report" } };
+            var branch = new Dictionary<string, string[]>
+            {
+                ["stay"] = new[] { "rounds_with_manager", "smoke_judged" },
+                ["move"] = new[] { "sort_supplies", "shelter_fire_judged", "fire_report", "shelter_outlet_shared", "shelter_water_carried", "shelter_child_care", "shelter_child_referred", "shelter_notice_read" },
+            };
             var pathed = new Dictionary<string, string> { ["seoyeon_waited"] = "seoyeon", ["volunteered"] = "volunteer", ["stayed"] = "stay" };
             foreach (var e in Endings.All.Where(x => x.Kind == "world"))
             {
@@ -128,7 +136,9 @@ namespace AiOn.Tests
                     var drop = new HashSet<string>(excl.SelectMany(g => g.Where((id, i) => i != (g[0] == "store_paid" ? store : 0))).Concat(branch[b == "stay" ? "move" : "stay"]));
                     if (path == "stay") drop.Add("stock_to_manager");
                     var ids = Deeds.Table.Where(d => !drop.Contains(d.Id) && (!pathed.ContainsKey(d.Id) || pathed[d.Id] == path) && d.W.Values.All(v => v >= 0)).ToList();
-                    return e.Need.All(n => ids.Sum(d => d.W.TryGetValue(n.Axis, out var v) ? v : 0) >= n.Threshold);
+                    // a port ending (report, care) also needs one of its own moments' deeds (its gate)
+                    if (e.Gate != null && !e.Gate.Any(id => ids.Any(d => d.Id == id))) return false;
+                    return e.Need.All(n => ids.Sum(d => Deeds.Weight(d.Id, n.Axis)) >= n.Threshold);
                 })));
                 Assert.That(ok, e.Id);
             }
@@ -233,7 +243,7 @@ namespace AiOn.Tests
             GoldenRuns.AssertGolden(g.Seen["reopen"], JToken.Parse("{at:'2026-10-30',runs:2,trace:['store_paid']}"));
             AssertSameJson(GoldenRuns.Js(Endings.AddToGallery(g, "nope", new string[0], "2026-11-02")), GoldenRuns.Js(g));
             var v = Endings.GalleryView(Endings.AddToGallery(g, "bus", new[] { "stairs_asked", "water_for_seoyeon", "door_note", "card_meet" }, "2026-11-03"));
-            Assert.AreEqual(11, v.Count);
+            Assert.AreEqual(13, v.Count, "the original 11, then the port's two");
             CollectionAssert.AreEqual(Endings.All.Select(e => e.Id), v.Select(x => x.Id));
             GalleryCard bus = v.First(x => x.Id == "bus"), walk = v.First(x => x.Id == "walk");
             Assert.AreEqual("남쪽에서 온 편지", bus.Title); Assert.AreEqual(3, bus.Shorts.Count); Assert.AreEqual("2026-11-03", bus.At);
@@ -344,7 +354,7 @@ namespace AiOn.Tests
             Assert.AreEqual((double)Golden["stockOk"]["litres"], Endings.StockOk.Litres);
             Assert.AreEqual((int)Golden["stockOk"]["food"], Endings.StockOk.Food);
             var table = (JArray)Golden["endings"];
-            Assert.AreEqual(table.Count, Endings.All.Count);
+            Assert.AreEqual(table.Count + Endings.PortAdded.Count, Endings.All.Count, "the original table, then the port's endings (갈라짐 기록)");
             for (int i = 0; i < table.Count; i++)
             {
                 var e = Endings.All[i];
@@ -413,10 +423,19 @@ namespace AiOn.Tests
                     ? Endings.AddToGallery(JsonConvert.SerializeObject(g), (string)a["id"], trace, (string)a["at"])
                     : Endings.AddToGallery(g, (string)a["id"], trace, (string)a["at"]);
                 GoldenRuns.AssertGolden(g, a["out"], $"add {i}: {a["id"]}");
-                GoldenRuns.AssertGolden(Endings.GalleryView(g), a["view"], $"view after add {i}");
-                GoldenRuns.AssertGolden(Endings.GalleryView(JsonConvert.SerializeObject(g)), a["view"], $"view of the stored text after add {i}");
+                // the original's 11 cards as the original showed them; the port's cards after them (unseen in these runs)
+                GoldenRuns.AssertGolden(Original(Endings.GalleryView(g)), a["view"], $"view after add {i}");
+                GoldenRuns.AssertGolden(Original(Endings.GalleryView(JsonConvert.SerializeObject(g))), a["view"], $"view of the stored text after add {i}");
             }
-            GoldenRuns.AssertGolden(Endings.GalleryView((Gallery)null), gal["emptyView"]);
+            GoldenRuns.AssertGolden(Original(Endings.GalleryView((Gallery)null)), gal["emptyView"]);
+        }
+
+        /// <summary>The original's part of the gallery: the first 11 cards; the port's cards after them are unseen.</summary>
+        static List<GalleryCard> Original(List<GalleryCard> view)
+        {
+            Assert.That(view.Skip(11).Select(c => c.Id), Is.EqualTo(Endings.PortAdded));
+            Assert.That(view.Skip(11).All(c => !c.Seen && c.Title == null && !string.IsNullOrEmpty(c.Hint)));
+            return view.Take(11).ToList();
         }
     }
 }

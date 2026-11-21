@@ -34,21 +34,21 @@ namespace AiOn.Tests
 
         /// <summary>Runs DDay.Run with StandInSeoyeon (put back afterwards, so other tests get the real SeoyeonRelay).</summary>
         /// <summary>
-        /// Runs DDay.Run with StandInSeoyeon and without the port's shelter CPR (these tests and the golden compare the
-        /// chapter with the original; CprSceneTests plays the CPR scene), both put back afterwards.
+        /// Runs DDay.Run with StandInSeoyeon and without the port's shelter CPR and 304호 point of view (these tests and the
+        /// golden compare the chapter with the original; CprSceneTests and ElderPovTests play those scenes), all put back afterwards.
         /// </summary>
         public static void Play(FakeStoryHost host, StoryContext ctx)
         {
-            var keep = DDay.SeoyeonPart; var cpr = DDay.CprPart;
-            DDay.SeoyeonPart = StandInSeoyeon; DDay.CprPart = _ => System.Threading.Tasks.Task.CompletedTask;
-            try { host.Run(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; DDay.CprPart = cpr; }
+            var keep = DDay.SeoyeonPart; var cpr = DDay.CprPart; var elder = DDay.ElderPart;
+            DDay.SeoyeonPart = StandInSeoyeon; DDay.CprPart = _ => System.Threading.Tasks.Task.CompletedTask; DDay.ElderPart = _ => System.Threading.Tasks.Task.CompletedTask;
+            try { host.Run(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; DDay.CprPart = cpr; DDay.ElderPart = elder; }
         }
 
         public static StoryFail PlayExpectFail(FakeStoryHost host, StoryContext ctx)
         {
-            var keep = DDay.SeoyeonPart; var cpr = DDay.CprPart;
-            DDay.SeoyeonPart = StandInSeoyeon; DDay.CprPart = _ => System.Threading.Tasks.Task.CompletedTask;
-            try { return host.RunExpectFail(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; DDay.CprPart = cpr; }
+            var keep = DDay.SeoyeonPart; var cpr = DDay.CprPart; var elder = DDay.ElderPart;
+            DDay.SeoyeonPart = StandInSeoyeon; DDay.CprPart = _ => System.Threading.Tasks.Task.CompletedTask; DDay.ElderPart = _ => System.Threading.Tasks.Task.CompletedTask;
+            try { return host.RunExpectFail(() => DDay.Run(ctx)); } finally { DDay.SeoyeonPart = keep; DDay.CprPart = cpr; DDay.ElderPart = elder; }
         }
 
         static (FakeStoryHost host, StoryContext ctx) Rig(System.Action<GameRules, GameState> setup = null)

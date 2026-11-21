@@ -133,6 +133,13 @@ namespace AiOn.Game
             (c => c.Has("looter_argued"), c => "골목에서 언성을 높였던 날을 가끔 떠올린다. 다르게 말할 수도 있었다."),
             // added by the port: the bystander CPR in the shelter (it always ended with the paramedics taking over)
             (c => c.Has("cpr_helped"), c => "대피소에서 쓰러졌던 할아버지의 가족이 고맙다는 쪽지를 관리사무소에 맡겨 두었다."),
+            // added by the port: 4장 「임시 거처의 하루」 (the child next door, the outlet)
+            (c => c.Has("shelter_child_care"), c => "임시 거처에서 봐 주었던 지우가 엄마 손을 잡고 와서 고맙다며 손을 흔들었다."),
+            (c => c.Has("shelter_child_referred"), c => "임시 거처 아이 돌봄 자리의 자원봉사자가, 그날 자리를 알려 준 덕에 지우가 거기서 친구를 사귀었다고 전해 주었다."),
+            (c => c.Has("shelter_outlet_shared"), c => "충전 차례를 양보했던 할머니가 아드님과 연락이 닿았다며 급수 줄에서 손을 꼭 잡아 주셨다."),
+            // added by the port: 3장 「산에서 내려온 사람들」 (the courier at the door, the report: only an accurate one helped narrow the search)
+            (c => c.Has("intercom_checked") || c.Has("intercom_police"), c => "그날 인터폰으로 길을 물었던 택배 기사는 이제 104동 앞에서 먼저 손을 흔든다."),
+            (c => c.Has("sighting_reported"), c => "뒷산 통제가 풀린 뒤, 파출소에서 그날의 신고가 수색 범위를 좁히는 데 도움이 됐다는 연락이 왔다."),
             // old saves only (nobody fights any more); port change: the original said 주먹을 휘둘렀던
             (c => c.Has("looter_fought"), c => "골목에서 시비가 붙었던 날의 기억은 오래 꿈에 나왔다."),
             (c => c.Has("shelter_water_received"), c => "대피소에서 물을 건네받았던 일을 기억한다. 급수 줄에서, 이번에는 내가 물을 건넸다."),

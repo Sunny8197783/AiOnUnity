@@ -12,6 +12,11 @@ namespace AiOn.Tests
 {
     public class PrepTests
     {
+        // 「22분」 (Prep.TwentyTwoPart) is a port addition: these runs compare the chapter with the original, so without it.
+        System.Func<StoryContext, System.Threading.Tasks.Task> _twentyTwo;
+        [SetUp] public void WithoutTheInterlude() { _twentyTwo = Prep.TwentyTwoPart; Prep.TwentyTwoPart = null; }
+        [TearDown] public void PutTheInterludeBack() => Prep.TwentyTwoPart = _twentyTwo;
+
         static (FakeStoryHost host, StoryContext ctx) Rig(bool toured = true)
         {
             var host = new FakeStoryHost();

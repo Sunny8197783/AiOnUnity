@@ -22,6 +22,19 @@ namespace AiOn.Tests
         static string DemoDir => Path.Combine(UnityEngine.Application.dataPath, "_AiOn", "Resources", SceneSelect.ResourceFolder);
         static List<string> ChapterIds => DirectorParts.Default().Chapters.Select(c => c.Id).ToList();
         static string ReadDemo(string id) { var p = Path.Combine(DemoDir, id + ".json"); return File.Exists(p) ? File.ReadAllText(p) : null; }
+
+        /// <summary>
+        /// The prepared saves ship with the game, so they are rewritten only on purpose. An MCP "run all" also runs the
+        /// Explicit DemoSaves_Write* tests, which used to rewrite every Resources/Demo file silently. Create the empty file
+        /// Temp/aion-write-demo in the project folder (outside Assets, never committed) before running one of them, and
+        /// delete it afterwards.
+        /// </summary>
+        static string WriteFlag => Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, "..", "Temp", "aion-write-demo"));
+
+        static void RequireWriteFlag()
+        {
+            if (!File.Exists(WriteFlag)) Assert.Ignore($"prepared saves left as they are: create {WriteFlag} to rewrite them on purpose");
+        }
         const string MainSave = "{\"index\":3,\"G\":null,\"marker\":\"the player's own save\"}";
 
         // ---------------------------------------------------------------- the prepared states
@@ -34,7 +47,8 @@ namespace AiOn.Tests
             r.Host.OnCheckpoint += key =>
             {
                 foreach (var m in SceneSelect.Moments)
-                    if (m.Ready && m.Key == key && !caught.ContainsKey(m.Id)) caught[m.Id] = r.Store.Get(StoryDirector.SaveKey);
+                    if (m.Ready && m.Key == key && !caught.ContainsKey(m.Id))
+                        caught[m.Id] = RecordSeen(r.Store.Get(StoryDirector.SaveKey), key);
             };
             // subscribed before any roam: this runs before the story's own handler of the first press in the shelter (reception)
             r.Host.Interact += point =>
@@ -44,6 +58,7 @@ namespace AiOn.Tests
                 // inside the shelter, just arrived: a copy of the game with the shelter as its checkpoint, and the world as it is
                 var copy = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
                 WalkedClock(copy);
+                MarkRecordSeen(copy);
                 SaveCodec.MakeCheckpoint(copy, DDay.ShelterResume);
                 caught["shelter"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(copy)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
             };
@@ -53,13 +68,42 @@ namespace AiOn.Tests
                 var g = r.D.G;
                 if (key != "fire" || caught.ContainsKey("look") || g == null) return;
                 var copy = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
+                MarkRecordSeen(copy);
                 SaveCodec.MakeCheckpoint(copy, Endure.LookResume);
                 caught["look"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(copy)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
                 // and the 3D extinguisher's start (in the corridor, no look step), with the gauge read and reported in 1장
                 var ext = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
                 ext.SetKnow(ExtinguisherCheck.Know, ExtinguisherCheck.Reported);
+                MarkRecordSeen(ext);
                 SaveCodec.MakeCheckpoint(ext, Endure.ExtResume);
                 caught["extinguisher"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(ext)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
+            };
+            // 「산에서 내려온 사람들」: the D+2 morning, at the sub-scene's own mark (not a checkpoint), under its resume key
+            r.D.MarkReached = mark =>
+            {
+                var g = r.D.G;
+                // 「22분」: the D-1 morning after tonight's slot, at the interlude's mark, under its resume key
+                if (mark == TwentyTwoScene.StartMark && !caught.ContainsKey("twentytwo") && g != null)
+                {
+                    var tt = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
+                    SaveCodec.MakeCheckpoint(tt, Prep.TwentyTwoResume);
+                    caught["twentytwo"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(tt)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
+                    return;
+                }
+                // 「304호의 계단」: seated in the shelter, at the offer, under its resume key (the clock as the cpr state's)
+                if (mark == ElderPovScene.StartMark && !caught.ContainsKey("elderpov") && g != null)
+                {
+                    var ep = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
+                    SettledClock(ep);
+                    MarkRecordSeen(ep);
+                    SaveCodec.MakeCheckpoint(ep, DDay.ElderResume);
+                    caught["elderpov"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(ep)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
+                    return;
+                }
+                if (mark != MountainScene.StartMark || caught.ContainsKey("mountain") || g == null) return;
+                var copy = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
+                SaveCodec.MakeCheckpoint(copy, Endure.MountainResume);
+                caught["mountain"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(copy)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
             };
             // seated in the shelter, the moment the grandfather collapses (the CPR screen opens): the cpr moment's state
             var policy = r.Host.OpenPolicy;
@@ -70,6 +114,7 @@ namespace AiOn.Tests
                 {
                     var copy = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
                     SettledClock(copy);
+                    MarkRecordSeen(copy);
                     SaveCodec.MakeCheckpoint(copy, DDay.CprResume);
                     caught["cpr"] = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(copy)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
                 }
@@ -78,7 +123,67 @@ namespace AiOn.Tests
             var result = r.Play();
             Assert.That(r.Fails, Is.Empty);
             Assert.That(result, Is.EqualTo("restart"));
+            // 「임시 거처의 하루」: the default run stays home in 4장, so the decision's state is played again choosing the move
+            if (caught.TryGetValue("decision", out var decision)) caught["shelterlife"] = CaptureShelterLife(decision);
             return caught;
+        }
+
+        /// <summary>From the decision's prepared state, moving to the temporary stay: the state at the day's mark, under its resume key.</summary>
+        static string CaptureShelterLife(string decision)
+        {
+            var r = new StoryPlaythroughTests.Rig { Name = "demo-capture-shelterlife" };
+            r.D.PreparedSave = id => id == "decision" ? decision : null;
+            r.In("crossroads");
+            var cards = r.Host.CardPolicy;
+            r.Host.CardPolicy = o => o.Title == "지금 내 상황" ? "move" : cards(o);
+            ShelterLifeTests.Day(r);
+            string caught = null;
+            r.D.MarkReached = mark =>
+            {
+                var g = r.D.G;
+                if (mark != ShelterLifeScene.StartMark || caught != null || g == null) return;
+                var copy = SaveCodec.Load(SaveCodec.Save(g), TestSupport.Rules.Db);
+                SaveCodec.MakeCheckpoint(copy, Evac.ShelterLifeResume);
+                caught = new JObject { ["index"] = r.D.Index, ["G"] = JObject.Parse(SaveCodec.Save(copy)), ["snap"] = r.D.Snapshot() }.ToString(Formatting.None);
+            };
+            r.Host.Run(() => r.D.PlayPrepared(SceneSelect.Get("decision"), ChapterIds.IndexOf("crossroads") + 1));
+            Assert.That(r.Fails, Is.Empty);
+            Assert.That(caught, Is.Not.Null, "the day's mark was reached");
+            return caught;
+        }
+
+        /// <summary>
+        /// The corridor-fire moments (fire, look, extinguisher) start after the D+2 day the judge never saw there: their
+        /// prepared state counts the 「그날, 시민들은」 record card as shown, so 3장 does not end on a card for a scene
+        /// that was not played (a real run that retries the fire still has the card: its checkpoint has no such event).
+        /// The same for the 2장 moments (alert, shelter, cpr) and the D-1 morning 「22분」: "그날 22분이 남긴 것" counts as
+        /// shown, so 2장 does not end on a card about a morning the judge never played. True when anything was added.
+        /// </summary>
+        static bool MarkRecordSeen(GameState g)
+        {
+            bool added = false;
+            if (MountainScene.Played(g) && !g.Events.Any(e => e.Type == "record_card"))
+            {
+                GameRules.RecordEvent(g, "record_card", new JObject { ["id"] = "1996", ["prepared"] = true });
+                added = true;
+            }
+            if (TwentyTwoScene.Played(g) && !g.Events.Any(e => e.Type == TwentyTwoLogic.AfterEvent))
+            {
+                GameRules.RecordEvent(g, TwentyTwoLogic.AfterEvent, new JObject { ["prepared"] = true });
+                added = true;
+            }
+            return added;
+        }
+
+        /// <summary>MarkRecordSeen on a saved document ({ index, G, snap }), the checkpoint taken again under key.</summary>
+        static string RecordSeen(string saved, string key)
+        {
+            var doc = JObject.Parse(saved);
+            var g = SaveCodec.Load(doc["G"].ToString(Formatting.None), TestSupport.Rules.Db);
+            if (!MarkRecordSeen(g)) return saved; // nothing to count: the save as the director wrote it
+            SaveCodec.MakeCheckpoint(g, key);
+            doc["G"] = JObject.Parse(SaveCodec.Save(g));
+            return doc.ToString(Formatting.None);
         }
 
         /// <summary>
@@ -123,6 +228,7 @@ namespace AiOn.Tests
         [Test, Explicit("Writes Assets/_AiOn/Resources/Demo/*.json from the default playthrough")]
         public void DemoSaves_Write()
         {
+            RequireWriteFlag();
             var caught = Capture();
             Directory.CreateDirectory(DemoDir);
             foreach (var m in SceneSelect.Moments.Where(x => x.Ready))
@@ -130,6 +236,46 @@ namespace AiOn.Tests
                 Assert.That(caught.ContainsKey(m.Id), $"no state taken for {m.Id}");
                 File.WriteAllText(Path.Combine(DemoDir, m.Id + ".json"), caught[m.Id]);
             }
+        }
+
+        [Test, Explicit("Writes Assets/_AiOn/Resources/Demo/mountain.json only (the other prepared states stay as shipped)")]
+        public void DemoSaves_WriteMountain()
+        {
+            RequireWriteFlag();
+            var caught = Capture();
+            Assert.That(caught.ContainsKey("mountain"), "no state taken for mountain");
+            Directory.CreateDirectory(DemoDir);
+            File.WriteAllText(Path.Combine(DemoDir, "mountain.json"), caught["mountain"]);
+        }
+
+        [Test, Explicit("Writes Assets/_AiOn/Resources/Demo/twentytwo.json only (the other prepared states stay as shipped)")]
+        public void DemoSaves_WriteTwentyTwo()
+        {
+            RequireWriteFlag();
+            var caught = Capture();
+            Assert.That(caught.ContainsKey("twentytwo"), "no state taken for twentytwo");
+            Directory.CreateDirectory(DemoDir);
+            File.WriteAllText(Path.Combine(DemoDir, "twentytwo.json"), caught["twentytwo"]);
+        }
+
+        [Test, Explicit("Writes Assets/_AiOn/Resources/Demo/elderpov.json only (the other prepared states stay as shipped)")]
+        public void DemoSaves_WriteElderPov()
+        {
+            RequireWriteFlag();
+            var caught = Capture();
+            Assert.That(caught.ContainsKey("elderpov"), "no state taken for elderpov");
+            Directory.CreateDirectory(DemoDir);
+            File.WriteAllText(Path.Combine(DemoDir, "elderpov.json"), caught["elderpov"]);
+        }
+
+        [Test, Explicit("Writes Assets/_AiOn/Resources/Demo/shelterlife.json only (the other prepared states stay as shipped)")]
+        public void DemoSaves_WriteShelterLife()
+        {
+            RequireWriteFlag();
+            var caught = Capture();
+            Assert.That(caught.ContainsKey("shelterlife"), "no state taken for shelterlife");
+            Directory.CreateDirectory(DemoDir);
+            File.WriteAllText(Path.Combine(DemoDir, "shelterlife.json"), caught["shelterlife"]);
         }
 
         [Test]
@@ -230,11 +376,15 @@ namespace AiOn.Tests
             Assert.That(r.Logged.Select(l => l.where + ": " + l.e), Is.Empty);
         }
 
+        [TestCase("twentytwo")]
         [TestCase("alert")]
         [TestCase("shelter")]
+        [TestCase("elderpov")]
         [TestCase("cpr")]
+        [TestCase("mountain")]
         [TestCase("fire")]
         [TestCase("decision")]
+        [TestCase("shelterlife")]
         [TestCase("evac")]
         public void EachMoment_PlaysItsChapterFromThePreparedState_WithoutTouchingThePlayersSave(string id)
         {
@@ -249,12 +399,45 @@ namespace AiOn.Tests
             Assert.That(result, Is.Null, "the chapter ran to its end");
             Assert.That(r.Host.PendingSteps, Is.EqualTo(0), "every scripted step was used");
             AssertNothingOfThePlayersTouched(r);
+            if (id == "elderpov")
+            {
+                Assert.That(r.Host.Calls("enter").Select(c => c.Text).Take(3), Is.EqualTo(new[] { "shelter:spot", "apartment:corridor3F", "shelter:spot" }), "seated, her stairs, seated again");
+                Assert.That(r.Host.Cards.Any(c => c.Title == ElderPovLogic.OfferTitle), Is.False, "no offer: the moment is the point of view");
+                Assert.That(r.LastG.Events.Count(e => e.Type == "arrived"), Is.EqualTo(1), "the arrival is not played again");
+                Assert.That(r.LastG.Events.Count(e => e.Type == ElderPovLogic.Event), Is.EqualTo(1));
+                Assert.That(r.LastG.Events.Count(e => e.Type == "cpr"), Is.EqualTo(1), "the shelter goes on to the CPR");
+            }
             if (id == "cpr")
             {
                 Assert.That(r.Host.Calls("enter").First().Text, Is.EqualTo("shelter:spot"), "starts seated in the shelter");
                 Assert.That(r.Host.Opens.First().screen, Is.EqualTo(CprScene.Screen), "the grandfather collapses first");
                 Assert.That(r.LastG.Events.Count(e => e.Type == "arrived"), Is.EqualTo(1), "the arrival is not played again");
                 Assert.That(r.LastG.Events.Count(e => e.Type == "cpr"), Is.EqualTo(1));
+            }
+            if (id == "fire")
+                Assert.That(r.Host.Cards.Any(c => c.Title == MountainLogic.RecordTitle), Is.False, "no record card for a D+2 day this run did not show");
+            if (m.Chapter == "dday")
+                Assert.That(r.Host.Cards.Any(c => c.Title == TwentyTwoLogic.AfterTitle), Is.False, "no 「22분」 card for a D-1 morning this run did not show"); 
+            if (id == "twentytwo")
+            {
+                Assert.That(r.Host.Opens.First(o => o.screen != "planner").screen, Is.EqualTo("emergencyAlert"), "starts with the 06:41 text");
+                Assert.That(r.Host.Cards.Any(c => c.Title == "103동 302호"), Is.False, "the first evening is not played again");
+                Assert.That(r.LastG.Events.Count(e => e.Type == TwentyTwoLogic.Event), Is.EqualTo(1));
+                Assert.That(r.LastG.Events.Count(e => e.Type == "equip_done"), Is.EqualTo(1), "tonight's slot is not played again");
+            }
+            if (id == "mountain")
+            {
+                Assert.That(r.Host.Opens.First().screen, Is.EqualTo("emergencyAlert"), "starts with the 병종사태 text");
+                Assert.That(r.LastG.Events.Count(e => e.Type == "water_fetched"), Is.EqualTo(1), "D+1 is not played again");
+                Assert.That(r.LastG.Events.Count(e => e.Type == "sighting"), Is.EqualTo(1));
+                Assert.That(r.Host.Cards.Any(c => c.Title == MountainLogic.RecordTitle), "the record card after the chapter card");
+            }
+            if (id == "shelterlife")
+            {
+                Assert.That(r.Host.Cards.Any(c => c.Title == "지금 내 상황"), Is.False, "the move is already decided");
+                Assert.That(r.LastG.Events.Count(e => e.Type == ShelterLifeLogic.Event), Is.EqualTo(1));
+                Assert.That(r.Host.Cards.Any(c => c.Title == ShelterLifeLogic.ReviewTitle), "the day's review card");
+                Assert.That(r.LastG.Events.Count(e => e.Type == "decision"), Is.EqualTo(1), "the decision is not played again");
             }
             if (id == "shelter")
             {
@@ -295,7 +478,7 @@ namespace AiOn.Tests
             Assert.That(r.Host.Run(() => r.D.TitleOnce()), Is.EqualTo("scenes"), "an unknown moment is not startable");
             Assert.That(r.Played, Is.Empty);
             var opened = r.Host.Opens.First(o => o.screen == "sceneSelect").options;
-            Assert.That(opened["moments"].Where(x => (bool)x["ready"]).Select(x => (string)x["id"]), Is.EqualTo(new[] { "alert", "shelter", "cpr", "fire", "look", "extinguisher", "decision", "evac" }));
+            Assert.That(opened["moments"].Where(x => (bool)x["ready"]).Select(x => (string)x["id"]), Is.EqualTo(new[] { "twentytwo", "alert", "shelter", "elderpov", "cpr", "mountain", "fire", "look", "extinguisher", "decision", "shelterlife", "evac" }));
 
             // a ready one plays on to the ending (the ending document's 'menu' keeps nothing)
             StoryPlaythroughTests.DefaultFrom(r, "evac", null);

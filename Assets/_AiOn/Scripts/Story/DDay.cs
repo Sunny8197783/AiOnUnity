@@ -27,6 +27,8 @@ namespace AiOn.Story
         public const string ShelteredMark = "sheltered";
         /// <summary>The resume key of the scene-select CPR start (seated in the shelter, just before the grandfather collapses).</summary>
         public const string CprResume = "cpr";
+        /// <summary>The resume key of the scene-select 「304호의 계단」 start (seated in the shelter; 304호 어르신's point of view next).</summary>
+        public const string ElderResume = "elderpov";
 
         /// <summary>Math.random stand-in (far blasts). Tests may pin it.</summary>
         public static Func<double> Random = new System.Random().NextDouble;
@@ -42,6 +44,12 @@ namespace AiOn.Story
         /// seam: the tests that compare this chapter with the original play it without the scene (and put it back).
         /// </summary>
         public static Func<StoryContext, Task> CprPart = ctx => CprScene.Run(ctx);
+
+        /// <summary>
+        /// 「304호의 계단」 (ElderPovScene.Run; a port addition): the air-raid stairs from 304호 어르신's side, offered once
+        /// after the seat. The same kind of test seam: the tests that compare this chapter with the original play without it.
+        /// </summary>
+        public static Func<StoryContext, Task> ElderPart = ctx => ElderPovScene.Run(ctx);
 
         static bool Truthy(JToken t) => t != null && t.Type switch
         {
@@ -108,9 +116,9 @@ namespace AiOn.Story
                 await ctx.Goto("shelter", "stairs");
                 ctx.Refresh();
             }
-            else if (ctx.Resume == CprResume)
+            else if (ctx.Resume == CprResume || ctx.Resume == ElderResume)
             {
-                // Scene select (SceneSelect "cpr"): seated in the shelter after the sign-in; again a prepared save only.
+                // Scene select (SceneSelect "cpr", "elderpov"): seated in the shelter after the sign-in; again a prepared save only.
                 ctx.Audio.Loop("siren", false);
                 ShelterState(ctx);
                 await ctx.Goto("shelter", "spot");
@@ -130,15 +138,18 @@ namespace AiOn.Story
                 }
                 await AlertScene(ctx);
             }
-            if (ctx.Resume != CprResume)
+            if (ctx.Resume != CprResume && ctx.Resume != ElderResume)
             {
                 await Shelter(ctx);
                 ctx.Reached(ShelteredMark);
             }
+            // Competition upgrade: the same stairs from 304호 어르신's side (optional, once). After the teacher mode's stop.
+            if (ctx.Resume != CprResume) await ElderPart(ctx);
             // Competition upgrade: the grandfather on the next mat collapses (bystander CPR). After the teacher mode's stop.
             await CprPart(ctx);
             await SeoyeonPart(ctx);
             await AfterAlert(ctx);
+            await TwentyTwoScene.AfterCard(ctx); // 「22분」: "그날 22분이 남긴 것" (only after the D-1 morning interlude)
         }
 
         static void BlackoutState(StoryContext ctx)
@@ -285,7 +296,7 @@ namespace AiOn.Story
         }
 
         /// <summary>The 3F corridor seen from 302's door toward 304 (levels/apartment-corridor.js ELDER), or null off the apartment.</summary>
-        static CameraShot HallLook(StoryContext ctx)
+        internal static CameraShot HallLook(StoryContext ctx) // also 「22분」 (TwentyTwoScene): the D-1 morning knock at 304
         {
             var e = ctx.Engine;
             if (e.LevelId != "apartment" || !e.TryGetSpawn("corridor3F", out var x, out _, out var z, out _)) return null;

@@ -183,6 +183,17 @@ namespace AiOn.UI
     {
         /// <summary>A scene with its own key panel (the 3D extinguisher) hides the general strip meanwhile.</summary>
         public static bool StripSuppressed;
+        /// <summary>Someone else is the player (StoryDirector.OtherPov): 정민's own keys leave the strip.</summary>
+        public static bool OtherPov;
+        /// <summary>Someone else's slow steps (StoryContext.WalkOnly): no running or jumping either.</summary>
+        public static bool WalkOnly;
+
+        /// <summary>The strip keys that are 정민's own (hands, light, bag, phone, notebook, first aid, chalk, terminal).</summary>
+        static readonly string[] OwnKeys = { "G", "Q", "C", "X", "B", "F", "P", "Tab", "I", "K" };
+
+        /// <summary>Whether the strip shows this key now (OtherPov, WalkOnly).</summary>
+        public static bool Shown(string stripKey, bool otherPov, bool walkOnly) =>
+            stripKey != null && !(otherPov && System.Array.IndexOf(OwnKeys, stripKey) >= 0) && !(walkOnly && (stripKey == "Shift" || stripKey == "Space"));
 
         public readonly struct Entry
         {
@@ -231,13 +242,16 @@ namespace AiOn.UI
         }
 
         /// <summary>The bottom-right strip as rich text, perRow keys a line.</summary>
-        public static string StripText(int perRow)
+        public static string StripText(int perRow) => StripText(perRow, false, false);
+
+        /// <summary>The strip for someone else's turn (OtherPov) and slow steps (WalkOnly).</summary>
+        public static string StripText(int perRow, bool otherPov, bool walkOnly)
         {
             var sb = new System.Text.StringBuilder();
             int n = 0;
             foreach (var e in All)
             {
-                if (e.StripKey == null) continue;
+                if (!Shown(e.StripKey, otherPov, walkOnly)) continue;
                 sb.Append(n == 0 ? "" : n % perRow == 0 ? "\n" : "    ").Append("<b><color=#e8eef0>").Append(e.StripKey).Append("</color></b> ").Append(e.Strip);
                 n++;
             }

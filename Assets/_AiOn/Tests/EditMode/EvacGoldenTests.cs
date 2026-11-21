@@ -15,6 +15,12 @@ namespace AiOn.Tests
 {
     public class EvacGoldenTests
     {
+        // 「임시 거처의 하루」 (a port addition after the move decision) is left out here: these runs are the original
+        // chapter's (ShelterLifeTests plays the day itself).
+        Func<StoryContext, System.Threading.Tasks.Task> _shelterLife;
+        [SetUp] public void LeaveOutTheShelterDay() { _shelterLife = Evac.ShelterLifePart; Evac.ShelterLifePart = null; }
+        [TearDown] public void PutTheShelterDayBack() => Evac.ShelterLifePart = _shelterLife;
+
         static JObject _golden;
         static JObject Golden => _golden ??= JObject.Parse(TestSupport.Fixture("story-evac-golden.json"));
 

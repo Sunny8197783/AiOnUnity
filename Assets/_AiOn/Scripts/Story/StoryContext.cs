@@ -117,12 +117,28 @@ namespace AiOn.Story
         public double? ProfileSpeed;
         public string DeathCause;
         public string SeoyeonAsk;
+        /// <summary>
+        /// The teacher route (교사용 30분 모드) is playing: optional long scenes keep to the route's time (Evac.Crossroads plays
+        /// the original's one-line skip instead of 「임시 거처의 하루」 when the class picks 'move'). Set by the director.
+        /// </summary>
+        public bool TeacherRun;
 
         // Hooks the director fills; chapters call them with ?.
         public Action<string> SetPlayer;
+        /// <summary>Someone else's slow body (ElderPovScene): true = walking only, no running, jumping or vaulting, whatever the profile.</summary>
+        public Action<bool> WalkOnly;
+        /// <summary>An optional scene left out of the chapter time: call at its start, call the returned action at its end.</summary>
+        public Func<Action> BeginUntimed;
         /// <summary>(x, z, size)</summary>
         public Action<double, double, double> Boom;
         public Func<Task> RecordRun;
+        /// <summary>Read aloud (the director passes it to the host's voice only in the low-vision profile).</summary>
+        public Action<string> Speak;
+        /// <summary>
+        /// 「임시 거처의 하루」 (ShelterLifeScene): true shows the HUD's 긴장 row as 마음 (차분 · 조금 불안 · 불안), false puts it back.
+        /// The same tension stat, read in calm words; no new meter.
+        /// </summary>
+        public Action<bool> MindMeter;
         public StoryCine Cine;
         /// <summary>The time-lapse cutscene that replaces the time-skip card; if it throws, Skip shows the card.</summary>
         public Func<string, string, IReadOnlyList<string>, Task> SkipOverride;

@@ -15,6 +15,11 @@ namespace AiOn.Tests
 {
     public class PrepGoldenTests
     {
+        // 「22분」 (Prep.TwentyTwoPart) is a port addition: these runs compare the chapter with the original, so without it.
+        System.Func<StoryContext, System.Threading.Tasks.Task> _twentyTwo;
+        [SetUp] public void WithoutTheInterlude() { _twentyTwo = Prep.TwentyTwoPart; Prep.TwentyTwoPart = null; }
+        [TearDown] public void PutTheInterludeBack() => Prep.TwentyTwoPart = _twentyTwo;
+
         static JObject _golden;
         static JObject Golden => _golden ??= JObject.Parse(TestSupport.Fixture("story-prep-golden.json"));
 

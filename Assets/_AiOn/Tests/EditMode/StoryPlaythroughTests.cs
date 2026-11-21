@@ -120,6 +120,7 @@ namespace AiOn.Tests
                         case "rereadCaption": return "next";
                         case "extinguisher": return JObject.Parse("{ sequence: ['fight', 'shout', 'pin', 'aim', 'squeeze', 'sweep'] }");
                         case "compose": return JObject.Parse("{ chips: { what: 'gate_closed', time: true, route: true, unknowns: false, advice: 'follow_me' }, text: '', edited: false }");
+                        case MountainScene.Screen: return MountainSceneTests.Sighting(o); // the report card, every line as seen, to 112
                         default: return basePolicy(screen, o);
                     }
                 };
@@ -251,26 +252,36 @@ namespace AiOn.Tests
             r.In("prologue");
             // Prologue: the first choice everywhere; desk, lead, window, exit.
             r.Press("office:desk", "office:coworker", "office:window", "office:officeExit");
-            r.In("prep");
-            // Prep, week A: equipment tonight, then the mart, the shelter, the neighbours and the bag.
-            foreach (var p in new[] { "equip", "mart", "shelter", "neighbors", "bag" }) h.AnswerOpen("planner", p);
-            h.AnswerOpen("shop", JObject.Parse("{ cart: { batteries_aa: 2, radio: 1 }, total: 33000 }"));
-            h.AnswerOpen("shop", JObject.Parse("{ cart: { water_2l: 4, bars: 3 }, total: 8900 }"));
-            h.AnswerOpen("routemap", JObject.Parse("{ choice: 1 }"));
-            h.AnswerOpen("bag", JObject.Parse("{ bag: { water_2l: 1, bars: 3, flashlight: 1, radio: 1, meds: 1, clothes: 1 }, pocket: { meds: 1 } }"));
-            h.AnswerWhen(o => o.Speaker == "현관" && o.Choices.Any(c => c.Id == "lift"), "lift", once: false);
-            r.Press("apartment:homeStock", "apartment:homeGas", "apartment:homeBreaker", "apartment:homePlanner",
-                "apartment:homeDesk", "apartment:homePlanner", "apartment:homeExitDoor", "town:mart", "mart:shelfElec", "mart:shelfWater", "mart:checkout",
-                "apartment:homePlanner", "apartment:homeExitDoor", "town:shelterEast", "town:shelterA", "town:shelterB", "town:shelterNotice",
-                "apartment:homePlanner", "apartment:homeExitDoor", "apartment:seoyeonDoor", "apartment:elevator", "apartment:managerWindow", "apartment:lobbyExit", "town:store",
-                "store:storeCounter", "store:storeExit", "town:home", "apartment:elevator", "apartment:homeDoor",
-                "apartment:homePlanner", "apartment:homeBag",
-                "apartment:homeSink", "apartment:homeBed");
+            DefaultFrom(r, "prep", null);
             DefaultFrom(r, "dday", null);
             DefaultFrom(r, "endure", null);
             DefaultFrom(r, "crossroads", null);
             DefaultFrom(r, "evac", null);
             return r;
+        }
+
+        /// <summary>
+        /// Prep, week A: equipment tonight, then the mart, the shelter, the neighbours and the bag; 「22분」 after tonight's
+        /// slot answered carefully. From the 「22분」 prepared state (resume "twentytwo") tonight's slot is already done.
+        /// </summary>
+        static void DefaultPrep(Rig r, string resume)
+        {
+            var h = r.Host;
+            bool fromMorning = resume == Prep.TwentyTwoResume;
+            r.Before["prep"] = TwentyTwoTests.AnswerCarefully;
+            foreach (var p in new[] { "equip", "mart", "shelter", "neighbors", "bag" }.Skip(fromMorning ? 1 : 0)) h.AnswerOpen("planner", p);
+            h.AnswerOpen("shop", JObject.Parse("{ cart: { batteries_aa: 2, radio: 1 }, total: 33000 }"));
+            h.AnswerOpen("shop", JObject.Parse("{ cart: { water_2l: 4, bars: 3 }, total: 8900 }"));
+            h.AnswerOpen("routemap", JObject.Parse("{ choice: 1 }"));
+            h.AnswerOpen("bag", JObject.Parse("{ bag: { water_2l: 1, bars: 3, flashlight: 1, radio: 1, meds: 1, clothes: 1 }, pocket: { meds: 1 } }"));
+            h.AnswerWhen(o => o.Speaker == "현관" && o.Choices.Any(c => c.Id == "lift"), "lift", once: false);
+            if (!fromMorning) r.Press("apartment:homeStock", "apartment:homeGas", "apartment:homeBreaker", "apartment:homePlanner");
+            r.Press("apartment:homeDesk", "apartment:homePlanner", "apartment:homeExitDoor", "town:mart", "mart:shelfElec", "mart:shelfWater", "mart:checkout",
+                "apartment:homePlanner", "apartment:homeExitDoor", "town:shelterEast", "town:shelterA", "town:shelterB", "town:shelterNotice",
+                "apartment:homePlanner", "apartment:homeExitDoor", "apartment:seoyeonDoor", "apartment:elevator", "apartment:managerWindow", "apartment:lobbyExit", "town:store",
+                "store:storeCounter", "store:storeExit", "town:home", "apartment:elevator", "apartment:homeDoor",
+                "apartment:homePlanner", "apartment:homeBag",
+                "apartment:homeSink", "apartment:homeBed");
         }
 
         /// <summary>
@@ -284,29 +295,42 @@ namespace AiOn.Tests
             r.In(chapter);
             switch (chapter)
             {
+                case "prep":
+                    DefaultPrep(r, resume);
+                    break;
                 case "dday":
-                    if (resume != DDay.ShelterResume && resume != DDay.CprResume)
+                    if (resume != DDay.ShelterResume && resume != DDay.CprResume && resume != DDay.ElderResume)
                     {
-                        // D-day: wait for the alert, out of the door, down the stairs, the manager, the lobby; shelter A after the strike.
+                        // D-day: wait for the alert, out of the door, toward 304 (어르신 asks; the first answer: help her down),
+                        // down the stairs, the manager, the lobby; shelter A after the strike.
                         r.When(() => r.D.Ctx.Roaming && r.D.G.Events.Any(e => e.Type == "alert"), _ => { }, "wait for the alert");
                         r.Press("apartment:homeExitDoor");
+                        r.When(() => r.Roam("apartment") && h.PlayerY > 4, x => { x.Point("elder304").Enabled = true; x.MoveTo(12, -1, 5.6); x.RunFrame(); }, "toward 304"); // the level enables her point (elder304 'on')
                         r.When(() => r.Roam("apartment") && h.PlayerY > 4, x => { x.MoveTo(5, 0.9, 0); x.RunFrame(); }, "downstairs");
                         r.Press("apartment:managerWindow", "apartment:lobbyExit");
                         r.When(() => r.Roam("town") && r.D.G.Knows("strikeSeen"), x => x.Press("shelterA"), "shelterA after the strike");
                     }
-                    if (resume != DDay.CprResume) r.Press("shelter:reception", "shelter:spot");
+                    if (resume != DDay.CprResume && resume != DDay.ElderResume) r.Press("shelter:reception", "shelter:spot");
+                    // 「304호의 계단」 (after the seat, before the CPR): 어르신 walks down the four flights
+                    if (resume != DDay.CprResume && !teacherStop) ElderPovTests.Descend(r);
                     // 서연's part (the real SeoyeonRelay inside D-day): the notice board, then the C ramp.
                     if (!teacherStop) r.Press("town:shelterNotice", "town:shelterC");
                     break;
                 case "endure":
                     // Endure: the helper's day (EndureTests "helper" roams), then the night fire.
-                    if (resume != "fire")
+                    if (resume != "fire" && resume != Endure.MountainResume)
                         r.Steps("press apartment:homeFridge", "press apartment:homeStock", "press apartment:seoyeonDoor", "press apartment:lobbyNotice", "press apartment:homePlanner",
                             "press apartment:homeExitDoor", "door apartment:lobbyExit", "press town:water", "door town:home", "y 5.6", "press apartment:seoyeonDoor",
                             "door apartment:lobbyExit", "door town:store", "press store:storeCounter", "door store:storeExit", "door town:home", "press apartment:homeBed");
+                    // 「산에서 내려온 사람들」 (D+2 at home): the report at the desk, the intercom, the window, the calendar,
+                    // answered as a careful player would (the prepared saves are taken from this run)
+                    r.Before["endure"] = MountainSceneTests.AnswerCarefully;
+                    if (resume != "fire") r.Steps(MountainSceneTests.DaySteps);
                     r.Steps("press apartment:extinguisher");
                     break;
                 case "crossroads":
+                    // 「임시 거처의 하루」's scene-select start (moved, D+6): the day, then the shelter's fire
+                    if (resume == Evac.ShelterLifeResume) { ShelterLifeTests.Day(r); break; }
                     // Crossroads: feel the door handle, then stay in and call 119 (after the handle, the first choice is the extinguisher run).
                     r.Before["crossroads"] = x => x.AnswerSpeaker("판단", "handle").AnswerSpeaker("판단", "stay");
                     break;
@@ -395,8 +419,9 @@ namespace AiOn.Tests
             // Endure: alone (EndureTests "alone" roams).
             r.Steps("press apartment:homeFridge", "press apartment:homeRadio", "press apartment:seoyeonDoor", "press apartment:homePlanner",
                 "press apartment:homeExitDoor", "door apartment:lobbyExit", "press town:water", "door town:home", "y 5.6",
-                "door apartment:lobbyExit", "door town:store", "press store:storeCounter", "door store:storeExit", "door town:home", "press apartment:homeBed",
-                "press apartment:hallFire", "press apartment:hallFire", "press apartment:hallFire", "stairs1F apartment:stairs1F");
+                "door apartment:lobbyExit", "door town:store", "press store:storeCounter", "door store:storeExit", "door town:home", "press apartment:homeBed");
+            r.Steps(MountainSceneTests.DaySteps);
+            r.Steps("press apartment:hallFire", "press apartment:hallFire", "press apartment:hallFire", "stairs1F apartment:stairs1F");
             r.Before["endure"] = x => x.AnswerSpeaker("오서연", "no").AnswerSpeaker("급수대", "go")
                 .AnswerSpeaker("복도", "shout").AnswerSpeaker("복도", "water").AnswerSpeaker("복도", "retreat");
             r.Screens["extinguisher"] = o => JObject.Parse("{ sequence: ['shout', 'water', 'retreat'] }");

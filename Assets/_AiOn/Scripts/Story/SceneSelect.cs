@@ -66,12 +66,18 @@ namespace AiOn.Story
 
         public static readonly IReadOnlyList<DemoMoment> Moments = new[]
         {
+            new DemoMoment { Id = "twentytwo", No = "1장", Chapter = "prep", Key = Prep.TwentyTwoResume, Title = "22분", When = "D-1 목 06:41",
+                Line = "이유도 장소도 없는 경보 문자, 먹통인 대피소 앱. 22분 동안 무엇부터 할까요?" },
             new DemoMoment { Id = "alert", No = "2장", Chapter = "dday", Key = "alert", Title = "공습경보와 계단", When = "D-day 금 20:05",
                 Line = "정전된 밤, 사이렌이 울립니다. 엘리베이터 대신 계단으로 가까운 대피소까지." },
             new DemoMoment { Id = "shelter", No = "2장", Chapter = "dday", Key = DDay.ShelterResume, Title = "대피소", When = "D-day 금 밤",
                 Line = "명부를 쓰고 자리를 잡습니다. 그사이 서연은 다른 길로 오고 있습니다." },
+            new DemoMoment { Id = "elderpov", No = "2장", Chapter = "dday", Key = DDay.ElderResume, Title = "304호의 계단", When = "D-day 금 20:05",
+                Line = "같은 사이렌, 같은 계단. 이번에는 304호 어르신이 되어, 도움을 받는 사람의 걸음으로 내려갑니다." },
             new DemoMoment { Id = "cpr", No = "2장", Chapter = "dday", Key = DDay.CprResume, Title = "대피소 심폐소생술", When = "D-day 금 밤",
                 Line = "쓰러진 사람 앞에서 119와 AED를 부탁하고, 지치기 전에 교대를 요청합니다." },
+            new DemoMoment { Id = "mountain", No = "3장", Chapter = "endure", Key = Endure.MountainResume, Title = "산에서 내려온 사람들", When = "D+2 일 08:10",
+                Line = "통합방위 병종사태 문자와 단톡방 소문. 어제 본 흔적은 다가가지 않고 집에서, 본 것만 112에 알립니다." },
             new DemoMoment { Id = "fire", No = "3장", Chapter = "endure", Key = "fire", Title = "복도 화재", When = "D+2 일 21:40",
                 Line = "어두운 복도에 연기가 찹니다. 먼저 살핀 뒤 복도로 나가, 소화기로 끌지 물러날지 판단합니다." },
             new DemoMoment { Id = "look", No = "3장", Chapter = "endure", Key = Endure.LookResume, Title = "살펴서 대피", When = "D+2 일 21:40",
@@ -80,6 +86,8 @@ namespace AiOn.Story
                 Line = "복도의 작은 불 앞에서 안전핀을 뽑고, 출구를 등진 채 불이 난 곳을 겨눠 쓸듯이 뿌립니다. 불이 커지면 물러나 알립니다." },
             new DemoMoment { Id = "decision", No = "4장", Chapter = "crossroads", Key = "crossroads", Title = "남을까, 떠날까", When = "D+6 목",
                 Line = "남은 물과 먹을 것, 들려오는 소문. 지금의 조건으로 고릅니다." },
+            new DemoMoment { Id = "shelterlife", No = "4장", Chapter = "crossroads", Key = Evac.ShelterLifeResume, Title = "임시 거처의 하루", When = "D+6 목 18:40",
+                Line = "돗자리 한 장의 경계, 잠 못 드는 밤, 날마다 바뀌는 안내문, 옆 돗자리 아이. 마음이 불안할 땐 숨을 고릅니다." },
             new DemoMoment { Id = "evac", No = "5장", Chapter = "evac", Key = "evac", Title = "공식 대피", When = "D+12 수",
                 Line = "대피 안내 문자를 받고 가방 하나를 꾸려 집결지로 갑니다." },
         };
@@ -101,7 +109,8 @@ namespace AiOn.Story
         /// <summary>
         /// The route, in play order. A lesson is a fact (facts.json or facts-ext.json), never a sentence of our own; its
         /// title names the moment, not the fact's first words. alert ends once seated in the shelter (before 서연's part),
-        /// fire after the corridor fire (before D+3), decision plays 4장 out, evac runs to the ending document.
+        /// fire after the corridor fire (before D+3), decision plays 4장 out (a class that moves gets the original's one-line
+        /// skip, not 「임시 거처의 하루」: StoryContext.TeacherRun), evac runs to the ending document.
         /// </summary>
         public static readonly IReadOnlyList<TeacherStep> TeacherRoute = new[]
         {

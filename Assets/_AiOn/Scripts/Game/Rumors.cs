@@ -139,7 +139,24 @@ namespace AiOn.Game
             }, road: Shortcut),
         };
 
-        static readonly Dictionary<string, RumorSet> ById = All.ToDictionary(r => r.Id);
+        /// <summary>
+        /// Sets the port added after the original three (competition upgrade; RumorsTests compares All with the original's
+        /// golden, so these stay apart): 3장 「산에서 내려온 사람들」's group-chat claim about the hill behind the flats.
+        /// </summary>
+        public static readonly IReadOnlyList<RumorSet> PortAdded = new[]
+        {
+            new RumorSet("mountain_raid", "endure", new[] { "info_rumor", "info_scope", "radio_listen" }, new[]
+            {
+                new RumorItem("claim", "sns", "103동 단톡방 (퍼온 글)", "작성자·시각 없음 · 사진 없음", "rumor", false,
+                    _ => "북한군 수십 명이 아파트 뒷산에 숨어 있대요!! 다들 짐 싸서 빨리 나가래요"),
+                new RumorItem("manager", "neighbor", "박영수 소장", "오늘 아침 · 단지 정문에서 경찰관에게 직접 들음", "site", true,
+                    _ => "아침에 정문에 온 경찰관한테 직접 들었어요. 뒷산 입구에 통제선을 쳤고, 몇 명인지는 확인 중이래요. 나가라는 말은 없었어요."),
+                new RumorItem("official", "radio", "재난방송·연무구 안내 (가상)", "공식 안내", "official", true,
+                    _ => "연무동 일대에 통합방위 병종사태가 선포됐습니다. 인원은 확인 중입니다. 주민은 외출을 자제하고 뒷산에 들어가지 마십시오."),
+            }),
+        };
+
+        static readonly Dictionary<string, RumorSet> ById = All.Concat(PortAdded).ToDictionary(r => r.Id);
 
         /// <summary>The set with this id. Throws for an unknown id.</summary>
         public static RumorSet Rumor(string id) =>

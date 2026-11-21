@@ -405,7 +405,8 @@ namespace AiOn.UI
             view ??= new JArray();
             var v = new GalleryViewModel();
             int seen = view.Count(e => JsSem.Truthy(Get(e, "seen")));
-            v.Title = $"연무동의 열한 가지 끝 · {seen.ToString(CultureInfo.InvariantCulture)}/11";
+            int total = view.Count; // the original 11 and the port's endings (Endings.All)
+            v.Title = $"연무동의 {Endings.CountWord(total)} 가지 끝 · {seen.ToString(CultureInfo.InvariantCulture)}/{total.ToString(CultureInfo.InvariantCulture)}";
             foreach (var e in view)
             {
                 bool isSeen = JsSem.Truthy(Get(e, "seen"));

@@ -65,6 +65,7 @@ namespace AiOn.Game
                 r.Rows.Add(new ReportRow { Axis = axis, Id = id, Ok = ok, Label = ok ? yes : no, FactId = fact });
             static bool True(JToken t) => t != null && t.Type == JTokenType.Boolean && (bool)t;
             static bool False(JToken t) => t != null && t.Type == JTokenType.Boolean && !(bool)t;
+            static string JStr(JToken t) => t != null && t.Type == JTokenType.String ? (string)t : null;
 
             bool tested = Has("blackout") || Has("alert"); // the preparations were put to the test
 
@@ -101,6 +102,19 @@ namespace AiOn.Game
             else if (bag == "none") Row("alert", "takeBag", false, null, "생존배낭 없이 나섰다", "bag_take");
             else if (bag == "late") Row("alert", "takeBag", false, null, "경보가 울린 뒤에 배낭을 꾸리느라 출발이 늦었다", "bag_take");
             if (Has("candle_lit")) Row("alert", "candle", Has("candle_out"), "촛불을 끄고 집을 나섰다", "촛불을 켜 둔 채 집을 나섰다", "candle_rules");
+            // 「22분」 (D-1 morning, competition upgrade): the order of the response, never whether the alert was real
+            var tt = TwentyTwoLogic.PicksOf(g);
+            if (tt != null)
+            {
+                var ttRows = TwentyTwoLogic.Rows(tt);
+                bool TtOk(string id) => ttRows.Any(x => x.Id == id && x.Ok);
+                // good needs the elder row (TwentyTwoLogic.Verdict), so the label claims only what was done
+                Row("alert", "ttOrder", TwentyTwoLogic.Verdict(tt) == "good", "오발령 22분: 확인하고, 준비하고, 노약자부터 챙기는 순서로 대응했다",
+                    "오발령 22분: 대응 순서가 흐트러졌다", "alert_caution");
+                Row("info", "ttOfficial", TtOk("official"), "이유도 장소도 없는 경보 문자를 공식 방송으로 먼저 확인했다", "이유도 장소도 없는 경보 문자를 공식 방송으로 먼저 확인하지 않았다", "radio_listen");
+                if (tt.Contains("chat")) Row("info", "ttRumor", false, null, "오발령 아침, 확인되지 않은 말을 단톡방에 올렸다", "info_rumor");
+                if (tt.Contains("redial")) Row("info", "ttCalls", false, null, "오발령 아침, 안 되는 전화를 계속 걸었다", "comms_calls");
+            }
 
             // ---- 화재·연기 ----
             var smoke = First("smoke_escape");
@@ -162,6 +176,23 @@ namespace AiOn.Game
             if (Has("rumor_corrected")) Row("info", "rumorCorrected", true, "잘못 알고 있던 내용을 공식 안내로 바로잡았다", null, "radio_listen");
             if (Has("note_left")) Row("info", "note", true, "떠나면서 행선지를 쪽지로 남겼다", null, "evac_note");
 
+            // ---- 「산에서 내려온 사람들」 (3장 하위 장면, MountainScene): the report card, the intercom, the object ----
+            var sight = ev.LastOrDefault(e => e.Type == "sighting");
+            var sr = sight != null ? SightResult.Read(sight.Details) : null;
+            if (sr != null && sr.Played)
+            {
+                Row("info", "sightSafe", sr.HowOk, "흔적을 확인하러 가지 않고 안전한 집에서 신고했다", "흔적을 확인하러 다시 가려 했다", "defense_report");
+                Row("info", "sightReport", sr.Accurate, $"본 것만 빠짐없이 신고했다 (정확도 {sr.Score}/{sr.Full})",
+                    sr.Guesses > 0 ? $"신고 카드에 보지 않은 것을 짐작으로 적었다 (정확도 {sr.Score}/{sr.Full})" : $"신고 카드에 빈 곳이 많았다 (정확도 {sr.Score}/{sr.Full})", "report_5w");
+            }
+            var obj = First("unknown_object");
+            if (obj?.Details != null)
+            {
+                bool hands = MountainLogic.ObjectFirstOk(JStr(obj.Details["first"])), told = MountainLogic.ObjectReportOk(JStr(obj.Details["reported"]));
+                Row("info", "objectHandsOff", hands && told, "낙하물을 만지지 않고 1338·경찰서에 위치를 알렸다",
+                    !hands ? "모르는 낙하물에 다가가려 했다" : "낙하물을 1338이나 경찰서에 직접 알리지 않았다", hands ? "report_object" : "object_no_touch");
+            }
+
             // ---- 응급 처치 (대피소 심폐소생술; CprLogic.Evaluate on the "cpr" event's summary) ----
             var cpr = First("cpr");
             if (cpr?.Details != null)
@@ -172,6 +203,9 @@ namespace AiOn.Game
             if (Has("ate_spoiled")) Row("endure", "spoiled", false, null, "정전 뒤 상했을 수 있는 음식을 먹었다", "food_4h");
             if (Has("tossed_food")) Row("endure", "tossed", true, "의심스러운 음식은 먹지 않고 버렸다", null, "food_doubt");
             if (Has("water_fetched")) Row("endure", "water", true, "비상급수시설에서 물을 받아 왔다", null, "water_point");
+            var door = First("intercom");
+            if (door?.Details != null)
+                Row("endure", "doorTalk", !True(door.Details["opened"]), "낯선 방문자에게 문을 열지 않고 인터폰으로 먼저 확인했다", "누구인지 확인하기 전에 문을 열었다", "door_talk");
 
             foreach (var (id, label) in AxisDefs)
             {

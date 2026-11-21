@@ -14,6 +14,12 @@ namespace AiOn.Tests
 {
     public class EvacTests
     {
+        // 「임시 거처의 하루」 (a port addition after the move decision) is left out here: these runs are the original
+        // chapter's (ShelterLifeTests plays the day itself).
+        Func<StoryContext, System.Threading.Tasks.Task> _shelterLife;
+        [SetUp] public void LeaveOutTheShelterDay() { _shelterLife = Evac.ShelterLifePart; Evac.ShelterLifePart = null; }
+        [TearDown] public void PutTheShelterDayBack() => Evac.ShelterLifePart = _shelterLife;
+
         static bool IsLabels(TalkOptions o) => o.Choices != null && o.Choices.Any(c => c.Id == "neighbor") && o.Choices.Any(c => c.Id == "official");
         static StoryPoint P(string id, string kind = "npc", string label = null) => new() { Id = id, Kind = kind, Label = label ?? id };
 

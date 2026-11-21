@@ -27,6 +27,12 @@ namespace AiOn.Game
 
         /// <summary>(G, axes, has) -> the ending's own lines; null entries are left out.</summary>
         [JsonIgnore] internal Func<GameState, IReadOnlyDictionary<string, int>, Func<string, bool>, string[]> Lines;
+        /// <summary>
+        /// Port endings only (competition upgrade): the ending is a candidate (chosen or shown as a near miss) only for a
+        /// run that holds one of these deeds, i.e. one that played the moments it is about. Runs of the original game hold
+        /// none, so they reach and miss exactly what the original's did (갈라짐 기록).
+        /// </summary>
+        [JsonIgnore] public string[] Gate;
     }
 
     /// <summary>One step that led to the ending: the last-day path (id 'path') or a deed.</summary>
@@ -118,6 +124,22 @@ namespace AiOn.Game
 
         /// <summary>World endings in tie-break order.</summary>
         public static readonly string[] Order = { "commons", "reopen", "relief", "board" };
+
+        /// <summary>The port's world endings in tie-break order, after the original's Order (competition upgrade).</summary>
+        public static readonly string[] PortOrder = { "report", "care" };
+
+        /// <summary>Ids of the endings the port added after the original 11 (EndingsTests checks the original part against its golden).</summary>
+        public static IReadOnlyList<string> PortAdded => PortTable.Select(e => e.Id).ToArray();
+
+        static int Rank(string id)
+        {
+            int i = Array.IndexOf(Order, id);
+            return i >= 0 ? i : Order.Length + Array.IndexOf(PortOrder, id);
+        }
+
+        /// <summary>The world endings this run may reach: the original four, and a port ending once its gate is met.</summary>
+        static IEnumerable<EndingDef> Worlds(Func<string, bool> has) =>
+            AllEndings.Where(e => e.Kind == "world" && (e.Gate == null || e.Gate.Any(has)));
 
         // How you left: lines[0] of every ending on that path.
         static readonly Dictionary<string, string> Opening = new()
@@ -274,10 +296,51 @@ namespace AiOn.Game
             },
         };
 
-        static readonly Dictionary<string, EndingDef> ByIdMap = Table.ToDictionary(e => e.Id);
+        // ---- added by the port (competition upgrade): two in-town world endings on the port's axes (Deeds.PortAxisNames) ----
+        static readonly EndingDef[] PortTable =
+        {
+            new EndingDef
+            {
+                No = 12, Id = "report", Kind = "world", Title = "짧고 정확한 한 줄", Place = "연무파출소 앞 주민 안전 교실 · D+14", Need = Need(("report", 14)),
+                // ending 10 (board) is about what is written on the board; this one is about the call: 112 · 1338 · 119, said short
+                Facts = new[] { "report_112_text", "report_object" },
+                Hint = "수상한 것을 보면 다가가지 않고, 112·1338·119에 본 것만 짧게 알렸다면.",
+                Gate = new[] { "sighting_reported", "sighting_honest", "object_reported", "tt_order_good", "fire_call_clear", "intercom_checked", "intercom_police", "looter_reported", "mountain_rumor_checked", "shelter_notice_read" },
+                Lines = (g, a, has) => L(
+                    "D+14, 연무파출소 앞 공터에서 주민 안전 교실이 열렸다. 주제는 '전화 한 통, 문자 한 줄로 알리기'. 순경이 그날의 신고를 예로 들어 달라고 정민에게 부탁했다.",
+                    has("sighting_reported") ? "정민은 칠판에 그날의 신고 카드를 옮겨 적었다. 언제, 어디서, 몇 명, 무엇을 보았는지. 짐작한 칸은 하나도 없었다."
+                        : has("sighting_honest") ? "정민은 칠판에 그날의 신고 카드를 옮겨 적었다. 모르는 칸에는 '모름'이라고 썼다. 순경은 그 칸이 가장 쓸모 있었다고 했다." : null,
+                    has("object_reported") ? "잔디밭 낙하물 이야기에서는 아이들이 먼저 손을 들었다. \"만지지 않고, 물러나서, 군부대(1338)나 경찰서!\"" : null,
+                    has("fire_call_clear") ? "복도 불을 119에 알릴 때 무엇부터 말했느냐는 질문에, 정민은 동·호수부터였다고 답했다." : null,
+                    has("tt_order_good") ? "22분 동안 무엇부터 했느냐는 질문에는, 방송부터 들었다고 답했다." : null,
+                    "교실이 끝나고 아이들이 신고 연습 카드에 한 줄씩 적었다. \"어디서, 무엇을, 본 것만. 짧고 정확하게.\""),
+            },
+            new EndingDef
+            {
+                No = 13, Id = "care", Kind = "world", Title = "돌봄 순번표", Place = "103동 1층 현관 · D+14", Need = Need(("care", 16)),
+                Facts = new[] { "people_ask", "shelter_share" },
+                Hint = "어르신과 아이, 쓰러진 이웃 곁을 지키고 가진 것을 나눴다면.",
+                Gate = new[] { "cpr_helped", "cpr_relay", "elder_pov_walked", "shelter_child_care", "shelter_child_referred", "shelter_outlet_shared", "shelter_water_carried" },
+                Lines = (g, a, has) => L(
+                    "103동 현관에 종이 한 장이 붙었다. 이름 옆에 칸이 셋이었다. 안부 묻기, 물 나르기, 아이 봐 주기.",
+                    has("elder_alert_knock") || has("queue_carry_elder") ? "304호 칸에는 날마다 두 사람의 이름이 적혔다. 첫 줄은 302호였다." : null,
+                    has("cpr_relay") ? "대피소에서 함께 교대로 가슴을 눌렀던 이웃이 주민센터 심폐소생술 교육 신청서를 두 장 들고 왔다."
+                        : has("cpr_helped") ? "대피소에서 할아버지 곁을 지켰던 일을 듣고, 이웃들이 심폐소생술 교육을 함께 신청했다." : null,
+                    has("shelter_child_care") ? "임시 거처에서 봐 주었던 지우는 순번표의 '아이 봐 주기' 칸에 스티커를 붙이는 일을 맡았다."
+                        : has("shelter_child_referred") ? "임시 거처의 아이 돌봄 자원봉사 자리를 본떠, 순번표에 '아이 봐 주기' 칸이 생겼다. 지우 엄마가 첫 줄에 이름을 적었다." : null,
+                    "칸이 비면 누구든 먼저 이름을 적었다. 혼자 남는 집이 없도록."),
+            },
+        };
 
-        /// <summary>The 11 endings in order (the original ENDINGS).</summary>
-        public static IReadOnlyList<EndingDef> All => Table;
+        static readonly EndingDef[] AllEndings = Table.Concat(PortTable).ToArray();
+
+        static readonly Dictionary<string, EndingDef> ByIdMap = AllEndings.ToDictionary(e => e.Id);
+
+        /// <summary>Every ending in order: the original 11 (ENDINGS), then the port's (report, care). The gallery shows them all.</summary>
+        public static IReadOnlyList<EndingDef> All => AllEndings;
+
+        /// <summary>"열세": the number of endings as the gallery's title says it.</summary>
+        public static string CountWord(int n) => n switch { 11 => "열한", 12 => "열두", 13 => "열세", 14 => "열네", 15 => "열다섯", _ => JsSem.NumText(n) };
 
         /// <summary>The ending with this id, or null.</summary>
         public static EndingDef ById(string id) => id != null && ByIdMap.TryGetValue(id, out var e) ? e : null;
@@ -286,12 +349,12 @@ namespace AiOn.Game
         static double Fit(EndingDef e, IReadOnlyDictionary<string, int> a) =>
             e.Need.Length == 0 ? double.PositiveInfinity : e.Need.Min(n => (double)a[n.Axis] / n.Threshold);
 
-        static string Choose(IReadOnlyDictionary<string, int> a, string path)
+        static string Choose(IReadOnlyDictionary<string, int> a, string path, Func<string, bool> has)
         {
             if (Town.Contains(path) && a["harm"] >= 4) return "shut";
             if (!Town.Contains(path)) return path;
-            var best = Table.Where(e => e.Kind == "world").Select(e => (e, fit: Fit(e, a))).Where(x => x.fit >= 1)
-                .OrderByDescending(x => x.fit).ThenBy(x => Array.IndexOf(Order, x.e.Id)).Select(x => x.e).FirstOrDefault();
+            var best = Worlds(has).Select(e => (e, fit: Fit(e, a))).Where(x => x.fit >= 1)
+                .OrderByDescending(x => x.fit).ThenBy(x => Rank(x.e.Id)).Select(x => x.e).FirstOrDefault();
             return best != null ? best.Id : path;
         }
 
@@ -317,7 +380,7 @@ namespace AiOn.Game
             {
                 int Weight(string k) => d.Id == "violence"
                     ? (k == "harm" ? d.N + 2 * (d.Ko ?? 0) : 0)
-                    : (Deeds.Get(d.Id).W.TryGetValue(k, out var v) ? v : 0);
+                    : Deeds.Weight(d.Id, k); // the table's weight; on the port's axes (report, care) the port's
                 if (end.Kind == "world") return end.Need.Aggregate(0.0, (s, n) => s + (double)Math.Max(0, Weight(n.Axis)) / n.Threshold);
                 return end.Axes.Aggregate(0.0, (s, k) => s + Math.Max(0, Weight(k)));
             }
@@ -347,16 +410,16 @@ namespace AiOn.Game
         /// <summary>World endings this run did not reach, closest first, with the first undone deed on the weakest axis.</summary>
         public static List<NearMiss> NearMisses(GameState g, string id)
         {
-            var a = Deeds.Axes(g, final: true);
+            var a = Deeds.AllAxes(g, final: true);
             var done = new HashSet<string>(Deeds.Of(g).Select(d => d.Id));
             string pre = Leave.Contains(Fates.PathOf(g)) ? "연무동에 남았다면 — " : "";
-            return Table.Where(e => e.Kind == "world" && e.Id != id).Select(e => (e, fit: Fit(e, a)))
-                .OrderByDescending(x => x.fit).ThenBy(x => Array.IndexOf(Order, x.e.Id)).Take(2)
+            return Worlds(done.Contains).Where(e => e.Id != id).Select(e => (e, fit: Fit(e, a)))
+                .OrderByDescending(x => x.fit).ThenBy(x => Rank(x.e.Id)).Take(2)
                 .Select(x =>
                 {
                     var e = x.e;
                     string weak = e.Need.OrderBy(n => (double)a[n.Axis] / n.Threshold).First().Axis;
-                    var tip = Deeds.Table.FirstOrDefault(d => (d.W.TryGetValue(weak, out var v) ? v : 0) > 0 && !done.Contains(d.Id));
+                    var tip = Deeds.Table.FirstOrDefault(d => Deeds.Weight(d.Id, weak) > 0 && !done.Contains(d.Id));
                     return new NearMiss { Id = e.Id, Title = e.Title, Hint = pre + e.Hint, Tip = tip != null ? $"{Deeds.Ch[tip.Ch]} — {tip.Short}" : "" };
                 }).ToList();
         }
@@ -365,10 +428,10 @@ namespace AiOn.Game
         public static Fate PickEnding(GameState g, Func<string, string> factSource)
         {
             var path = Fates.PathOf(g);
-            var a = Deeds.Axes(g, final: true);
+            var a = Deeds.AllAxes(g, final: true);
             var done = new HashSet<string>(Deeds.Of(g).Select(d => d.Id));
             Func<string, bool> has = done.Contains;
-            var id = Choose(a, path);
+            var id = Choose(a, path, has);
             var e = ByIdMap[id];
             var lines = new List<string> { Opening[path] };
             lines.AddRange(e.Lines(g, a, has));
@@ -433,11 +496,11 @@ namespace AiOn.Game
 
         public static Gallery AddToGallery(string raw, string id, IEnumerable<string> traceIds, string at) => AddToGallery(ReadGallery(raw), id, traceIds, at);
 
-        /// <summary>All 11 cards in order; unseen endings keep their title and place hidden.</summary>
+        /// <summary>All the cards in order (the original 11, then the port's); unseen endings keep their title and place hidden.</summary>
         public static List<GalleryCard> GalleryView(Gallery gal)
         {
             var seen = ReadGallery(gal).Seen;
-            return Table.Select(e =>
+            return AllEndings.Select(e =>
             {
                 seen.TryGetValue(e.Id, out var s);
                 return new GalleryCard

@@ -14,7 +14,7 @@ namespace AiOn.UI
     {
         JArray _moments;
         readonly MenuFocusRing _ring = new() { ArrowsMove = false };
-        const float W = 1500, H = 1010, RowH = 80, RowGap = 6, Top = 144; // eight moments (소화기 쓰기 added) above the close button
+        const float W = 1500, H = 1010, RowH = 58, RowGap = 4, Top = 144; // twelve moments (「임시 거처의 하루」 added) above the close button
 
         public static void Register(UnityStoryHost host) => host.Screens["sceneSelect"] = Open;
 
@@ -49,11 +49,11 @@ namespace AiOn.UI
                 var dim = ready ? 1f : 0.45f;
                 Color Fade(Color c) => new(c.r, c.g, c.b, c.a * dim);
                 // left: chapter tag and when
-                MenuBits.Label(rt, "No", (string)m["no"], 24, Fade(UiKit.Teal), 28, 14, 110, 32, style: FontStyle.Bold);
-                MenuBits.Label(rt, "When", (string)m["when"] ?? "", 17, Fade(UiKit.Dim), 28, 50, 190, 26);
+                MenuBits.Label(rt, "No", (string)m["no"], 24, Fade(UiKit.Teal), 28, 2, 110, 32, style: FontStyle.Bold);
+                MenuBits.Label(rt, "When", (string)m["when"] ?? "", 17, Fade(UiKit.Dim), 28, 33, 190, 22);
                 // middle: title and line
-                MenuBits.Label(rt, "Title", (string)m["title"], 27, Fade(UiKit.Ink), 230, 12, 900, 36, style: FontStyle.Bold);
-                MenuBits.Label(rt, "Line", (string)m["line"], 20, Fade(UiKit.Dim), 230, 50, 1000, 30);
+                MenuBits.Label(rt, "Title", (string)m["title"], 26, Fade(UiKit.Ink), 230, 1, 900, 32, style: FontStyle.Bold);
+                MenuBits.Label(rt, "Line", (string)m["line"], 19, Fade(UiKit.Dim), 230, 32, 1000, 24);
                 // right: start, or the slot's "준비 중"
                 var chipBg = ready ? UiKit.Teal : new Color(1, 1, 1, 0.06f);
                 var chip = UiKit.Box("Chip", rt, chipBg).rectTransform;

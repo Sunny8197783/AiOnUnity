@@ -130,7 +130,7 @@ namespace AiOn.UI
             list.Add(new MenuButton("teacher", "교사용 30분 모드", ghost: true));
             list.Add(new MenuButton("records", $"도전 과제 {challenges}/{challengeTotal}", ghost: true));
             list.Add(new MenuButton("lounge", "대피소 라운지", ghost: true));
-            if (endings > 0) list.Add(new MenuButton("gallery", $"엔딩 기록 {endings}/11", ghost: true));
+            if (endings > 0) list.Add(new MenuButton("gallery", $"엔딩 기록 {endings}/{AiOn.Game.Endings.All.Count}", ghost: true));
             list.Add(new MenuButton("settings", "설정", ghost: true));
             list.Add(new MenuButton("about", "출처와 만든 사람", ghost: true));
             return list;

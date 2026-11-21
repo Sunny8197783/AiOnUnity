@@ -13,6 +13,16 @@ namespace AiOn.Story
 {
     public static class Evac
     {
+        /// <summary>The resume key of the scene-select 「임시 거처의 하루」 start (D+6, moved; a prepared save only).</summary>
+        public const string ShelterLifeResume = "shelterlife";
+
+        /// <summary>
+        /// 「임시 거처의 하루」 (ShelterLifeScene.Run; a port addition): the first night and morning in the temporary stay,
+        /// in place of the original's "하루가 지났다" for whoever moved. A test seam like DDay.CprPart: the tests that
+        /// compare this chapter with the original set it to null.
+        /// </summary>
+        public static Func<StoryContext, Task> ShelterLifePart = ShelterLifeScene.Run;
+
         static readonly string[] Water = { "water_2l", "water_500" }, Food = { "canned", "rice_instant", "bars", "ramen" };
 
         static int Count(GameState g, string id, bool bag) => g.Items.TryGetValue(id, out var e) && e != null ? (bag ? e.Bag : e.Home) : 0;
@@ -57,7 +67,14 @@ namespace AiOn.Story
             G.Chapter = "crossroads";
             ctx.Hud.SetChapter("4장", "남을까, 떠날까");
             ctx.Power = false; ctx.OutdoorEnv = "day";
-            if (ctx.Resume != "fire4")
+            if (ctx.Resume == ShelterLifeResume)
+            {
+                // Scene select (SceneSelect "shelterlife"): D+6, the move decided; a prepared save only, never a story checkpoint.
+                G.SetKnow("stayMove", "move");
+                if (ShelterLifePart != null) await ShelterLifePart(ctx);
+                ctx.Checkpoint("fire4");
+            }
+            else if (ctx.Resume != "fire4")
             {
                 int days = Math.Max(1, 6 - G.Day);
                 var ledger = await ctx.Modal(() => StoryCommon.DayLedger(ctx, days, "home"));
@@ -101,6 +118,10 @@ namespace AiOn.Story
                 });
                 G.SetKnow("stayMove", stayMove);
                 GameRules.RecordEvent(G, "decision", new JObject { ["stayMove"] = stayMove, ["water"] = water, ["food"] = food });
+                // competition upgrade: the first night and morning in the temporary stay, before the fire's checkpoint (a retry
+                // of the fire does not play the day again)
+                // (the teacher route keeps to its ~30 minutes: there the original's one-line skip tells the day)
+                if (stayMove == "move" && ShelterLifePart != null && !ctx.TeacherRun) await ShelterLifePart(ctx);
                 ctx.Checkpoint("fire4");
             }
             if (KnowString(ctx.G, "stayMove") == "move") await MoveAndFire(ctx); else await StayAndSmoke(ctx);
@@ -196,7 +217,9 @@ namespace AiOn.Story
         static async Task MoveAndFire(StoryContext ctx)
         {
             var G = ctx.G;
-            await ctx.Skip("D+6 목", "D+7 금 저녁", new[] { "짐을 꾸려 생활문화센터 임시 거처로 옮겼다. 하루가 지났다." });
+            if (ShelterLifeScene.Played(G)) // 「임시 거처의 하루」 told the night and the morning
+                await ctx.Skip("D+7 금 아침", "D+7 금 저녁", new[] { "낮에는 배식 줄과 세면장 순번을 오가며 보냈다. 충전은 바뀐 시간에 맞춰 했다." });
+            else await ctx.Skip("D+6 목", "D+7 금 저녁", new[] { "짐을 꾸려 생활문화센터 임시 거처로 옮겼다. 하루가 지났다." });
             G.Day = 7; G.Minute = 19 * 60 + 30;
             ctx.SetLevelState("shelter", "crowd", "settled");
             ctx.SetLevelState("shelter", "phase", "calm");

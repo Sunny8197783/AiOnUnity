@@ -39,6 +39,16 @@ namespace AiOn.Story
             new PrepAction("rest", "휴식", 1, "🛏", "쉬면서 피로와 긴장을 덜어 낸다."),
         };
 
+        /// <summary>The resume key of the scene-select 「22분」 start (the D-1 morning, a prepared save only).</summary>
+        public const string TwentyTwoResume = "twentytwo";
+
+        /// <summary>
+        /// 「22분」 (TwentyTwoScene.Run; a port addition): the D-1 morning interlude in place of the original's one-line skip
+        /// after tonight's slot. A test seam like Endure.LookPart: the tests that compare this chapter with the original set it
+        /// to null (then the original skip card runs).
+        /// </summary>
+        public static Func<StoryContext, Task> TwentyTwoPart = TwentyTwoScene.Run;
+
         static Func<StoryPoint, Task<JToken>> H(Func<Task<JToken>> f) => _ => f();
         static (int day, int minute) Slot(int i) => SlotAt[Math.Min(i, SlotAt.Count - 1)];
 
@@ -58,22 +68,33 @@ namespace AiOn.Story
             ctx.Hud.SetChapter("1장", "준비 — 남은 시간 여섯 칸");
             ctx.Objective(null);
             PrepActions.ApplyHome(ctx);
-            if (!g.Knows("toured")) // C0: where the shop, the mart, the 행정복지센터 and the shelter are, before the first plan
+            bool twentyTwo = ctx.Resume == TwentyTwoResume && TwentyTwoPart != null;
+            if (twentyTwo)
+            {
+                // Scene select (SceneSelect "twentytwo"): tonight's slot is done; the interlude, then the planner as usual.
+                await ctx.Goto("apartment", "home");
+                ctx.Refresh();
+                await TwentyTwoPart(ctx);
+            }
+            else if (!g.Knows("toured")) // C0: where the shop, the mart, the 행정복지센터 and the shelter are, before the first plan
             {
                 try { await Cutscenes.TownTour(ctx); }
                 catch (Exception) { /* the original logs '[cine] town tour failed; the story goes on' */ }
                 g.SetKnow("toured", true);
             }
-            await ctx.Goto("apartment", "home");
-            ctx.Refresh();
-            await ctx.Card(new CardOptions
+            if (!twentyTwo)
             {
-                Kind = "info", Title = "103동 302호", Meta = "D-2 수요일 18:30",
-                Body = { "오늘 저녁 한 칸, 내일 다섯 칸. 모든 것을 다 할 수는 없다.", "거실 벽의 달력에서 할 일을 고르자. 물건을 많이 사는 것보다, 실제로 쓸 수 있게 해 두는 것이 중요하다." },
-                Actions = new List<CardAction> { new("ok", "달력 보기", true) },
-            });
+                await ctx.Goto("apartment", "home");
+                ctx.Refresh();
+                await ctx.Card(new CardOptions
+                {
+                    Kind = "info", Title = "103동 302호", Meta = "D-2 수요일 18:30",
+                    Body = { "오늘 저녁 한 칸, 내일 다섯 칸. 모든 것을 다 할 수는 없다.", "거실 벽의 달력에서 할 일을 고르자. 물건을 많이 사는 것보다, 실제로 쓸 수 있게 해 두는 것이 중요하다." },
+                    Actions = new List<CardAction> { new("ok", "달력 보기", true) },
+                });
+            }
 
-            bool opened = false;
+            bool opened = twentyTwo; // after the interlude the calendar is on the wall, as after tonight's slot
             while (g.Slots.Used < g.Slots.Total)
             {
                 int slot = g.Slots.Used;
@@ -99,8 +120,11 @@ namespace AiOn.Story
                 var action = Actions.First(a => a.Id == pick);
                 GameRules.SpendSlot(g, action.Id, action.Cost);
                 ctx.Event("prep_action", new JObject { ["id"] = action.Id, ["slot"] = slot });
-                await RunAction(ctx, action, slot);
-                if (slot == 0 && g.Slots.Used < g.Slots.Total)
+                bool interlude = slot == 0 && g.Slots.Used < g.Slots.Total && TwentyTwoPart != null;
+                // before 「22분」 the clock stays in tonight's slot: the interlude moves it on to 06:41, the loop then to 09:00
+                await RunAction(ctx, action, slot, toSlotEnd: !interlude);
+                if (interlude) await TwentyTwoPart(ctx); // 「22분」 (D-1 06:41)
+                else if (slot == 0 && g.Slots.Used < g.Slots.Total)
                 {
                     await ctx.Skip("D-2 수 밤", "D-1 목 09:00", new[] { "밤새 뉴스 속보 알림이 몇 번 울렸다. 정민은 잠을 설쳤다." });
                     GameRules.Adjust(g, "fatigue", 6); GameRules.Adjust(g, "tension", 6);
@@ -142,7 +166,7 @@ namespace AiOn.Story
             return res is JValue v && v.Type == JTokenType.String ? v : JValue.CreateNull();
         }
 
-        static async Task RunAction(StoryContext ctx, PrepAction action, int slot)
+        static async Task RunAction(StoryContext ctx, PrepAction action, int slot, bool toSlotEnd = true)
         {
             var g = ctx.G;
             var end = Slot(slot + action.Cost);
@@ -160,8 +184,11 @@ namespace AiOn.Story
                     GameRules.Adjust(g, "fatigue", -25); GameRules.Adjust(g, "tension", -12);
                     break;
             }
-            long t = Math.Max((long)g.Day * 1440 + g.Minute, (long)end.day * 1440 + end.minute); // absolute minutes, so a day change never rolls back
-            g.Day = (int)Num.FloorDiv(t, 1440); g.Minute = (int)(t - (long)g.Day * 1440);
+            if (toSlotEnd)
+            {
+                long t = Math.Max((long)g.Day * 1440 + g.Minute, (long)end.day * 1440 + end.minute); // absolute minutes, so a day change never rolls back
+                g.Day = (int)Num.FloorDiv(t, 1440); g.Minute = (int)(t - (long)g.Day * 1440);
+            }
             if (ctx.Engine.LevelId != "apartment") await PrepActions.GoHome(ctx);
             PrepActions.ApplyHome(ctx);
         }

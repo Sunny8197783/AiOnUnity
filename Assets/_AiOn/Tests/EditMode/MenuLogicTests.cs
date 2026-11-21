@@ -26,7 +26,7 @@ namespace AiOn.Tests
             var b = MenuLogic.LandingButtons(true, 3, 0, 13);
             Assert.That(b.Select(x => x.Id), Is.EqualTo(new[] { "new", "continue", "scenes", "teacher", "records", "lounge", "gallery", "settings", "about" }));
             Assert.That(b.Single(x => x.Autofocus).Id, Is.EqualTo("continue"));
-            Assert.That(b.Single(x => x.Id == "gallery").Label, Is.EqualTo("엔딩 기록 3/11"));
+            Assert.That(b.Single(x => x.Id == "gallery").Label, Is.EqualTo($"엔딩 기록 3/{AiOn.Game.Endings.All.Count}"));
         }
 
         [Test]

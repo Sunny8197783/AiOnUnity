@@ -17,12 +17,22 @@ namespace AiOn.Story
         public const string LookResume = "look";
         /// <summary>The resume key of the scene-select "소화기" start: the same evening, straight into the corridor (no look step).</summary>
         public const string ExtResume = "ext";
+        /// <summary>The resume key of the scene-select 「산에서 내려온 사람들」 start (D+2 morning, a prepared save only).</summary>
+        public const string MountainResume = "mountain";
 
         /// <summary>
         /// The "살펴서 대피" judgement before the corridor fire (LookFirstScene.Run; a port addition, not in the original
         /// chapter). A test seam like DDay.CprPart: the tests that compare this chapter with the original set it to null.
         /// </summary>
         public static Func<StoryContext, bool, Task<LookFirstLogic.Outcome>> LookPart = (ctx, knocked) => LookFirstScene.Run(ctx, knocked);
+
+        /// <summary>
+        /// 「산에서 내려온 사람들」 (MountainScene; a port addition): the traces on the way to the water point (D+1) and the
+        /// D+2 day indoors in place of the original's one-line skip to the fire's night, then the record card after the
+        /// chapter card. Test seams like LookPart: the tests that compare this chapter with the original set both to null.
+        /// </summary>
+        public static Func<StoryContext, Task> TracesPart = MountainScene.Traces;
+        public static Func<StoryContext, Task> MountainPart = MountainScene.Run;
 
         static int Count(GameState g, string id) => g.Items.TryGetValue(id, out var e) && e != null ? e.Home + e.Bag : 0;
         static string WaterId(GameState g) => new[] { "water_500", "water_2l" }.FirstOrDefault(id => Count(g, id) > 0);
@@ -83,17 +93,23 @@ namespace AiOn.Story
             ctx.Refresh();
             if (ctx.Resume != "fire" && ctx.Resume != LookResume && ctx.Resume != ExtResume)
             {
-                await ctx.Skip("D-day 금 밤", "D+1 토 07:00", new[] { "전기는 밤새 돌아오지 않았다. 아침에는 수도꼭지에서도 물이 나오지 않았다." });
-                g = ctx.G;
-                g.Day = 1; g.Minute = 7 * 60;
-                ctx.SetLevelState("apartment", "windowView", "day");
-                PrepActions.ApplyHome(ctx);
-                await ctx.Goto("apartment", "home", "interiorDark");
-                ctx.Refresh();
-                await Morning(ctx);
-                await WaterTrip(ctx);
-                await Evening(ctx);
-                await ctx.Skip("D+1 토 밤", "D+2 일 21:40", new[] { "하루가 더 지났다. 낮에는 물을 아껴 마시며 집에서 버텼다." });
+                bool mountain = ctx.Resume == MountainResume && MountainPart != null;
+                if (!mountain)
+                {
+                    await ctx.Skip("D-day 금 밤", "D+1 토 07:00", new[] { "전기는 밤새 돌아오지 않았다. 아침에는 수도꼭지에서도 물이 나오지 않았다." });
+                    g = ctx.G;
+                    g.Day = 1; g.Minute = 7 * 60;
+                    ctx.SetLevelState("apartment", "windowView", "day");
+                    PrepActions.ApplyHome(ctx);
+                    await ctx.Goto("apartment", "home", "interiorDark");
+                    ctx.Refresh();
+                    await Morning(ctx);
+                    await WaterTrip(ctx);
+                    await Evening(ctx);
+                }
+                else PrepActions.ApplyHome(ctx);
+                if (MountainPart != null) await MountainPart(ctx);
+                else await ctx.Skip("D+1 토 밤", "D+2 일 21:40", new[] { "하루가 더 지났다. 낮에는 물을 아껴 마시며 집에서 버텼다." });
                 ctx.Checkpoint("fire");
             }
             await CorridorFire(ctx, ctx.Resume == ExtResume);
@@ -104,6 +120,7 @@ namespace AiOn.Story
             {
                 ["chapter"] = "3장", ["title"] = "버티기", ["lines"] = new JArray(sum.Lines), ["payoffs"] = JArray.FromObject(sum.Payoffs),
             }));
+            if (MountainPart != null) await MountainScene.RecordCard(ctx); // 장 사이 기록 카드 "그날, 시민들은" (only after the sub-scene)
         }
 
         static async Task Morning(StoryContext ctx)
@@ -217,6 +234,7 @@ namespace AiOn.Story
             ctx.SetLevelState("town", "closures", new JArray());
             ctx.OutdoorEnv = "day";
             await PrepActions.GoOut(ctx, "비상급수시설로", "행정복지센터 마당의 비상급수시설로 갑니다.");
+            if (TracesPart != null) await TracesPart(ctx); // 「산에서 내려온 사람들」: traces by the path up the hill (traces only)
             ctx.Objective("물 받기", "행정복지센터 마당 급수대에서 줄을 섭니다.", Array.Empty<ObjectiveStep>());
             await ctx.Roam(new RoamOptions { Rate = 2, Tick = Tick(BodyCheck(ctx)), On = { ["water"] = _ => Task.FromResult<JToken>("queue") } });
             await JoinQueue(ctx);
@@ -596,6 +614,7 @@ namespace AiOn.Story
             if (en.LevelId != "apartment") await ctx.Goto("apartment", "corridor3F", "interiorDark");
             _ = en.FadeTo(0, 0.4); // the card skip (no time-lapse) leaves the black in place
             ctx.Refresh();
+            if (MountainPart != null) await MountainScene.MorningAfter(ctx); // 「산에서 내려온 사람들」: the 통제 kept overnight is lifted
             if (g.Stats.Tension > 55) await StoryCommon.FactCard(ctx, "긴장이 높을 때", new[] { "mind_breath", "mind_call" });
             bool crossed = g.Events.Any(e => e.Type == "lookfirst" && e.Details?["act"]?.Type == JTokenType.String && (string)e.Details["act"] == "partition");
             var pick = await ctx.Say("오서연", new[] { (crossed ? "어젯밤에 베란다 벽을 넘어 301호로 피하셨다면서요? 다행이에요. " : "어젯밤 괜찮으셨어요? ") + "저 라디오 들은 거 메모해 뒀어요. 전기 복구 시점은 아직 정해지지 않았대요.", "앞으로 저녁마다 들은 걸 정리해서 문 앞에 붙여 둘게요. 필요하면 보세요." },

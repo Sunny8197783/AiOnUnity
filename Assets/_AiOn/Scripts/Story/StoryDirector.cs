@@ -140,8 +140,11 @@ namespace AiOn.Story
     {
         public bool Run, Jump, Stairs;
         public double Eye, Speed;
+        /// <summary>The hands' keys (G pick up, Q set down): off while the player is someone else (StoryDirector.OtherPov).</summary>
+        public bool Hands = true;
         public ExperienceProfile(bool run, bool jump, double eye, bool stairs, double speed) { Run = run; Jump = jump; Eye = eye; Stairs = stairs; Speed = speed; }
         public ExperienceProfile With(bool run) => new ExperienceProfile(run, Jump, Eye, Stairs, Speed);
+        public ExperienceProfile With(bool run, bool jump, bool hands) => new ExperienceProfile(run, jump, Eye, Stairs, Speed) { Hands = hands };
     }
 
     public sealed class StoryDirector : IStoryPersist
@@ -327,7 +330,21 @@ namespace AiOn.Story
             var ctxEngine = Engine is ICineFx ? new DirectorEngineFx(Engine, this) : new DirectorEngine(Engine, this);
             Ctx = new StoryContext(Rules, () => G, g => G = g, Facts, ctxEngine, Hud, Ui, Audio, this, StorySettings);
             // The 서연 interlude swaps who you are; the engine keeps one controller, so swap the model it drives.
-            Ctx.SetPlayer = preset => { Pov = preset; Engine.SetPlayerPreset(preset); };
+            Ctx.SetPlayer = preset => { Pov = preset; Engine.SetPlayerPreset(preset); ApplyBody(); };
+            // 304호 어르신's slow steps (ElderPovScene): walking only while she is the player.
+            Ctx.WalkOnly = on => { if (_walkOnly == on) return; _walkOnly = on; ApplyBody(); };
+            // An optional scene (ElderPovScene) is left out of the chapter time; a pause inside it is not counted twice.
+            Ctx.BeginUntimed = () =>
+            {
+                if (_untimed++ == 0) _untimedT0 = NowMs();
+                bool ended = false;
+                return () =>
+                {
+                    if (ended) return;
+                    ended = true;
+                    if (--_untimed == 0) _pausedMs += NowMs() - _untimedT0;
+                };
+            };
 
             _danger = parts.MakeDanger?.Invoke(Ctx, Hurt);
             _echo = parts.MakeEcho?.Invoke(Ctx, Store);
@@ -345,6 +362,8 @@ namespace AiOn.Story
                 };
             }
             Ctx.RecordRun = () => { RecordRun(); return Task.CompletedTask; };
+            Ctx.Speak = SpeakIf;
+            Ctx.MindMeter = on => { if (_rawHud is AiOn.UI.StoryOverlay so) so.SetMindMode(on); };
             // settings.view after 서연's re-read: the original read ctx.settings.view; StorySettings has none, so SeoyeonRelay
             // asks through its hook, and this director answers for its own context (another context gets SeoyeonRelay's default).
             var prevView = SeoyeonRelay.ViewSetting;
@@ -398,7 +417,8 @@ namespace AiOn.Story
             StorySettings.MemoryCue = Settings["memoryCue"]?.Type != JTokenType.Boolean || (bool)Settings["memoryCue"];
             StorySettings.ReduceMotion = Truthy(Settings["reduceMotion"]);
             Engine.SetView(View);
-            ApplyHostSettings?.Invoke((JObject)Settings.DeepClone(), p.With(p.Run && !HasLeg)); // a broken leg ends running for the rest of the run
+            ApplyHostSettings?.Invoke((JObject)Settings.DeepClone(), Body(p));
+            AiOn.UI.UiKeys.OtherPov = OtherPov; AiOn.UI.UiKeys.WalkOnly = _walkOnly;
             Ctx.ProfileSpeed = p.Speed;
             if (G != null) Ctx.Refresh();
             Store.Set(SettingsKey, Settings.ToString(Formatting.None));
@@ -413,6 +433,31 @@ namespace AiOn.Story
             Settings["quality"] = quality; Store.Set(SettingsKey, Settings.ToString(Formatting.None));
             if (auto) Hud.Toast($"화면이 자주 멈춰서 그래픽을 '{tierLabel ?? quality}'(으)로 낮췄어요. 설정에서 다시 바꿀 수 있어요.", "self", 6000);
         }
+
+        /// <summary>
+        /// The body the host applies: the profile's, a broken leg ends running for the rest of the run, someone else's slow
+        /// steps (WalkOnly) neither run nor jump, and 정민's hands (G, Q) are his only.
+        /// </summary>
+        ExperienceProfile Body(ExperienceProfile p) => p.With(p.Run && !HasLeg && !_walkOnly, p.Jump && !_walkOnly, !OtherPov);
+
+        /// <summary>The body again after whose body or pace changed (SetPlayer, WalkOnly), with the key strip to match.</summary>
+        void ApplyBody()
+        {
+            var p = Profiles[Profile];
+            ApplyHostSettings?.Invoke((JObject)Settings.DeepClone(), Body(p));
+            AiOn.UI.UiKeys.OtherPov = OtherPov; AiOn.UI.UiKeys.WalkOnly = _walkOnly;
+        }
+
+        bool _walkOnly;
+        int _untimed;
+        double _untimedT0;
+
+        /// <summary>The keys that are 정민's own (his bag, phone, notebook, first aid, chalk, light): someone else's turn leaves them.</summary>
+        public static readonly string[] PovHeldKeys = { "F", "Tab", "I", "X", "B", "P" };
+
+        /// <summary>What one of 정민's own keys says while someone else is the player.</summary>
+        public static string PovKeysLine(string pov) =>
+            $"지금은 {(pov == "elder" ? "304호 어르신" : pov == "seoyeon" ? "서연" : "다른 사람")}의 시간이에요. 정민의 불빛·소지품·휴대폰·수첩은 정민으로 돌아가면 쓸 수 있어요.";
 
         string View => Settings["view"]?.Type == JTokenType.String ? (string)Settings["view"] : "third";
 
@@ -465,6 +510,12 @@ namespace AiOn.Story
             if (G == null || !Engine.ControlsEnabled || code == null) return;
             var k = code.StartsWith("Key", StringComparison.Ordinal) && code.Length == 4 ? code.Substring(3) : code;
             if (Ctx.HandsFull && (k == "V" || k == "B" || k == "X")) return; // the extinguisher in both hands, first person
+            if (OtherPov && Array.IndexOf(PovHeldKeys, k) >= 0)
+            {
+                // 서연's or 어르신's turn: 정민's light, bag, phone, notebook, first aid and chalk are not theirs to use
+                if (Ctx.Roaming) { var line = PovKeysLine(Pov); Hud.Toast(line, "self", 3600); SpeakIf(line); }
+                return;
+            }
             if (k == "F") ToggleFlashlight();
             else if (k == "V") ToggleView();
             else if (!Ctx.Roaming) return;
@@ -573,7 +624,7 @@ namespace AiOn.Story
             double p0 = NowMs();
             var pick = Str(await Ctx.Modal(() => Ui.Open("pause", new JObject())));
             if (pick == "lounge") await Ctx.Modal(() => OpenLounge());
-            _pausedMs += NowMs() - p0;
+            if (_untimed == 0) _pausedMs += NowMs() - p0; // inside an untimed scene the whole scene is left out already
             if (pick == "settings") { var r = await Ctx.Modal(() => Ui.Open("settings", (JObject)Settings.DeepClone())); UpdateSettings(r); }
             else if (pick == "save")
             {
@@ -700,7 +751,8 @@ namespace AiOn.Story
         // 지체 장애 mode: a guardian walks a step behind, to the right.
         void GuardianFrame(double dt)
         {
-            bool on = G != null && Profile == "guardian" && Engine.LevelId != null;
+            // someone else's turn (서연, 304호 어르신) has its own company: the guardian waits for 정민
+            bool on = G != null && Profile == "guardian" && Engine.LevelId != null && !OtherPov;
             if (!on) { if (_buddy != null) _buddy.Visible = false; return; }
             double yaw = Engine.PlayerYaw, s = Math.Sin(yaw), c = Math.Cos(yaw), py = Engine.PlayerY;
             double tx = Engine.PlayerX + s * 1.3 + c * 0.6, tz = Engine.PlayerZ + c * 1.3 - s * 0.6; // behind (+sin, +cos) and right (cos, -sin)
@@ -880,9 +932,13 @@ namespace AiOn.Story
         /// <summary>The teacher route's stop for the moment playing (a StoryContext.Reached mark), or null to play the chapter out.</summary>
         string _stopAt;
 
+        /// <summary>Called on every story mark (tests take the scene-select states at marks that are not checkpoints).</summary>
+        public Action<string> MarkReached;
+
         /// <summary>persist.reached: a story mark. During a teacher-mode moment that ends here, the moment is over.</summary>
         public void Reached(string mark)
         {
+            MarkReached?.Invoke(mark);
             if (DemoRun && _stopAt != null && mark == _stopAt) throw new MomentDone(mark);
         }
 
@@ -898,6 +954,7 @@ namespace AiOn.Story
         public void ResetTransient()
         {
             Ctx.SpeedOverride = null; Ctx.Calm = false; Engine.Carrying = null;
+            Ctx.MindMeter?.Invoke(false); // 「임시 거처의 하루」's 마음 row, if a retry or the title cut the scene short
             _litT = 0; SetLight(false);
             Ctx.SetPlayer?.Invoke("jeongmin"); Hud.SetCinematic(false); Engine.SetControls(true);
             DropHeld?.Invoke(); _danger?.Reset(); Ctx.DeathCause = null; ApplySettings();
@@ -1146,6 +1203,7 @@ namespace AiOn.Story
             if (go != "start") return "teacher";
             // the player's own experience mode, kept until the class is over (also across a menu reload or a closed app)
             Store.Set(SceneSelect.TeacherRestoreKey, new JObject { ["profile"] = Settings["profile"]?.DeepClone(), ["captions"] = Settings["captions"]?.DeepClone() }.ToString(Formatting.None));
+            Ctx.TeacherRun = true;
             try
             {
                 await ProfileCard();
@@ -1164,7 +1222,7 @@ namespace AiOn.Story
                 await TeacherSummary();
                 return result;
             }
-            finally { RestoreTeacherSettings(); }
+            finally { Ctx.TeacherRun = false; RestoreTeacherSettings(); }
         }
 
         /// <summary>The class's experience mode was for the class: puts the player's own profile and captions back (once).</summary>
@@ -1352,7 +1410,12 @@ namespace AiOn.Story
             readonly IStoryHud _h; readonly StoryDirector _d;
             public DirectorHud(IStoryHud h, StoryDirector d) { _h = h; _d = d; }
             public void SetClock(string text) => _h.SetClock(text);
-            public void SetStats(Stats stats) => _h.SetStats(stats);
+            public void SetStats(Stats stats)
+            {
+                // 정민's health and fatigue are not 서연's or 어르신's: the panel waits until he is the player again
+                if (_d.OtherPov && _h is AiOn.UI.StoryOverlay so) { so.HideStats(); return; }
+                _h.SetStats(stats);
+            }
             public void SetBattery(double percent)
             {
                 if (_d.OtherPov) { if (_h is AiOn.UI.StoryOverlay so) so.HideBattery(); return; }

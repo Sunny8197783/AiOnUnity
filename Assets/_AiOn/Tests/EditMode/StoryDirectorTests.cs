@@ -342,7 +342,7 @@ namespace AiOn.Tests
             var r = new Rig();
             Assert.AreEqual("gallery", r.Title(("landing", "gallery")));
             var g = r.Host.Opens.Last().options;
-            Assert.AreEqual(11, ((JArray)g["view"]).Count);
+            Assert.AreEqual(11 + AiOn.Game.Endings.PortAdded.Count, ((JArray)g["view"]).Count, "the original 11, then the port's endings");
             Assert.AreEqual("records", r.Title(("landing", "records")));
             TestSupport.AssertJson(r.Host.Opens.Last().options, "{ done: {}, best: {}, runs: [] }");
             Assert.AreEqual("about", r.Title(("landing", "about")));
@@ -594,6 +594,69 @@ namespace AiOn.Tests
                 Assert.AreEqual(0, g.Items["first_aid"].Bag); Assert.AreEqual(1, g.Items["first_aid"].Used);
                 Assert.AreEqual("first_aid", g.Events.Last().Type);
             });
+        }
+
+        [Test]
+        // Competition upgrade (「304호의 계단」): someone else's turn leaves 정민's keys, panels and hands alone; her slow
+        // steps neither run nor jump; the guardian waits for 정민.
+        public void SomeoneElsesTurn_LeavesJeongminsKeys_AndWalkOnlyTakesRunAndJump()
+        {
+            Roaming(async r =>
+            {
+                ExperienceProfile body = null;
+                r.D.ApplyHostSettings = (s, p) => body = p;
+                var g = r.D.G;
+                g.Items["first_aid"] = new ItemEntry(0) { Bag = 1 };
+                g.Stats.Health = 50;
+                r.D.Ctx.SetPlayer("elder");
+                Assert.That(body.Run && body.Jump, "the profile's own body until the scene says walk only");
+                Assert.That(body.Hands, Is.False, "G and Q are 정민's hands");
+                r.D.Ctx.WalkOnly(true);
+                Assert.That(body.Run || body.Jump, Is.False);
+                Assert.That(AiOn.UI.UiKeys.OtherPov && AiOn.UI.UiKeys.WalkOnly);
+                Assert.That(AiOn.UI.UiKeys.StripText(6, true, true), Does.Not.Contain("Shift").And.Not.Contain("구급함").And.Not.Contain("소지품").And.Contain("WASD"));
+                foreach (var k in new[] { "KeyX", "KeyF", "KeyB" }) { r.Host.PressKey(k); await r.Host.Settle(); }
+                Assert.AreEqual(50, g.Stats.Health, "정민's first-aid kit is not used");
+                Assert.AreEqual(1, g.Items["first_aid"].Bag);
+                Assert.IsFalse(r.D.FlashOn);
+                Assert.AreEqual(StoryDirector.PovKeysLine("elder"), r.Host.Toasts.Last());
+                Assert.That(r.Host.Toasts.Contains("켤 수 있는 불빛이 없다."), Is.False);
+                Assert.That(r.Calls.Contains("echo.chalk"), Is.False);
+                r.D.UpdateSettings(new JObject { ["profile"] = "guardian" });
+                r.Host.RunFrames(3);
+                Assert.That(r.Host.Level("town").Spawned.Any(p => p.Visible), Is.False, "no guardian at her side");
+                Assert.That(body.Run || body.Jump, Is.False, "a settings change keeps her walk");
+                r.D.UpdateSettings(new JObject { ["profile"] = "none" });
+                r.D.Ctx.WalkOnly(false);
+                r.D.Ctx.SetPlayer("jeongmin");
+                Assert.That(body.Run && body.Jump && body.Hands, "정민's body again");
+                Assert.That(AiOn.UI.UiKeys.OtherPov || AiOn.UI.UiKeys.WalkOnly, Is.False);
+                r.Host.PressKey("KeyX"); await r.Host.Settle();
+                Assert.AreEqual(85, g.Stats.Health, "his keys again");
+            });
+        }
+
+        [Test]
+        public void AnUntimedScene_IsLeftOutOfTheChapterTime()
+        {
+            double Time(bool untimed)
+            {
+                var r = new Rig();
+                r.Body["prologue"] = async (c, n) =>
+                {
+                    var end = untimed ? c.BeginUntimed() : null;
+                    await c.Wait(6);
+                    end?.Invoke(); end?.Invoke(); // once only
+                    return null;
+                };
+                r.Body["ending"] = (c, n) => Task.FromResult<JToken>(new JValue("restart"));
+                r.Title(("landing", "new"));
+                return (double)r.LastG.Events.First(e => e.Type == "chapter_time" && (string)e.Details["id"] == "prologue").Details["ms"];
+            }
+            double timed = Time(false), left = Time(true);
+            Assert.That(timed, Is.GreaterThanOrEqualTo(5000));
+            Assert.That(left, Is.LessThan(timed - 5000), "the six seconds are not counted");
+            Assert.That(left, Is.GreaterThanOrEqualTo(0));
         }
 
         // ------------------------------------------------------------------ the body

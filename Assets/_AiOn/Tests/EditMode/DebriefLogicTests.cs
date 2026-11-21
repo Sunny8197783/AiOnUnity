@@ -235,14 +235,14 @@ namespace AiOn.Tests
         public void Gallery_CountsSeenAndHidesUnseen()
         {
             var view = DebriefLogic.GalleryArg(new JObject());
-            Assert.That(view.Count, Is.EqualTo(11));
+            Assert.That(view.Count, Is.EqualTo(13), "the original 11 and the port's two (report, care)");
             var v = DebriefLogic.Gallery(view);
-            Assert.That(v.Title, Is.EqualTo("연무동의 열한 가지 끝 · 0/11"));
+            Assert.That(v.Title, Is.EqualTo("연무동의 열세 가지 끝 · 0/13"));
             Assert.That(v.Rows.All(r => r.Title == "???" && !r.Seen));
 
             var gal = Endings.AddToGallery(new Gallery(), "reopen", new[] { "blackout_radio", "hall_checked" }, "2026-11-16");
             v = DebriefLogic.Gallery(DebriefLogic.GalleryArg(new JObject { ["gallery"] = JToken.FromObject(gal) }));
-            Assert.That(v.Title, Is.EqualTo("연무동의 열한 가지 끝 · 1/11"));
+            Assert.That(v.Title, Is.EqualTo("연무동의 열세 가지 끝 · 1/13"));
             var row = v.Rows.Single(r => r.Seen);
             Assert.That(row.No, Is.EqualTo("8"));
             Assert.That(row.Title, Is.EqualTo("다시 문을 연 가게"));

@@ -155,7 +155,7 @@ namespace AiOn.Story
             Timers(dt);
 
             var P = Player;
-            bool free = P && !InputGate.Blocked && InputGate.ReleasedFrame != Time.frameCount && !SuppressKeys;
+            bool free = P && !InputGate.Blocked && InputGate.ReleasedFrame != Time.frameCount && !SuppressKeys && !OtherBody;
             if (free)
             {
                 var kb = Keyboard.current;
@@ -171,6 +171,8 @@ namespace AiOn.Story
 
         /// <summary>Both hands are on something else (the 3D extinguisher): G and Q and the pickup prompt wait; dropped things still fall.</summary>
         public bool SuppressKeys;
+        /// <summary>Someone else is the player (서연, 304호 어르신; HostSettings from ExperienceProfile.Hands): no pickups, no prompt.</summary>
+        public bool OtherBody;
 
         void LateUpdate()
         {

@@ -180,6 +180,102 @@
    "topic": "bag",
    "sourceId": "ext_incheon_disability",
    "text": "청각·언어장애인은 의사소통 보조기기를 챙겨둡니다."
+  },
+  {
+   "id": "defense_stage_c",
+   "topic": "defense",
+   "sourceId": "ext_law_defense",
+   "text": "통합방위법의 병종사태는 적의 침투·도발 위협이 예상되거나 소규모의 적이 침투했을 때, 단기간 안에 치안을 회복할 수 있는 사태를 말합니다."
+  },
+  {
+   "id": "defense_zone",
+   "topic": "defense",
+   "sourceId": "ext_law_defense",
+   "text": "통합방위사태가 선포되면 시장·군수·구청장 등은 통제구역을 정해 작전과 관련 없는 사람의 출입을 금지하거나 제한할 수 있습니다."
+  },
+  {
+   "id": "defense_report",
+   "topic": "defense",
+   "sourceId": "ext_law_defense",
+   "text": "적의 침투나 출현, 또는 그 흔적을 발견한 사람은 누구든지 지체 없이 군부대나 행정기관에 신고해야 합니다."
+  },
+  {
+   "id": "suspect_report",
+   "topic": "info",
+   "sourceId": "ext_dobong_defense",
+   "text": "수상한 사람과 물건은 즉시 신고합니다. 신고는 경찰(112)과 가까운 군부대·관공서 등에 합니다."
+  },
+  {
+   "id": "report_112_text",
+   "topic": "comms",
+   "sourceId": "ext_korea_112",
+   "text": "국번 없이 112로 '위치와 상황'을 문자로 보내도 신고가 접수됩니다."
+  },
+  {
+   "id": "report_5w",
+   "topic": "info",
+   "sourceId": "ext_dhs_report",
+   "text": "수상한 것을 신고할 때는 누가 또는 무엇을 봤는지, 언제, 어디서, 왜 수상한지 구체적으로 말합니다. (미국 국토안보부)"
+  },
+  {
+   "id": "door_talk",
+   "topic": "home",
+   "sourceId": "ext_eps_door",
+   "text": "낯선 사람에게 문을 열어 줄 의무는 없습니다. 문을 열지 말고, 집에 있다는 것만 알린 채 문 너머로 이야기하며 먼저 신원을 확인합니다. (캐나다 에드먼턴 경찰)"
+  },
+  {
+   "id": "object_no_touch",
+   "topic": "info",
+   "sourceId": "ext_mois_leaflet",
+   "text": "전단으로 추정되는 물체를 발견하면 절대 만지거나 열지 말고 신고합니다."
+  },
+  {
+   "id": "record_1996_taxi",
+   "topic": "history",
+   "sourceId": "ext_seoul_1996",
+   "text": "1996년 9월 18일 새벽, 강릉의 한 택시기사는 길에서 언뜻 본 수상한 사람들과 낯선 물체를 찜찜하게 여겨 그냥 넘기지 않았고, 그의 신고 덕에 군과 경찰이 빠르게 대응할 수 있었습니다."
+  },
+  {
+   "id": "record_1996_student",
+   "topic": "history",
+   "sourceId": "ext_seoul_1996",
+   "text": "한 고등학생은 낯선 두 사람의 말투와 타고 간 차의 차종·번호, 간 방향을 기억해 신고했습니다."
+  },
+  {
+   "id": "record_1996_tips",
+   "topic": "history",
+   "sourceId": "ext_seoul_1996",
+   "text": "주민 신고는 18일 23건, 19일 오후까지 14건이 이어졌고, 사소해 보이는 제보 하나가 실마리가 될 수 있다는 점이 함께 강조됐습니다."
+  },
+  {
+   "id": "misfire_times",
+   "topic": "info",
+   "sourceId": "seoul_2023",
+   "text": "2023년 5월 31일 서울에서는 오전 6시 41분쯤 경계경보 문자가 왔고, 7시 3분에 그 경보가 '오발령'이라는 위급재난문자가 다시 왔습니다."
+  },
+  {
+   "id": "misfire_app",
+   "topic": "info",
+   "sourceId": "ext_seoul_2023_shelter",
+   "text": "그날 대피소 위치를 찾으려는 사람이 한꺼번에 몰려 안전디딤돌 앱의 대피소 위치 확인 기능이 멈췄고, 포털 사이트에도 한때 접속 장애가 생겼습니다."
+  },
+  {
+   "id": "misfire_siren",
+   "topic": "info",
+   "sourceId": "ext_seoul_2023_shelter",
+   "text": "그날 아침 서울에서는 창밖으로 들린 사이렌 소리에 잠에서 깼다는 시민도 있었습니다."
+  },
+  {
+   "id": "alert_text_fix",
+   "topic": "alert",
+   "sourceId": "ext_seoul_alert_rule",
+   "text": "2023년 8월 23일 개정된 「민방위 경보 발령·전달 규정」은 경보의 종류·발령 시각·발령 지역에 더해 발령 사유와 대피 방법을 경보 내용에 넣도록 했습니다."
+  },
+  {
+   "id": "alert_clarify",
+   "topic": "alert",
+   "sourceId": "ext_seoul_alert_rule",
+   "text": "민방위 경보가 잘못 발령되면 사이렌 장비나 재난문자방송 등으로 해명방송을 합니다."
   }
  ],
  "sources": [
@@ -286,6 +382,62 @@
    "publisher": "인천광역시",
    "title": "장애인 재난안전가이드 카드뉴스 폭염·태풍 대비(2025.7.13)",
    "url": "https://www.incheon.go.kr/IC010601/3024726",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_law_defense",
+   "publisher": "국가법령정보센터",
+   "title": "통합방위법 제2조·제16조·제19조 (법률 제21065호, 2025.10.1 시행)",
+   "url": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%86%B5%ED%95%A9%EB%B0%A9%EC%9C%84%EB%B2%95",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_dobong_defense",
+   "publisher": "서울특별시 도봉구",
+   "title": "비상대비 (수상한 사람과 물건 신고)",
+   "url": "https://www.dobong.go.kr/Contents.asp?code=10010087&tab=2",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_korea_112",
+   "publisher": "대한민국 정책브리핑(경찰청)",
+   "title": "[오맞! 이 정책] 위급상황, 말로 신고하기 어려울 땐 '이렇게'(2022.10.27)",
+   "url": "https://www.korea.kr/multi/visualNewsView.do?newsId=148907462",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_dhs_report",
+   "publisher": "미국 국토안보부 (보조 자료)",
+   "title": "How to Report Suspicious Activity",
+   "url": "https://www.dhs.gov/see-something-say-something/how-to-report-suspicious-activity",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_eps_door",
+   "publisher": "캐나다 에드먼턴 경찰 (보조 자료)",
+   "title": "When a Stranger Comes Knocking",
+   "url": "https://www.edmontonpolice.ca/CrimePrevention/HomePropertySafety/ProtectingYourHome/StrangerComesKnocking",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_seoul_1996",
+   "publisher": "서울신문",
+   "title": "강릉 잠수함 침투 때 주민 신고(1996.9.20)",
+   "url": "https://www.seoul.co.kr/news/1996/09/20/19960920023002",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_seoul_2023_shelter",
+   "publisher": "서울신문",
+   "title": "\"대피소 도대체 어디 있지?\" 새벽 사이렌, 시민들 패닉(2023.6.1)",
+   "url": "https://m.seoul.co.kr/news/2023/06/01/20230601001006",
+   "checkedAt": "2026-11-21"
+  },
+  {
+   "id": "ext_seoul_alert_rule",
+   "publisher": "서울특별시",
+   "title": "「민방위 경보 발령ㆍ전달 규정」 개정(2023.8.23.)사항 알림",
+   "url": "https://news.seoul.go.kr/safe/archives/515236",
    "checkedAt": "2026-11-21"
   }
  ]

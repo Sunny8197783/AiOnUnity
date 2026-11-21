@@ -22,10 +22,16 @@ namespace AiOn.Tests
     {
         // The chapter as the original had it: without the competition upgrade's 살펴서 대피 step (LookFirstSceneTests
         // plays it) and with the original fact toast at the elevator during the smoke escape.
+        // Nor 「산에서 내려온 사람들」 (MountainSceneTests plays it): no traces on the way to the water, the original skip to D+2 night.
         Func<StoryContext, bool, System.Threading.Tasks.Task<LookFirstLogic.Outcome>> _look;
+        Func<StoryContext, System.Threading.Tasks.Task> _traces, _mountain;
         bool _stops;
-        [SetUp] public void WithoutTheLookFirstStep() { _look = Endure.LookPart; _stops = Escape.NeighbourStops; Endure.LookPart = null; Escape.NeighbourStops = false; }
-        [TearDown] public void PutTheStepBack() { Endure.LookPart = _look; Escape.NeighbourStops = _stops; }
+        [SetUp] public void WithoutTheLookFirstStep()
+        {
+            _look = Endure.LookPart; _stops = Escape.NeighbourStops; _traces = Endure.TracesPart; _mountain = Endure.MountainPart;
+            Endure.LookPart = null; Escape.NeighbourStops = false; Endure.TracesPart = null; Endure.MountainPart = null;
+        }
+        [TearDown] public void PutTheStepBack() { Endure.LookPart = _look; Escape.NeighbourStops = _stops; Endure.TracesPart = _traces; Endure.MountainPart = _mountain; }
 
         static JObject _golden;
         // Polish pass (port upgrades the original did not have): the wait in the water queue, the knock before 서연's

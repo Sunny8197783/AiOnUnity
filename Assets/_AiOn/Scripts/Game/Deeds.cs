@@ -228,10 +228,103 @@ namespace AiOn.Game
                 Ev("cpr", d => JsSem.IsTrue(d["played"]))),
             Row("cpr_relay", "dday", W(("town", 1)), null, F(), "이웃을 지목해 교대를 부탁했다", "가슴압박을 하다 옆 사람을 지목해 교대를 부탁했다.",
                 Ev("cpr", d => JsSem.IsTrue(d["played"]) && d["swaps"] != null && d["swaps"].Type == JTokenType.Integer && (int)d["swaps"] > 0)),
+            // ---- added by the port (competition upgrade): 3장 「산에서 내려온 사람들」 (Story/MountainScene.cs) ----
+            Row("mountain_rumor_checked", "endure", W(("info", 1)), null, F("info_rumor"), "뒷산 소문을 공식 안내로 확인했다", "\"북한군 수십 명\"이라는 단톡방 글을 듣고 먼저 공식 안내로 확인했다.",
+                Ev("rumor_checked", d => JsSem.Is(d["id"], "mountain_raid"))),
+            // the report card: only an accurate card from home earns "본 것만"; an honest card with gaps (no guess) a softer line; a guessed one nothing
+            Row("sighting_reported", "endure", W(("info", 1), ("town", 1)), null, F("info_scope"), "어제 본 흔적을 112에 알렸다", "뒷산 입구에서 본 흔적을 다가가지 않고, 본 것만 추려 112에 알렸다.",
+                Ev("sighting", d => { var r = SightResult.Read(d); return r.Accurate && r.HowOk; })),
+            Row("intercom_checked", "endure", W(("manager", 1)), "박 소장은", F("info_appearance"), "문을 열기 전에 인터폰으로 물었다", "현관 앞 낯선 사람에게 문을 열지 않고 인터폰으로 묻고, 관리사무소에 확인했다.",
+                Ev("intercom", d => JsSem.IsTrue(d["asked"]) && !JsSem.IsTrue(d["opened"]) && JsSem.IsTrue(d["office"]))),
+            Row("object_reported", "endure", W(("info", 1), ("town", 1)), null, F("info_suspect"), "잔디밭 낙하물을 만지지 않고 알렸다", "단지 잔디밭에 떨어진 정체 모를 물체에서 아이들을 물러서게 하고, 만지지 않은 채 위치를 알렸다.",
+                Ev("unknown_object", d => MountainLogic.ObjectReportOk(JsSem.Str(d["reported"])))),
+            Row("sighting_honest", "endure", W(("info", 1)), null, F("info_scope"), "짐작 없이 112에 알렸다", "뒷산 입구에서 본 흔적을, 짐작은 빼고 모르는 건 모른다고 하며 112에 알렸다.",
+                Ev("sighting", d => { var r = SightResult.Read(d); return r.Played && r.Guesses == 0 && !(r.Accurate && r.HowOk); })),
+            Row("intercom_police", "endure", W(("info", 1)), null, F("info_appearance"), "문을 열기 전에 물어 112에 확인했다", "현관 앞 낯선 사람에게 문을 열지 않고 인터폰으로 묻고, 112에 확인을 부탁했다.",
+                Ev("intercom", d => JsSem.IsTrue(d["asked"]) && !JsSem.IsTrue(d["opened"]) && JsSem.IsTrue(d["police"]))),
+            // ---- added by the port (competition upgrade): 4장 「임시 거처의 하루」 (Story/ShelterLifeScene.cs "shelter_life" event) ----
+            Row("shelter_outlet_shared", "crossroads", W(("town", 1)), "그 할머니는", F("shelter_share"), "충전 차례를 할머니께 양보했다", "임시 거처의 멀티탭 앞에서 옆 할머니께 충전 차례를 먼저 양보했다.",
+                Ev(ShelterLifeLogic.Event, d => JsSem.Is(d["outlet"], "yield"))),
+            Row("shelter_water_carried", "crossroads", W(("town", 1)), "그 할아버지는", F("people_order"), "할아버지 몫의 물을 받아 드렸다", "배급대 줄에 서기 힘든 할아버지께 여쭌 뒤 물을 받아다 드렸다.",
+                Ev(ShelterLifeLogic.Event, d => JsSem.Is(d["water"], "carry"))),
+            Row("shelter_child_care", "crossroads", W(("town", 1)), "지우네 가족은", F("people_order"), "옆 돗자리 아이를 봐 주었다", "급수 줄에 간 엄마 대신 옆 돗자리 아이 지우를 20분 동안 봐 주었다.",
+                Ev(ShelterLifeLogic.Event, d => JsSem.Is(d["child"], "watch"))),
+            Row("shelter_child_referred", "crossroads", W(("town", 1)), "지우네 가족은", F("people_order"), "아이 돌봄 자리를 알려 드렸다", "아이를 봐 달라는 부탁에 임시 거처의 아이 돌봄 자원봉사 자리를 알려 드렸다.",
+                Ev(ShelterLifeLogic.Event, d => JsSem.Is(d["child"], "staff"))),
+            Row("shelter_notice_read", "crossroads", W(), null, F("shelter_rules"), "바뀐 안내문을 먼저 읽었다", "임시 거처 게시판에서 그날 바뀐 안내를 먼저 읽고 움직였다.",
+                Ev(ShelterLifeLogic.Event, d => JsSem.Is(d["notice"], "read"))),
+            // ---- added by the port (competition upgrade): the other wave-3 moments, read for the two new endings (report, care) ----
+            Row("elder_pov_walked", "dday", W(), null, F("alert_stairs"), "어르신의 걸음으로 계단을 걸었다", "304호 어르신의 걸음으로 그날 밤의 계단을 다시 내려가 보았다.",
+                Ev("elder_pov", d => JsSem.IsTrue(d["played"]))), // ElderPovLogic.Event, by name: the row compiles without that package
+            Row("tt_order_good", "prep", W(), null, F("alert_caution"), "22분, 방송부터 듣고 움직였다", "경보 문자가 온 22분 동안 공식 방송부터 듣고, 준비하고, 어르신을 챙긴 뒤 움직였다.",
+                Ev("twentytwo", d => JsSem.Is(d["verdict"], "good"))), // TwentyTwoLogic.Event, by name
+            Row("fire_call_clear", "endure", W(), null, F("fire_119"), "119에 본 그대로 알렸다", "복도에 불이 났을 때 119에 동·호수와 불의 모습을 짐작 없이 본 그대로 알렸다.",
+                (e, g) => (e.Type == "fire_report" && ClearCall(Det(e))) || (e.Type == "lookfirst" && ClearCall(Det(e)["report"] as JObject))),
         };
 
+        /// <summary>A 119 card with every line as seen, no guess, no vague line, not hung up (LookFirst's report).</summary>
+        static bool ClearCall(JObject d)
+        {
+            if (d == null) return false;
+            var r = LookReport.Read(d);
+            return r.Played && r.Score >= LookReport.Full && !r.Guess && !r.Vague && !r.Hangup;
+        }
+
         /// <summary>Rows the port appended after the original table (DeedsTests checks the original part against its golden).</summary>
-        public static readonly IReadOnlyList<string> PortAdded = new[] { "looter_reported", "looter_neighbors", "looter_argued", "cpr_helped", "cpr_relay" };
+        public static readonly IReadOnlyList<string> PortAdded = new[] { "looter_reported", "looter_neighbors", "looter_argued", "cpr_helped", "cpr_relay",
+            "mountain_rumor_checked", "sighting_reported", "intercom_checked", "object_reported", "sighting_honest", "intercom_police",
+            "shelter_outlet_shared", "shelter_water_carried", "shelter_child_care", "shelter_child_referred", "shelter_notice_read",
+            "elder_pov_walked", "tt_order_good", "fire_call_clear" };
+
+        // ---------- the port's two axes (competition upgrade): report (정확한 신고·확인 습관) and care (돌봄) ----------
+        // Kept apart from AxisNames and Axes(), which the original's golden runs pin: Axes() is the original's, AllAxes() adds
+        // these. Original deeds weigh on them too (a precise handover is a report habit; helping 어르신 down is care); only
+        // the two port endings read them (Endings.PortTable).
+
+        public static readonly string[] PortAxisNames = { "report", "care" };
+
+        static readonly Dictionary<string, (string axis, int v)[]> PortW = new()
+        {
+            // report: what was seen, said as seen; what was heard, checked first
+            ["signals_clear"] = new[] { ("report", 1) }, ["handover_precise"] = new[] { ("report", 2) }, ["handover_partial"] = new[] { ("report", 1) },
+            ["rumor_checked"] = new[] { ("report", 1) }, ["rumor_corrected"] = new[] { ("report", 1) }, ["seoyeon_note_reply"] = new[] { ("report", 1) },
+            ["fire_report"] = new[] { ("report", 2) }, ["looter_reported"] = new[] { ("report", 1) }, ["mountain_rumor_checked"] = new[] { ("report", 1) },
+            ["sighting_reported"] = new[] { ("report", 3) }, ["sighting_honest"] = new[] { ("report", 2) }, ["object_reported"] = new[] { ("report", 2) },
+            ["intercom_checked"] = new[] { ("report", 1) }, ["intercom_police"] = new[] { ("report", 1) }, ["tt_order_good"] = new[] { ("report", 2) },
+            ["fire_call_clear"] = new[] { ("report", 2) }, ["shelter_notice_read"] = new[] { ("report", 1) },
+            // care: staying beside someone, asking first, sharing what there is
+            ["elder_alert_knock"] = new[] { ("care", 2) }, ["elder_alert_told"] = new[] { ("care", 1) }, ["queue_carry_elder"] = new[] { ("care", 2) },
+            ["shelter_water_given"] = new[] { ("care", 1) }, ["register_helped"] = new[] { ("care", 1) }, ["stairs_asked"] = new[] { ("care", 1) },
+            ["water_for_seoyeon"] = new[] { ("care", 1) }, ["knock_helped"] = new[] { ("care", 1) }, ["mart_share"] = new[] { ("care", 1) },
+            ["bus_helped"] = new[] { ("care", 1) }, ["fire_warned"] = new[] { ("care", 1) }, ["elder_visit"] = new[] { ("care", 1) },
+            ["cpr_helped"] = new[] { ("care", 2) }, ["cpr_relay"] = new[] { ("care", 1) }, ["elder_pov_walked"] = new[] { ("care", 1) },
+            // watching her yourself and finding the shelter's organised childcare count the same: both look after the child
+            ["shelter_child_care"] = new[] { ("care", 2) }, ["shelter_child_referred"] = new[] { ("care", 2) },
+            ["shelter_outlet_shared"] = new[] { ("care", 1) }, ["shelter_water_carried"] = new[] { ("care", 1) },
+        };
+
+        /// <summary>A deed's weight on any axis: the table's (original axes), else the port's (report, care).</summary>
+        public static int Weight(string id, string axis)
+        {
+            var d = Get(id);
+            if (d == null || axis == null) return 0;
+            if (d.W.TryGetValue(axis, out var v)) return v;
+            if (PortW.TryGetValue(id, out var pw)) foreach (var (a, w) in pw) if (a == axis) return w;
+            return 0;
+        }
+
+        /// <summary>The port's weights of a deed (report, care), empty for none.</summary>
+        public static IReadOnlyList<(string axis, int v)> PortWeights(string id) => id != null && PortW.TryGetValue(id, out var pw) ? pw : Array.Empty<(string, int)>();
+
+        /// <summary>Axes() plus the port's axes (report, care): what the endings read.</summary>
+        public static Dictionary<string, int> AllAxes(GameState g, bool final = false)
+        {
+            var a = Axes(g, final);
+            foreach (var k in PortAxisNames) a[k] = 0;
+            foreach (var d in Of(g))
+                if (PortW.TryGetValue(d.Id, out var pw)) foreach (var (k, v) in pw) a[k] += v;
+            return a;
+        }
 
         static readonly Dictionary<string, DeedDef> ById = Index();
 

@@ -605,6 +605,14 @@ namespace AiOn.Tests
                 h.AnswerCard("add", "move");
                 return (h, c);
             }
+            var life = Evac.ShelterLifePart;
+            Evac.ShelterLifePart = null; // 「임시 거처의 하루」 is ShelterLifeTests'; this is about the fire after it
+            try { TheShelterFire(Fresh); }
+            finally { Evac.ShelterLifePart = life; }
+        }
+
+        void TheShelterFire(Func<(FakeStoryHost, StoryContext)> Fresh)
+        {
             var (host, ctx) = Fresh();
             StandIn(host, (l, t) => At(distance: 20, onBase: false));
             host.AnswerWhen(o => o.Speaker == "정민" && o.Choices != null && o.Choices.Any(c => c.Id == "fight"), "retreat");

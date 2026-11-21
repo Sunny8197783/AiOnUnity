@@ -90,6 +90,10 @@ namespace AiOn.Settings
                 p.sensitivity = SettingsMath.Sensitivity(Num(s["sensitivity"], 1));
                 if (body != null) { p.canRun = body.Run; p.canJump = body.Jump; p.canStairs = body.Stairs; p.eye = (float)body.Eye; }
             }
+            // someone else's turn: G and Q (pick up, set down) are 정민's hands (PlayerHands keeps its own SuppressKeys for the extinguisher)
+            var hands = _host ? _host.GetComponent<PlayerHands>() : null;
+            if (!hands) hands = UnityEngine.Object.FindFirstObjectByType<PlayerHands>();
+            if (hands && body != null) { if (!body.Hands) hands.Drop(); hands.OtherBody = !body.Hands; }
             if (_host && _host.cameraRig) _host.cameraRig.reduceMotion = Truthy(s["reduceMotion"]);
             AiOn.Rendering.AtmosphereDirector.ReduceMotion = Truthy(s["reduceMotion"]);
             TextScaler.Apply((float)Num(s["textScale"], 1));

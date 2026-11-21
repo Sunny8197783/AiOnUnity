@@ -49,6 +49,8 @@ namespace AiOn.Story
             ExtinguisherScene.Available = ctx => host != null; // the host's own story (a destroyed host is false)
             CprScreen.Register(host);          // cpr (2장 대피소 심폐소생술)
             LookFirstScreen.Register(host);    // lookfirst (3장 불나면 살펴서 대피, 119 신고)
+            SightingScreen.Register(host);     // sighting (3장 산에서 내려온 사람들, 찜찜한 기억 신고 카드)
+            BreatheScreen.Register(host);      // breathe (4장 임시 거처의 하루, 숨 고르기)
             PlannerScreen.Register(host);      // planner
             DocsScreen.Register(host);         // docs
             RoutemapScreen.Register(host);     // routemap
