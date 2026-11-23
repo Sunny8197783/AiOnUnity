@@ -63,9 +63,14 @@ namespace AiOn.Tests
             Assert.AreEqual("Business_Male_02", RocketboxCast.ForPreset("coworker").Avatar); // the office team lead in a suit
             Assert.AreEqual("Male_Adult_09", RocketboxCast.ForPreset("manager").Avatar);
             Assert.AreEqual(RocketboxCast.Tier.Crowd, RocketboxCast.ForAvatar("Business_Male_04").Tier);
-            Assert.AreEqual(RocketboxCast.Tier.Crowd, RocketboxCast.ForAvatar("Female_Adult_05").Tier);
-            Assert.AreEqual("Business_Female_02", RocketboxCast.ForPreset("elder").Avatar);
-            Assert.AreEqual("f015", RocketboxCast.ForAvatar("Business_Female_02").Prefix);
+            // the elder: an East Asian avatar aged in her maps; the two East Asian crowd women that replaced the Western ones
+            Assert.AreEqual("Medical_Female_01", RocketboxCast.ForPreset("elder").Avatar);
+            Assert.AreEqual("f152", RocketboxCast.ForAvatar("Medical_Female_01").Prefix);
+            Assert.AreEqual(RocketboxCast.Tier.Hero, RocketboxCast.ForPreset("elder").Tier);
+            Assert.AreEqual("Sports_Female_02", RocketboxCast.ForPreset("crowd4").Avatar);
+            Assert.AreEqual("Female_Adult_03", RocketboxCast.ForPreset("crowd6").Avatar);
+            Assert.AreEqual(RocketboxCast.Tier.Crowd, RocketboxCast.ForAvatar("Female_Adult_03").Tier);
+            Assert.AreEqual(RocketboxCast.Tier.Crowd, RocketboxCast.ForAvatar("Sports_Female_02").Tier);
             Assert.AreSame(RocketboxCast.ForPreset("guide"), RocketboxCast.ForAvatar("Security_Male_01"));
         }
 
@@ -100,10 +105,10 @@ namespace AiOn.Tests
             Assert.AreEqual(0.928f, RocketboxCast.ForPreset("manager").OldScale, 0.001f);
             Assert.AreEqual(0.945f, RocketboxCast.ForPreset("seoyeon").OldScale, 0.001f);
             Assert.AreEqual(0.941f, RocketboxCast.ForPreset("clerk").OldScale, 0.001f);
-            Assert.AreEqual(0.901f, RocketboxCast.ForPreset("elder").OldScale, 0.001f);
+            Assert.AreEqual(0.895f, RocketboxCast.ForPreset("elder").OldScale, 0.001f);
             Assert.AreEqual(0.886f, RocketboxCast.ForPreset("crowd1").OldScale, 0.001f);
-            Assert.AreEqual(1.040f, RocketboxCast.ForPreset("crowd4").OldScale, 0.001f);
-            Assert.AreEqual(0.945f, RocketboxCast.ForPreset("crowd6").OldScale, 0.001f);
+            Assert.AreEqual(1.032f, RocketboxCast.ForPreset("crowd4").OldScale, 0.001f);
+            Assert.AreEqual(0.944f, RocketboxCast.ForPreset("crowd6").OldScale, 0.001f);
         }
 
         [Test]
@@ -156,13 +161,16 @@ namespace AiOn.Tests
                 {
                     var path = AssetDatabase.GUIDToAssetPath(g);
                     var name = Path.GetFileNameWithoutExtension(path);
-                    var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                    // the source file's own size: the importer caps the imported texture at 2048, so an oversized
+                    // source would otherwise pass
+                    var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+                    imp.GetSourceTextureWidthAndHeight(out int srcW, out int srcH);
                     int max = name.EndsWith("_metallicsmooth") ? 512
                         : e.Tier != RocketboxCast.Tier.Hero ? 1024
                         : name.EndsWith("_head_color") ? 2048
                         : name.EndsWith("_body_color") && (e.Preset == "jeongmin" || e.Preset == "seoyeon") ? 2048
                         : 1024;
-                    Assert.LessOrEqual(Mathf.Max(tex.width, tex.height), max, path);
+                    Assert.LessOrEqual(Mathf.Max(srcW, srcH), max, path);
                 }
             }
         }

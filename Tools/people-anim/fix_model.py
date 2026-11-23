@@ -8,7 +8,7 @@ Prepare a Unity-ready Rocketbox FBX from <Name>_facial.fbx.
 - thighs re-parented to Bip01 Pelvis and clavicles to Bip01 Spine2 (canonical Humanoid chain; Rocketbox's own
   Unity importer does the same when not retargeting)
 - all 175 blendshapes kept; no animation
-blender -b --factory-startup -P fix_model.py -- <in_fbx> <out_fbx> [--no-reparent] [--no-shapes | --hero-shapes | --blink-shapes]"""
+blender -b --factory-startup -P fix_model.py -- <in_fbx> <out_fbx> [--no-reparent] [--no-shapes | --hero-shapes | --blink-shapes] [--bun-normals]"""
 import bpy, bmesh, sys, os, json
 argv = sys.argv[sys.argv.index('--')+1:]
 src, dst = os.path.abspath(argv[0]), os.path.abspath(argv[1])
@@ -92,10 +92,33 @@ if op_idx:
     top_z, low_z = hc.z + 0.07, hc.z - 0.22
     cn = [n.vector.copy() for n in me.corner_normals]
     bent = 0
+    # --bun-normals (Medical_Female_01, the elder): her only hair cards are the bun's, a shell over the bun's own
+    # head-mesh core behind the head. Bent from the head capsule they point backward, so on the bun's top and sides they
+    # shade much darker than the core under them (dark stripes on a grey bun); bent from the bun's centre they shade
+    # like the core. The lash cards in front of the head keep the capsule.
+    bun_c = None
+    if '--bun-normals' in argv:
+        allv = [me.vertices[me.loops[li].vertex_index].co for p in me.polygons if p.material_index in op_idx for li in p.loop_indices]
+        back = 1.0 if sum(v.y for v in allv) / len(allv) > hc.y else -1.0      # the bun holds most of the card vertices
+        is_bun = lambda v: (v.y - hc.y) * back > 0.02
+        bv = [v for v in allv if is_bun(v)]
+        info['bun_side_y'] = back
+        if bv:
+            lo = Vector((min(v.x for v in bv), min(v.y for v in bv), min(v.z for v in bv)))
+            hi = Vector((max(v.x for v in bv), max(v.y for v in bv), max(v.z for v in bv)))
+            bun_c = (lo + hi) / 2
+            info['bun_centre'] = [round(x, 3) for x in bun_c]; info['bun_size'] = [round(x, 3) for x in hi - lo]
     for p in me.polygons:
         if p.material_index not in op_idx: continue
         for li in p.loop_indices:
             v = me.vertices[me.loops[li].vertex_index].co
+            if bun_c is not None and is_bun(v):
+                out = v - bun_c
+                if out.length < 1e-5: continue
+                out.normalize()
+                n0 = cn[li] if cn[li].dot(out) >= 0 else -cn[li]
+                cn[li] = (n0 * 0.15 + out * 0.85).normalized(); bent += 1
+                continue
             c = Vector((hc.x, hc.y, min(max(v.z, low_z), top_z)))
             out = v - c
             if out.length < 1e-5: continue
