@@ -501,6 +501,19 @@ namespace AiOn.UI
                     (showTip ? $"\n<size=15><color=#b9c6cc>{it.Tip}</color></size>" : ""), inBag ? 19 : 21, UiKit.Ink);
                 var fit = row.gameObject.AddComponent<VerticalLayoutGroup>();
                 fit.padding = inBag ? new RectOffset(12, 12, 4, 6) : new RectOffset(14, 14, 8, 10);
+                var rowIcon = BagIcons.For(it.Id);
+                if (rowIcon)
+                {
+                    // the item's picture at the row's left, the text moved over for it
+                    var ic = UiKit.Box("Icon", row.transform, Color.white);
+                    ic.sprite = rowIcon; ic.preserveAspect = true;
+                    ic.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                    var irt = ic.rectTransform;
+                    irt.anchorMin = irt.anchorMax = new Vector2(0, 1); irt.pivot = new Vector2(0, 1);
+                    float sz = inBag ? 30 : 38;
+                    irt.sizeDelta = new Vector2(sz, sz); irt.anchoredPosition = new Vector2(10, inBag ? -6 : -10);
+                    fit.padding.left += (int)sz + 10;
+                }
                 fit.childControlWidth = true; fit.childForceExpandWidth = true;
                 fit.childControlHeight = true; fit.childForceExpandHeight = false;
             }
@@ -560,6 +573,7 @@ namespace AiOn.UI
                 var col = ColorOf(p.Id);
                 bool lifted = p == _held;
                 var piece = UiKit.Box("Piece_" + p.Id, _pieces, new Color(col.r, col.g, col.b, lifted ? 0.25f : 0.88f));
+                piece.sprite = HudDraw.RoundedSprite; piece.type = Image.Type.Sliced;
                 UiKit.At(piece.rectTransform, p.X * Cell + 3, p.Y * Cell + 3, p.W * Cell - 6, p.H * Cell - 6);
                 _pieceRects.Add((piece.rectTransform, p));
                 bool wet = BagRules.Papers.Contains(p.Id) && waters.Any(w => BagGrid.RightAbove(w, p));
@@ -574,6 +588,43 @@ namespace AiOn.UI
                 var t = UiKit.Label("Name", piece.transform, label, 15, new Color(0.05f, 0.07f, 0.08f), TextAnchor.MiddleCenter, FontStyle.Bold);
                 t.resizeTextForBestFit = true; t.resizeTextMinSize = 10; t.resizeTextMaxSize = 16;
                 UiKit.Fill(t.rectTransform, 3, 2);
+                var pic = BagIcons.For(p.Id);
+                if (pic)
+                {
+                    // the item's picture: at the left of a wide piece, above the name in a tall one; a one-cell piece shows
+                    // it whole with the name on a solid strip along its bottom (dark text over the picture was unreadable)
+                    float pw = p.W * Cell - 6, ph = p.H * Cell - 6;
+                    bool small = p.W == 1 && p.H == 1;
+                    var ic = UiKit.Box("Icon", piece.transform, new Color(1, 1, 1, lifted ? 0.2f : 1f));
+                    ic.sprite = pic; ic.preserveAspect = true;
+                    ic.rectTransform.SetAsFirstSibling();
+                    if (small)
+                    {
+                        const float strip = 17;
+                        float sz = Mathf.Min(pw - 8, ph - strip - 4);
+                        UiKit.At(ic.rectTransform, (pw - sz) / 2, 3, sz, sz);
+                        var bar = UiKit.Box("NameStrip", piece.transform, new Color(0.04f, 0.06f, 0.07f, lifted ? 0.3f : 0.82f));
+                        UiKit.At(bar.rectTransform, 0, ph - strip, pw, strip);
+                        t.transform.SetParent(bar.transform, false);
+                        UiKit.Fill(t.rectTransform, 2, 0);
+                        t.color = new Color(0.95f, 0.96f, 0.94f);
+                        t.text = ShortName(p.Id, _model.View(p.Id)?.Name) + (wet ? " <color=#f2b33d>젖음</color>" : "");
+                        t.resizeTextMinSize = 8; t.resizeTextMaxSize = 12;
+                    }
+                    else if (p.H == 1 && p.W >= 2)
+                    {
+                        float sz = ph - 12;
+                        UiKit.At(ic.rectTransform, 6, 6, sz, sz);
+                        UiKit.At(t.rectTransform, sz + 8, 2, pw - sz - 11, ph - 4);
+                    }
+                    else
+                    {
+                        float sz = p.H == 1 ? ph * 0.5f : Mathf.Min(pw - 12, ph * 0.62f - 8);
+                        UiKit.At(ic.rectTransform, (pw - sz) / 2, 4, sz, sz);
+                        UiKit.At(t.rectTransform, 2, sz + 4, pw - 4, ph - sz - 6);
+                        if (p.H == 1) { t.resizeTextMinSize = 9; t.resizeTextMaxSize = 13; }
+                    }
+                }
                 if (BagRules.PriorityOf(p.Id) != null)
                     UiKit.At(UiKit.Label("Star", piece.transform, "★", 12, new Color(0.05f, 0.07f, 0.08f, 0.8f), TextAnchor.UpperLeft).rectTransform, 3, 1, 16, 16);
             }

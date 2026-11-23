@@ -26,6 +26,35 @@ namespace AiOn.UI
         bool _reduce, _lowVision, _mouseHold, _touchHold;
         string _lastPhase;
         RectTransform _stage, _disc;
+
+        static Sprite _orb;
+
+        /// <summary>The breath: a soft glowing orb (white, tinted by the image colour), denser toward the middle, its edge fading; 256 px.</summary>
+        static Sprite Orb
+        {
+            get
+            {
+                if (_orb) return _orb;
+                const int n = 256;
+                var t = AiOn.UI.Studio.StudioShared.Keep(new Texture2D(n, n, TextureFormat.RGBA32, true, false) { wrapMode = TextureWrapMode.Clamp }, "BreathOrb");
+                var px = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float dx = (x + 0.5f) / n * 2 - 1, dy = (y + 0.5f) / n * 2 - 1;
+                        float r = Mathf.Sqrt(dx * dx + dy * dy);
+                        float body = Mathf.Clamp01((0.94f - r) / 0.06f);              // the orb's soft rim
+                        float core = Mathf.Pow(Mathf.Clamp01(1f - r), 1.6f);           // brighter toward the middle
+                        float a = body * (0.42f + 0.5f * core);
+                        float hi = Mathf.Clamp01(1f - Mathf.Sqrt((dx + 0.28f) * (dx + 0.28f) + (dy - 0.32f) * (dy - 0.32f)) / 0.45f); // a light from the upper left
+                        byte c = (byte)(255 * Mathf.Clamp01(0.82f + 0.18f * hi));
+                        px[y * n + x] = new Color32(c, c, c, (byte)(255 * Mathf.Clamp01(a + hi * 0.18f * body)));
+                    }
+                t.SetPixels32(px);
+                t.Apply(true, true);
+                return _orb = AiOn.UI.Studio.StudioShared.Keep(Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100), "BreathOrbSprite");
+            }
+        }
         Image _discImg;
         Text _count, _cue, _progress, _hint, _howTo, _toggleLabel, _mind;
         Button _start, _stop, _done;
@@ -74,7 +103,8 @@ namespace AiOn.UI
             guide.sprite = HudDraw.RingSprite; guide.preserveAspect = true;
             Centre(guide.rectTransform, 440);
             _discImg = UiKit.Box("Breath", _stage, new Color(UiKit.Teal.r, UiKit.Teal.g, UiKit.Teal.b, 0.32f));
-            _discImg.sprite = HudDraw.DiscSprite; _discImg.preserveAspect = true;
+            _discImg.sprite = Orb; _discImg.preserveAspect = true;
+            _discImg.color = new Color(UiKit.Teal.r, UiKit.Teal.g, UiKit.Teal.b, 0.55f);
             _disc = Centre(_discImg.rectTransform, 420);
             if (_reduce) { _discImg.type = Image.Type.Filled; _discImg.fillMethod = Image.FillMethod.Vertical; _discImg.fillOrigin = 0; _discImg.fillAmount = 0; }
             _count = UiKit.Label("Count", _stage, "", 120, UiKit.Ink, TextAnchor.MiddleCenter, FontStyle.Bold);

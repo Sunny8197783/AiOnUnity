@@ -20,8 +20,10 @@ namespace AiOn.Story
         public static readonly string[] FactIds = { "cpr_check", "cpr_point", "cpr_breath", "cpr_gasp", "cpr_depth_rate", "cpr_fatigue", "cpr_fatigue_why", "cpr_aed_steps", "cpr_aed_clear", "cpr_practice" };
         /// <summary>Game minutes from the collapse to the ambulance leaving.</summary>
         public const int Minutes = 12;
-        /// <summary>The grandfather: the grey-haired crowd model (as in the screen's drawing).</summary>
-        public const string Model = "crowd2";
+        /// <summary>The grandfather: the port's own "patient" preset (Rocketbox Male_Adult_03, grey-haired, with blendshapes
+        /// so his eyes stay shut while he lies there; crowd2, the grey-haired man of the original baked people, is a woman in
+        /// the Rocketbox casting).</summary>
+        public const string Model = AiOn.People.RocketboxCast.Patient;
 
         /// <summary>Where he lies: his middle this far in front of 정민 (whichever way they face), across the view.</summary>
         public const double ManAhead = 1.4;

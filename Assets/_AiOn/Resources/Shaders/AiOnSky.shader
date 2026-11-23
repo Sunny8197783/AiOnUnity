@@ -44,10 +44,21 @@ Shader "AiOn/Sky"
         _CloudSunDir ("Cloud light direction (unit, world)", Vector) = (0, 1, 0, 0)
         _CloudTime ("Cloud time (s, from C#)", Float) = 0
 
+        [Header(Photographed sky)]
+        [NoScaleOffset] _HdriTex ("Sky photo A (equirect, LDR, sun painted out)", 2D) = "black" {}
+        [NoScaleOffset] _HdriTex2 ("Sky photo B (cross-fade target)", 2D) = "black" {}
+        _Hdri ("Photo weight", Range(0, 1)) = 0
+        _HdriMix ("A -> B", Range(0, 1)) = 0
+        _HdriGain ("Photo gain A (linear)", Float) = 1
+        _HdriGain2 ("Photo gain B (linear)", Float) = 1
+        _HdriYaw ("Photo yaw A (turns)", Float) = 0
+        _HdriYaw2 ("Photo yaw B (turns)", Float) = 0
+        _PhotoSun ("Sun disc colour over the photo (linear)", Vector) = (1, 0.95, 0.88, 0)
+
         [Header(Horizon)]
         _FogColor ("Fog colour (linear)", Vector) = (0.5, 0.55, 0.6, 0)
         _HorizonHaze ("Haze above the horizon (0..1)", Range(0, 1)) = 0
-        _HazeFalloff ("Haze falloff", Float) = 18
+        _HazeFalloff ("Haze falloff (1 / band height in dir.y)", Float) = 5
         _BelowFade ("Below-horizon fade depth (dir.y)", Float) = 0.04
         _SkyVis ("Sky visible (0 = fog colour only)", Range(0, 1)) = 1
     }
@@ -77,6 +88,18 @@ Shader "AiOn/Sky"
             float _CloudCover, _CloudOpacity, _CloudTime;
             float4 _CloudLit, _CloudShade, _CloudSunDir;
             float4 _FogColor;
+            sampler2D _HdriTex, _HdriTex2;
+            float _Hdri, _HdriMix, _HdriGain, _HdriGain2, _HdriYaw, _HdriYaw2;
+            float4 _PhotoSun;
+
+            // a photographed sky (Poly Haven, CC0) as an equirect: azimuth from north (+z) toward east (+x), turned by yaw so
+            // its sun side faces the preset's sun; sampled at mip 0 (no seam where the azimuth wraps)
+            float3 Photo(sampler2D tex, float yaw, float gain, float3 d)
+            {
+                float u = frac(atan2(d.x, d.z) * 0.15915494 + yaw);
+                float v = 0.5 + asin(clamp(d.y, -1.0, 1.0)) * 0.31830989;
+                return tex2Dlod(tex, float4(u, v, 0, 0)).rgb * gain;
+            }
             float _HorizonHaze, _HazeFalloff, _BelowFade, _SkyVis;
 
             struct appdata { float4 vertex : POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -278,6 +301,24 @@ Shader "AiOn/Sky"
                 float starR = clamp(length(fwidth(d)) * 0.8, 0.0004, 0.004);
 
                 float3 col = Preetham(d, i);
+                if (_Hdri > 0.002)
+                {
+                    // the photo over the analytic sky; the sun disc and its glow stay the preset's own (painted out of the photo)
+                    float3 sunDir = normalize(_SunDir.xyz);
+                    float cs = dot(d, sunDir);
+                    float3 photo = Photo(_HdriTex, _HdriYaw, _HdriGain, d);
+                    if (_HdriMix > 0.002) photo = lerp(photo, Photo(_HdriTex2, _HdriYaw2, _HdriGain2, d), _HdriMix);
+                    // a photographed clear zenith is a deep blue, darker than the analytic sky the scene's light matches (a
+                    // navy sky over a sunlit street): lift it toward the analytic brightness, never darken it, so clouds
+                    // brighter than the analytic sky keep their contrast
+                    const float3 lumW = float3(0.2126, 0.7152, 0.0722);
+                    float lp = max(dot(photo, lumW), 1e-4), la = max(dot(col, lumW), 1e-4);
+                    photo *= clamp(pow(la / lp, 0.8), 1.0, 3.0);
+                    float3 sunCol = _PhotoSun.rgb;
+                    float sun = smoothstep(0.99996, 0.99999, cs) * 60.0 + pow(max(cs, 0.0), 900.0) * 3.0 + pow(max(cs, 0.0), 24.0) * 0.25;
+                    photo += sunCol * sun * step(-0.03, sunDir.y);
+                    col = lerp(col, photo, _Hdri * smoothstep(-0.02, 0.04, d.y));
+                }
                 if (_Night > 0.002) col = lerp(col, NightDome(d), _Night);
                 float above = smoothstep(0.0, 0.08, d.y);
                 if (_Stars > 0.005) col += StarField(d, starR) * (_Stars * above);
@@ -287,7 +328,9 @@ Shader "AiOn/Sky"
 
                 // Horizon: haze above, the fog colour itself below, so fogged geometry meets the sky without a seam.
                 float3 fogC = _FogColor.rgb;
-                float haze = _HorizonHaze * exp(-max(d.y, 0.0) * _HazeFalloff);
+                // a Gaussian band: flat at the horizon (where the fogged distant skyline stands), gone a few tens of degrees up
+                float hy = max(d.y, 0.0) * _HazeFalloff;
+                float haze = _HorizonHaze * exp(-hy * hy);
                 float below = saturate(-d.y / max(_BelowFade, 1e-4));
                 below = below * below * (3.0 - 2.0 * below);
                 col = lerp(col, fogC, saturate(max(haze, below)));

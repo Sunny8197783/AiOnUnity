@@ -140,20 +140,32 @@ namespace AiOn.Story
 
         const float Reach = 7f, TurnSeconds = 0.6f;
 
+        static TalkFacing _installed;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Install()
         {
+            // '메인 메뉴로' (TitleReturn) destroys every persistent root, this one too: put it back on the next scene load,
+            // or every talk after the first return to the title lost its shot, turn and lip movement.
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= Reinstall;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += Reinstall;
+            if (_installed) return;
             var go = new GameObject("TalkFacing");
             DontDestroyOnLoad(go);
-            go.AddComponent<TalkFacing>();
+            _installed = go.AddComponent<TalkFacing>();
+        }
+
+        static void Reinstall(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (!_installed && Application.isPlaying) Install();
         }
 
         Transform _npc;
         Quaternion _npcFrom, _npcTo;
         float _npcT = 1;
 
-        void OnEnable() { StoryOverlay.TalkStarted += OnTalk; StoryOverlay.TalkEnded += OnTalkEnd; }
-        void OnDisable() { StoryOverlay.TalkStarted -= OnTalk; StoryOverlay.TalkEnded -= OnTalkEnd; }
+        void OnEnable() { StoryOverlay.TalkStarted += OnTalk; StoryOverlay.TalkEnded += OnTalkEnd; StoryOverlay.TalkLineShown += OnLine; }
+        void OnDisable() { StoryOverlay.TalkStarted -= OnTalk; StoryOverlay.TalkEnded -= OnTalkEnd; StoryOverlay.TalkLineShown -= OnLine; }
 
         // ---------- the conversation shot ----------
         // Over the player's shoulder onto the speaker, their eyes about 30 % from the top, above the dialog. Eases in;
@@ -306,8 +318,42 @@ namespace AiOn.Story
             return !_rig.overrideActive || (_shot && OursNow); // a cutscene's camera stays the cutscene's
         }
 
+        /// <summary>The speaker's face while their line shows: the mouth moves (at most this long) and they look at 정민.</summary>
+        public const float SpeakSeconds = 4.5f;
+        PersonFace _talkFace;
+
+        /// <summary>
+        /// How long the mouth moves for one line (page) of a dialog: about the time it takes to say it (Korean speech runs
+        /// near 7 syllables a second; spaces and punctuation are not spoken), 1 to 7 s (pure; tested).
+        /// </summary>
+        public static float SpeakSecondsFor(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return 0f;
+            int spoken = 0;
+            foreach (var ch in line) if (char.IsLetterOrDigit(ch)) spoken++;
+            if (spoken == 0) return 0f;
+            return Mathf.Clamp(0.5f + spoken / 7f, 1f, 7f);
+        }
+
+        /// <summary>Each new page of the same speaker's dialog moves the mouth again, for that page's length.</summary>
+        void OnLine(string line)
+        {
+            if (_talkFace) _talkFace.Speak(SpeakSecondsFor(line));
+        }
+
+        void FaceSpeaker(Transform npc, PlayerController player)
+        {
+            var face = npc ? npc.GetComponentInChildren<PersonFace>() : null;
+            if (_talkFace && _talkFace != face) { _talkFace.Speak(0); _talkFace.LookAt(null); }
+            _talkFace = face;
+            if (!face) return;
+            face.Speak(SpeakSeconds);
+            if (player) face.LookAt(player.transform.position + Vector3.up * 1.6f);
+        }
+
         void OnTalkEnd()
         {
+            if (_talkFace) { _talkFace.Speak(0); _talkFace.LookAt(null); _talkFace = null; }
             if (_shot) _endAt = Time.unscaledTime + HandBackDelay;
             if (_temp != null && _tempState != Leaving) _tempEndAt = Time.unscaledTime + StandInGrace;
         }
@@ -392,6 +438,7 @@ namespace AiOn.Story
             // another person takes over: the stand-in walks off
             if (!standIn && _temp != null) DismissStandIn(false);
 
+            FaceSpeaker(npc, player);
             var eyes = standIn ? _tempHome + _tempEyes : EyesOf(npc);
             if (standIn)
             {

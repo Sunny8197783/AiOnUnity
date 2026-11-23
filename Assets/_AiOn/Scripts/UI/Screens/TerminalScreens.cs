@@ -391,7 +391,8 @@ namespace AiOn.UI
             }
             int bad = _d.Total - _d.Ok;
             var listP = Plate(body, $"대처 항목     O {_d.Ok}  ·  X {bad}", rx, ly, rw, lh);
-            var col = DebriefUi.Scroll(listP, 12, 44, rw - 24, lh - 56, out _, 8);
+            var col = DebriefUi.Scroll(listP, 12, 44, rw - 24, lh - 56, out var listScroll, 8);
+            ScrollCue.Attach(listScroll, Terminal.Plate); // the fold cut the last row mid-line with no sign there was more
             var facts = TerminalData.Facts;
             int n = 0;
             foreach (var row in _d.Rows.OrderBy(r => r.Ok))

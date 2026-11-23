@@ -25,6 +25,7 @@ namespace AiOn.UI
         readonly List<Button> _choices = new();
         AiOn.Settings.HostSettings _speech;
         bool _lowVision;
+        AiOn.UI.Studio.GaugeStudio _studio;
 
         public static async Task<JToken> Open(JObject options)
         {
@@ -47,6 +48,23 @@ namespace AiOn.UI
 
             var dial = UiKit.Box("Dial", Window, new Color(0.1f, 0.11f, 0.12f)).rectTransform;
             UiKit.At(dial, 40, 140, 600, 560);
+            // the extinguisher itself, close up at its gauge (UI/Studio/GaugeStudio); the flat dial if the model is missing
+            _studio = AiOn.UI.Studio.GaugeStudio.Create(this, AiOn.UI.Studio.MiniStudio.PixelsFor(Root.GetComponent<Canvas>(), new Vector2(600, 560)), _needle, _lowVision);
+            if (_studio)
+            {
+                dial.gameObject.AddComponent<RectMask2D>();
+                _studio.Studio.Show(dial);
+                var top = UiKit.Box("CaptionPlate", dial, new Color(0.02f, 0.03f, 0.04f, 0.7f)).rectTransform;
+                UiKit.At(top, 0, 0, 600, 58);
+                var bottom = UiKit.Box("LegendPlate", dial, new Color(0.02f, 0.03f, 0.04f, 0.7f)).rectTransform;
+                UiKit.At(bottom, 0, 494, 600, 66);
+                UiKit.At(UiKit.Label("Caption", dial, "압력계 (소화기 손잡이 옆)", 20, UiKit.Ink, TextAnchor.UpperCenter).rectTransform, 0, 16, 600, 30);
+                UiKit.At(UiKit.Label("Legend", dial, "<color=#F2B33D>■</color> 낮음   <color=#4CC38A>■</color> 정상   <color=#E64849>■</color> 높음", 20, UiKit.Ink, TextAnchor.UpperCenter).rectTransform, 0, 513, 600, 30);
+                _right = UiKit.Rect("Right", Window);
+                UiKit.At(_right, 680, 140, 680, 640);
+                Read();
+                return;
+            }
             var face = UiKit.Box("Face", dial, Color.white);
             face.sprite = DialSprite();
             UiKit.At(face.rectTransform, 90, 60, 420, 420);

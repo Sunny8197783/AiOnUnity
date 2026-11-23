@@ -122,7 +122,7 @@ namespace AiOn.Levels.Crowd
                 if (!s.Active) { s.Go.SetActive(true); s.Active = true; s.AnimName = null; b.Snap = true; } // OnEnable restarts the animator
                 if (s.Anim)
                 {
-                    bool gait = b.Anim == "walk" || b.Anim == "brisk" || b.Anim == "run";
+                    bool gait = PersonAnimator.TakesSpeed(b.Anim); // the gaits and carry play at the body's speed
                     float sp = gait ? (float)b.Speed : 0;
                     if (b.Anim != s.AnimName || (gait && Mathf.Abs(sp - s.Speed) > 0.05f) || b.Snap)
                     {
@@ -138,6 +138,11 @@ namespace AiOn.Levels.Crowd
                     if (s.Cap.radius != r) s.Cap.radius = r;
                 }
                 b.Snap = false;
+                if (s.Anim)
+                {
+                    var hold = (b.Props & PropMask.Cart) != 0 ? PersonClips.ArmsCart : null; // hands on the cart handle
+                    if (!ReferenceEquals(s.Anim.HoldPose, hold)) s.Anim.HoldPose = hold;
+                }
                 var want = b.Props | PersonProps.Auto(b.Anim);
                 if (want != s.Have && PersonProps.SetMask(s.Go, want, ref s.Have)) RefreshRenderers(s);
                 bool sh = (pos - viewer).sqrMagnitude < s2;

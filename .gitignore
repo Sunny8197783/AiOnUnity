@@ -30,3 +30,7 @@ Thumbs.db
 
 # Python caches from agent skill scripts
 __pycache__/
+
+# Unity crash-recovery scene backups (kept locally, not committed)
+/Assets/_Recovery/
+/Assets/_Recovery.meta

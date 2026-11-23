@@ -9,15 +9,17 @@ namespace AiOn.People
     /// </summary>
     public sealed class HangingProp : MonoBehaviour
     {
-        public const float Drop = 0.072f;
+        /// <summary>Below the old rig's hand bone (the wrist) / below a Rocketbox palm grip (m).</summary>
+        public const float Drop = 0.072f, GripDrop = 0.012f;
         public Transform body;
+        public float drop = Drop;
 
         void LateUpdate()
         {
             var hand = transform.parent;
             if (!hand) return;
             var yaw = body ? body.eulerAngles.y : 0f;
-            transform.SetPositionAndRotation(hand.position + Vector3.down * Drop, Quaternion.Euler(0, yaw, 0));
+            transform.SetPositionAndRotation(hand.position + Vector3.down * drop, Quaternion.Euler(0, yaw, 0));
         }
     }
 }

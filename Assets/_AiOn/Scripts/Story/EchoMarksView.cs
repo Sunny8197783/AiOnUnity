@@ -157,7 +157,7 @@ namespace AiOn.Story
         }
 
         /// <summary>Line opacity of a run's trail: the last run (age 1) faint, older ones fainter still.</summary>
-        public static float TrailAlpha(int age) => 0.28f / (1f + 0.75f * (Math.Max(1, age) - 1));
+        public static float TrailAlpha(int age) => 0.13f / (1f + 0.75f * (Math.Max(1, age) - 1)); // faint: at 0.28 and 16 cm wide it read as tape on the floor
 
         /// <summary>The death label's spot: 0.9 m to the near side of the X (behind the way you were going).</summary>
         public static (double X, double Z) DeathLabelPos(double x, double z, double yaw, double off = 0.9) =>
@@ -197,7 +197,48 @@ namespace AiOn.Story
         public static float GhostVisibility(float cameraDist, float playerDist)
         {
             static float Ramp(float d, float from, float to) { float t = Mathf.Clamp01((d - from) / (to - from)); return t * t * (3 - 2 * t); }
-            return Mathf.Min(Ramp(cameraDist, 1.2f, 3f), Ramp(playerDist, 0.8f, 2.4f));
+            return Mathf.Min(Ramp(cameraDist, 2f, 5f), Ramp(playerDist, 0.8f, 2.4f));
+        }
+
+        /// <summary>
+        /// 1, or less when the ghost stands between the camera and the player close to the line of sight (lateral metres
+        /// from it): a figure walking through the shot in a corridor must not cover the player. In first person (the player
+        /// at the camera) the line runs 4 m ahead along the view, and a figure more than about 3 m ahead keeps at least
+        /// <see cref="GhostLeadFloor"/>, so in a narrow corridor it still leads the way as a faint silhouette (pure; tested).
+        /// </summary>
+        public static float GhostClearOfView(Vector3 cam, Vector3 camForward, Vector3 player, Vector3 ghost)
+        {
+            var d = player - cam; d.y = 0;
+            bool first = d.sqrMagnitude < 0.25f;
+            if (first) { d = camForward; d.y = 0; d = d.sqrMagnitude > 1e-6f ? d.normalized * 4f : Vector3.zero; }
+            var g = ghost - cam; g.y = 0;
+            float len = d.magnitude;
+            if (len < 0.01f) return 1f;
+            float along = Vector3.Dot(g, d / len);
+            if (along <= 0f || along >= len + 0.5f) return 1f; // behind the camera, or beyond the player
+            float lateral = Mathf.Sqrt(Mathf.Max(0f, g.sqrMagnitude - along * along));
+            float t = Mathf.Clamp01((lateral - 0.5f) / 1.0f);
+            float v = t * t * (3 - 2 * t);
+            if (first)
+            {
+                float k = Mathf.Clamp01((along - 2.5f) / 1.0f);
+                v = Mathf.Max(v, GhostLeadFloor * k * k * (3 - 2 * k));
+            }
+            return v;
+        }
+
+        /// <summary>The least a ghost walking ahead in first person keeps (past about 3 m) of its visibility.</summary>
+        public const float GhostLeadFloor = 0.35f;
+
+        /// <summary>
+        /// The ghost waits for the player: 0 until they have walked about 1 m from where the echo was drawn, 1 from 3 m
+        /// on (pure; tested). A new run's first frame used to open on a translucent 정민 walking through the middle of the
+        /// office before the player had done anything.
+        /// </summary>
+        public static float GhostAfterMove(float moved)
+        {
+            float t = Mathf.Clamp01((moved - 1f) / 2f);
+            return t * t * (3 - 2 * t);
         }
 
         /// <summary>The original ghost's step: walk toward point i at <paramref name="speed"/>, next point within 0.3 m, snap back to the start when far.</summary>
@@ -407,7 +448,7 @@ namespace AiOn.Story
                 foreach (var w in world)
                 {
                     projected.AddRange(w);
-                    var lr = Line("Trail" + tr.Age, _root.transform, w, 0.16f, true);
+                    var lr = Line("Trail" + tr.Age, _root.transform, w, 0.08f, true);
                     rt.Add(new[] { lr }, null, w[0], isNew, TrailAlpha(tr.Age), Chalk);
                 }
             }
@@ -565,10 +606,38 @@ namespace AiOn.Story
         static Material GhostMat()
         {
             if (_ghostMat) return _ghostMat;
-            _ghostMat = TransparentMat("Universal Render Pipeline/Unlit", null);
+            var echo = Resources.Load<Shader>("Shaders/AiOnEchoGhost");
+            _ghostMat = echo ? new Material(echo) { name = "EchoGhost" } : TransparentMat("Universal Render Pipeline/Unlit", null);
             _ghostMat.SetColor("_BaseColor", new Color(GhostBlue.r, GhostBlue.g, GhostBlue.b, GhostAlpha));
             return _ghostMat;
         }
+
+        static readonly Dictionary<Texture, Material> _ghostCutouts = new();
+
+        /// <summary>
+        /// The ghost material for one slot of the body: alpha-clipped cards (hair, eyelashes: the person's material clips
+        /// its base map) keep that cut-out, so they read as hair and not as solid quads around the head; anything else is
+        /// the plain ghost.
+        /// </summary>
+        static Material GhostMatFor(Material source)
+        {
+            var mat = GhostMat();
+            if (!source || !source.IsKeywordEnabled("_ALPHATEST_ON") || !source.HasProperty("_BaseMap") || !mat.HasProperty("_Cutoff")) return mat;
+            var tex = source.GetTexture("_BaseMap");
+            if (!tex) return mat;
+            if (_ghostCutouts.TryGetValue(tex, out var m) && m) return m;
+            m = new Material(mat) { name = "EchoGhost_" + tex.name };
+            m.SetTexture("_BaseMap", tex);
+            m.SetFloat("_Cutoff", source.HasProperty("_Cutoff") ? source.GetFloat("_Cutoff") : 0.5f);
+            _ghostCutouts[tex] = m;
+            return m;
+        }
+
+        /// <summary>The ghost's walking pace along the remembered path (m/s; the original's).</summary>
+        public const double GhostSpeed = 1.5;
+
+        /// <summary>The person the ghost is drawn from: 정민's own body (the run it remembers is his).</summary>
+        public const string GhostPreset = "jeongmin";
 
         static LineRenderer Line(string name, Transform parent, Vector3[] pts, float width, bool dashed)
         {
@@ -584,7 +653,7 @@ namespace AiOn.Story
             lr.numCapVertices = 3;
             lr.numCornerVertices = 2;
             lr.textureMode = dashed ? LineTextureMode.Tile : LineTextureMode.Stretch;
-            if (dashed) lr.textureScale = new Vector2(1.4f, 1f); // ~1.4 dashes a metre, like footsteps
+            if (dashed) lr.textureScale = new Vector2(2.4f, 1f); // short dashes, ~2.4 a metre (at 1.4 they were half-metre strips)
             lr.sharedMaterial = LineMat(dashed);
             lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             lr.receiveShadows = false;
@@ -616,10 +685,52 @@ namespace AiOn.Story
             return cg;
         }
 
+        /// <summary>
+        /// The ghost: 정민's own body (the people prefab, animated, its face and props left out) in the see-through echo
+        /// material, casting and receiving no shadows; without the prefab, a soft figure made of primitives as before.
+        /// </summary>
         static Transform MakeGhost(Transform parent)
         {
             var g = new GameObject("EchoGhost");
             g.transform.SetParent(parent, false);
+            var host = UnityStoryHost.Instance;
+            GameObject prefab = null;
+            if (host != null && host.peoplePrefabs != null)
+                foreach (var p in host.peoplePrefabs) if (p && p.name == GhostPreset) { prefab = p; break; }
+            if (prefab)
+            {
+                // built asleep: the body's scripts never wake. It is a memory, not a person: nothing that looks for people
+                // (PlayerHands' reach and thrown things, talks, crowds) may find a PersonAnimator on it.
+                g.SetActive(false);
+                var body = Object.Instantiate(prefab, g.transform, false);
+                body.name = "Body";
+                var pa = body.GetComponentInChildren<AiOn.People.PersonAnimator>(true);
+                float gait = pa ? pa.gaitScale : 1f;
+                foreach (var mb in body.GetComponentsInChildren<MonoBehaviour>(true)) Object.DestroyImmediate(mb);
+                foreach (var c in body.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
+                foreach (var r in body.GetComponentsInChildren<Renderer>(true))
+                {
+                    var src = r.sharedMaterials;
+                    var mats = new Material[src.Length];
+                    for (int i = 0; i < mats.Length; i++) mats[i] = GhostMatFor(src[i]);
+                    r.sharedMaterials = mats;
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                    r.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                    r.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+                }
+                g.SetActive(true);
+                var an = body.GetComponentInChildren<Animator>(true);
+                if (an && an.runtimeAnimatorController)
+                {
+                    // the walk at the ghost's pace (GhostStep's 1.5 m/s), driven directly
+                    an.applyRootMotion = false;
+                    an.SetFloat("Speed", (float)GhostSpeed);
+                    an.SetFloat(AiOn.People.PersonClips.GaitScaleParam, gait);
+                    an.Play("Locomotion", 0, 0.37f);
+                }
+                return g.transform;
+            }
             void Part(PrimitiveType type, Vector3 pos, Vector3 scale)
             {
                 var p = GameObject.CreatePrimitive(type);
@@ -660,13 +771,14 @@ namespace AiOn.Story
 
             List<(double X, double Z)> _ghostPts;
             Transform _ghost;
-            MeshRenderer[] _ghostParts;
+            Renderer[] _ghostParts;
             MaterialPropertyBlock _ghostMpb;
             float _ghostShown = -1f;
             static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
             double _gx, _gz;
             int _gi;
             float _gy, _ghostBorn;
+            Vector3? _ghostFrom; // the player's position when the ghost was placed; null once they have moved away
 
             public void Add(LineRenderer[] lines, CanvasGroup group, Vector3 pos, bool fadeIn, float alpha, Color color)
             {
@@ -681,14 +793,15 @@ namespace AiOn.Story
             public void StartGhost(List<(double X, double Z)> pts, double x, double z, int i, float hint, Transform ghost, bool fadeIn)
             {
                 _ghostPts = pts; _gx = x; _gz = z; _gi = i; _ghost = ghost;
-                _ghostParts = ghost.GetComponentsInChildren<MeshRenderer>(true);
+                _ghostParts = ghost.GetComponentsInChildren<Renderer>(true);
                 _ghostMpb ??= new MaterialPropertyBlock();
                 _ghostShown = -1f;
                 var u = LevelLayout.ToUnity((float)x, 0, (float)z);
                 _gy = GroundY(u.x, u.z, hint, Player);
                 _ghost.position = new Vector3(u.x, _gy, u.z);
                 _ghostBorn = fadeIn ? 0 : -FadeIn;
-                _ghost.localScale = fadeIn ? Vector3.zero : Vector3.one;
+                _ghost.localScale = Vector3.one;
+                _ghostFrom = Player ? Player.position : (Vector3?)null;
             }
 
             static void Paint(Item it, float fade, float near)
@@ -709,8 +822,11 @@ namespace AiOn.Story
                 }
             }
 
-            /// <summary>Melts the ghost away near the camera and the player (alpha through a property block, parts hidden at 0).</summary>
-            void FadeGhostNear(Vector3 player)
+            /// <summary>
+            /// Melts the ghost away near the camera and the player and while it crosses the line of sight to the player
+            /// (alpha through a property block, renderers off at 0); <paramref name="fadeIn"/> scales it on arrival.
+            /// </summary>
+            void FadeGhostNear(Vector3 player, float fadeIn)
             {
                 if (_ghostParts == null) return;
                 var cam = Camera.main;
@@ -718,6 +834,8 @@ namespace AiOn.Story
                 float camDist = cam ? Vector3.Distance(cam.transform.position, chest) : 99f;
                 float dx = _ghost.position.x - player.x, dz = _ghost.position.z - player.z;
                 float v = Player ? GhostVisibility(camDist, Mathf.Sqrt(dx * dx + dz * dz)) : GhostVisibility(camDist, 99f);
+                if (Player && cam) v *= GhostClearOfView(cam.transform.position, cam.transform.forward, Player.position, _ghost.position);
+                v *= fadeIn;
                 v = Mathf.Round(v * 50f) / 50f; // re-tint only when it changes visibly
                 if (Mathf.Approximately(v, _ghostShown)) return;
                 _ghostShown = v;
@@ -730,8 +848,18 @@ namespace AiOn.Story
                 }
             }
 
+            bool _cineHidden;
+
             void Update()
             {
+                // not in cutscenes: the chalk of an earlier run read as road markings across the night street shots
+                bool cine = AiOn.UI.GameHud.Cinematic;
+                if (cine != _cineHidden)
+                {
+                    _cineHidden = cine;
+                    for (int c = 0; c < transform.childCount; c++) transform.GetChild(c).gameObject.SetActive(!cine);
+                }
+                if (cine) return;
                 float dt = Time.deltaTime;
                 _t += dt;
                 var eye = Player ? Player.position : (Camera.main ? Camera.main.transform.position : Vector3.zero);
@@ -751,15 +879,21 @@ namespace AiOn.Story
 
                 if (_ghost && _ghostPts != null && _ghostPts.Count > 4)
                 {
-                    var s = GhostStep(_gx, _gz, _gi, _ghostPts, dt);
+                    var s = GhostStep(_gx, _gz, _gi, _ghostPts, dt, GhostSpeed);
                     _gx = s.X; _gz = s.Z; _gi = s.I;
                     var u = LevelLayout.ToUnity((float)_gx, 0, (float)_gz);
                     _gy = GroundY(u.x, u.z, _gy - 0.9f, Player, 1.2f, 2.3f, miss: _gy); // ray from feet + 0.3 m, 2 m below; no ground: keep the height (it used to sink 0.9 m a frame)
                     _ghost.position = new Vector3(u.x, _gy, u.z);
                     if (s.Yaw.HasValue) _ghost.rotation = Quaternion.Euler(0, LevelLayout.ToUnityYaw((float)s.Yaw.Value), 0);
                     float f = Mathf.Clamp01((_t - _ghostBorn) / FadeIn);
-                    _ghost.localScale = new Vector3(1, f, 1);
-                    FadeGhostNear(eye);
+                    if (_ghostFrom.HasValue && Player)
+                    {
+                        var m = Player.position - _ghostFrom.Value; m.y = 0;
+                        float wait = GhostAfterMove(m.magnitude);
+                        if (wait >= 1f) _ghostFrom = null;
+                        f *= wait;
+                    }
+                    FadeGhostNear(eye, f);
                     // a little walking bob and leg swing, since it is not an animated person
                     float ph = _t * 1.5f * Mathf.PI * 1.25f;
                     if (_ghost.childCount >= 4)

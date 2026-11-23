@@ -173,6 +173,13 @@ namespace AiOn.Story
             UiKit.At(_titleBox, Left, Bar + 22, 1100, 200);
             _titleGroup = _titleBox.gameObject.AddComponent<CanvasGroup>();
             _titleGroup.blocksRaycasts = false; _titleGroup.interactable = false;
+            // a soft dark scrim behind the place / date lines: over the bright day haze of the aerial shots the light grey
+            // date line all but vanished (sized to the text in SetTitle)
+            _scrim = new GameObject("Scrim", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            _scrim.transform.SetParent(_titleBox, false);
+            _scrim.sprite = SoftScrim(); _scrim.type = Image.Type.Sliced; _scrim.raycastTarget = false;
+            _scrim.color = new Color(0.02f, 0.03f, 0.05f, 0.42f);
+            _scrim.gameObject.SetActive(false);
 
             var skip = UiKit.Label("CineSkip", root, "Space · 건너뛰기", 13, new Color(1, 1, 1, 0.55f), TextAnchor.LowerRight);
             var srt = skip.rectTransform;
@@ -200,6 +207,7 @@ namespace AiOn.Story
             foreach (var t in _lineTexts) if (t) Destroy(t.gameObject);
             _lineTexts.Clear();
             _lines = Array.Empty<string>();
+            if (_scrim) _scrim.gameObject.SetActive(false);
             if (lines == null || lines.Count == 0) return;
             _lines = new string[lines.Count];
             float y = 0;
@@ -216,6 +224,40 @@ namespace AiOn.Story
                 y += size * 1.3f + size * 0.35f;
                 _lineTexts.Add(t);
             }
+            float w = 0;
+            for (int i = 0; i < _lines.Length; i++)
+            {
+                var g = _lineTexts[i].cachedTextGeneratorForLayout;
+                var set = _lineTexts[i].GetGenerationSettings(new Vector2(4000, 100));
+                w = Mathf.Max(w, g.GetPreferredWidth(_lines[i], set) / _lineTexts[i].pixelsPerUnit);
+            }
+            const float pad = 26;
+            UiKit.At((RectTransform)_scrim.transform, -pad, -pad * 0.7f, w + pad * 2, y + pad * 1.2f);
+            _scrim.transform.SetAsFirstSibling();
+            _scrim.gameObject.SetActive(true);
+        }
+
+        Image _scrim;
+        static Sprite _scrimSprite;
+
+        /// <summary>A 64 px white rounded rectangle whose alpha fades out over its 24 px border (9-sliced; made once).</summary>
+        static Sprite SoftScrim()
+        {
+            if (_scrimSprite) return _scrimSprite;
+            const int n = 64; const float b = 24f;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = "CineScrim", wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            var px = new Color32[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = Mathf.Max(0, b - Mathf.Min(x + 0.5f, n - x - 0.5f)), dy = Mathf.Max(0, b - Mathf.Min(y + 0.5f, n - y - 0.5f));
+                    float a = 1f - Mathf.Clamp01(Mathf.Sqrt(dx * dx + dy * dy) / b);
+                    px[y * n + x] = new Color32(255, 255, 255, (byte)(255 * a * a * (3 - 2 * a)));
+                }
+            tex.SetPixels32(px); tex.Apply();
+            _scrimSprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect, new Vector4(b, b, b, b));
+            _scrimSprite.hideFlags = HideFlags.DontSave;
+            return _scrimSprite;
         }
 
         public void TitleOut() => _out = true;

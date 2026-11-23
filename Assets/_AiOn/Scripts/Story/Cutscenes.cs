@@ -207,12 +207,14 @@ namespace AiOn.Story
         {
             var cine = ctx.Cine;
             var h = HereOf(ctx);
-            IStoryPerson lead = null;
+            IStoryPerson lead = null, street = null;
             await ctx.Goto("town", "home");
             var res = await cine.Play(new List<CineShot>
             {
-                // from the roadside facing the complex gate (it used to look through the fence), the walkers come out and cross the frame
-                new CineShot { Dur = 6.5, Fade = true, Exposure = 1.05, Cam = new CineCam { P = Pts(V(49.6, 1.8, 13.2), V(48.9, 1.85, 12.4)), T = Pts(V(58, 1.5, 19), V(42, 1.4, 8)), Fov = new[] { 50.0, 50 }, Hand = 0.12 }, // ends looking up 연무로, not at the dark shop front
+                // from the middle of the dark 연무로 (no traffic tonight) facing the complex gate: the walkers come out under the
+                // moonlit blocks and pass 4-5 m in front of the camera, which follows them to the sidewalk. (It stood on the sidewalk behind a lamp post and
+                // a bollard, with the lower two-thirds of the frame black; visual QA.)
+                new CineShot { Dur = 6.5, Fade = true, Exposure = 1.55, Cam = new CineCam { P = Pts(V(50, 1.7, 6), V(49.4, 1.75, 6.6)), T = Pts(V(57, 1.3, 17), V(49, 1.2, 11.5)), Fov = new[] { 50.0, 46 }, Hand = 0.1 },
                     Setup = () =>
                     { // residents of the complex hurry out of the gate toward the shelter, phone torches on
                         var who = new (string preset, double delay, double speed, string[] props)[]
@@ -232,12 +234,44 @@ namespace AiOn.Story
                     // the lead's phone torch: in the hand at 1.2 m, short reach, so it lights the walkers and not the fence
                     Fill = new CineFill { At = () => lead != null ? V(lead.X, 1.2, lead.Z) : null, I = 2.2, Color = "#fff1dc", Range = 4.0 },
                     Lines = { new CineLine(0.5, "20:05 — 공습경보. 사이렌이 오르내리며 1분 동안 울린다.", null, 5200) } },
-                new CineShot { Dur = 5, Exposure = 1.1, Cam = new CineCam { P = Pts(V(40, 2, -8), V(46, 2.2, -6)), T = Pts(V(-20, 6, 30), V(-30, 10, 34)), Fov = new[] { 46.0, 44 }, Hand = 0.08 },
+                // west of the road closure, looking back east along the south sidewalk: the residents come toward the camera past
+                // the barriers' end, faces lit by their phone torches (it started 1.4 m behind a street tree, and the walkers went
+                // through the barrier blocks; visual QA)
+                new CineShot { Dur = 5, Exposure = 1.5, Cam = new CineCam { P = Pts(V(21, 1.75, 3.2), V(22, 1.8, 3.6)), T = Pts(V(46, 1.3, 10.5), V(44, 1.3, 10.2)), Fov = new[] { 46.0, 44 }, Hand = 0.08 },
+                    // Port (visual QA): the town crowd's first wave is already past this stretch of 연무로 by now, so the caption
+                    // played over an empty street. Residents already on their way west along both sidewalks fill it.
+                    Setup = () =>
+                    {
+                        street = null;
+                        foreach (var w in StreetWalkers)
+                        {
+                            var a = cine.Actor(w.preset, new ActorOptions { Path = new (double, double)[] { (w.x, w.z), (-44, w.z) }, Speed = w.speed, Delay = w.delay, Props = w.props });
+                            street ??= a;
+                        }
+                        return null;
+                    },
+                    // the first walker's phone torch, like the first shot's: the unlit road showed them only as dark shapes
+                    Fill = new CineFill { At = () => street != null ? V(street.X, 1.2, street.Z) : null, I = 2.2, Color = "#fff1dc", Range = 6.0 },
                     Lines = { new CineLine(0.4, "어두운 거리로 사람들이 쏟아져 나온다. 다들 지하로 향한다.", null, 4200) } },
             }, new[] { "연무동", "D-day 금요일 20:05" });
             await Back(ctx, h);
             return res;
         }
+
+        /// <summary>The siren scene's second shot: people already walking west along 연무로's south sidewalk toward the shelter
+        /// (the z 8-11 band the evacuation paths use: the road itself is closed by the barrier line at x 28), original frame.</summary>
+        public static readonly (string preset, double x, double z, double speed, double delay, string[] props)[] StreetWalkers =
+        {
+            // east of the barrier line, coming toward the camera along the sidewalk
+            ("crowd", 36, 8.6, 2.2, 0, new[] { "flashlight" }), ("crowd", 39, 9.8, 2.0, 0.3, new[] { "backpack" }),
+            ("crowd", 42, 8.9, 2.4, 0, new string[0]), ("crowd", 45, 10.4, 2.3, 0.4, new[] { "backpack", "flashlight" }),
+            ("elder", 33, 10.0, 1.2, 0, new string[0]),
+            // and further back, near the complex
+            ("crowd", 49, 9.2, 2.2, 0, new[] { "flashlight" }), ("crowd", 52, 8.7, 2.0, 0.2, new[] { "backpack" }), ("crowd", 55, 10.1, 2.3, 0, new string[0]),
+        };
+
+        /// <summary>The south sidewalk band of 연무로 (original z) the street walkers keep to, clear of the road closure.</summary>
+        public const double SidewalkZMin = 8.2, SidewalkZMax = 11.0;
 
         // ---- 5장: the buses leave the assembly point (port upgrade: the caption used to play over the roam) ----
         /// <summary>
@@ -376,7 +410,9 @@ namespace AiOn.Story
 
         public static readonly Dictionary<string, Close> Closes = new()
         {
-            ["bus"] = new Close { States = { ["buses"] = "departed", ["crowd"] = "boarded" }, Cam = new CineCam { P = Pts(V(-47, 6, -29), V(-51, 5, -31)), T = Pts(V(-67, 1.6, -41)) }, Title = new[] { "행정복지센터 앞 임시 집결지", "버스가 출발한다" } },
+            // ends a little short of the yard's west edge: further left the 임시 집결지 board came into the frame's corner
+            // with its pole drawn across the lettering (visual QA)
+            ["bus"] = new Close { States = { ["buses"] = "departed", ["crowd"] = "boarded" }, Cam = new CineCam { P = Pts(V(-47, 6, -29), V(-50, 5.4, -30.3)), T = Pts(V(-66, 1.6, -41.5)) }, Title = new[] { "행정복지센터 앞 임시 집결지", "버스가 출발한다" } },
             ["missed"] = new Close { States = { ["buses"] = "off", ["crowd"] = "sparse" }, Cam = new CineCam { P = Pts(V(-47, 6, -29), V(-50, 5.5, -30)), T = Pts(V(-62, 1, -44)) }, Title = new[] { "임시 집결지", "버스가 떠난 뒤" } },
             ["volunteer"] = new Close { States = { ["waterPoint"] = "on", ["crowd"] = "queue" }, Cam = new CineCam { P = Pts(V(-67, 5, -7), V(-70, 4.5, -9)), T = Pts(V(-80, 1.2, -17)) }, Title = new[] { "비상급수시설", "자원봉사 조끼를 입고" } },
             ["stay"] = new Close { Cam = new CineCam { P = Pts(V(80, 2.5, 12), V(79, 3.5, 14)), T = Pts(V(82, 9, 30), V(82, 11, 30)) }, Title = new[] { "한빛아파트 103동", "남기로 한 집" } },
@@ -409,7 +445,7 @@ namespace AiOn.Story
                 res = await cine.Play(Still(ctx, new[]
                 {
                     new CineShot { Dur = dur, Fade = !held, Exposure = 0.4, Cam = crane,
-                        Lines = picks.Select((r, i) => new CineLine(1 + i * 4.6, $"{r.Cause?.When} · {r.Cause?.Text}  →  {r.Effect?.When} · {r.Effect?.Text}", r.Label, 4400)).ToList() },
+                        Lines = picks.Select((r, i) => new CineLine(1 + i * 4.6, $"{r.Cause?.When} · {r.Cause?.Text}\n→  {r.Effect?.When} · {r.Effect?.Text}" /* cause, then effect on its own line (a long pair wrapped a lone word) */, r.Label, 4400)).ToList() },
                 }), new[] { "그날의 선택들", "연무동, 돌아보며" });
             }
             if (res != "done") return res;

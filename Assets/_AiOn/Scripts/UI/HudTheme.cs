@@ -89,6 +89,13 @@ namespace AiOn.UI
 
         public static float OutCubic(float t) { t = 1f - Mathf.Clamp01(t); return 1f - t * t * t; }
 
+        /// <summary>
+        /// Where the third-person prompt for a person sits (canvas y, centre 0): just under their feet as seen on screen,
+        /// kept between -330 (above the bottom edge) and -150 (well under a face at the crosshair); -220 when the feet are
+        /// not on screen.
+        /// </summary>
+        public static float NpcPromptY(float? feetY) => feetY.HasValue ? Mathf.Clamp(feetY.Value - 34f, -330f, -150f) : -220f;
+
         /// <summary>Exponential approach of current to target (frame-rate independent).</summary>
         public static float Approach(float current, float target, float rate, float dt) => Mathf.Lerp(current, target, 1f - Mathf.Exp(-rate * dt));
 

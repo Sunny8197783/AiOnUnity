@@ -59,7 +59,7 @@ namespace AiOn.Levels
             IdFogColor = Shader.PropertyToID("_FogColor"), IdHaze = Shader.PropertyToID("_HorizonHaze"),
             IdSkyVis = Shader.PropertyToID("_SkyVis"), IdColor = Shader.PropertyToID("_Color"),
             IdFogAmount = Shader.PropertyToID("_FogAmount"), IdCull = Shader.PropertyToID("_Cull"),
-            IdEmissionColor = Shader.PropertyToID("_EmissionColor");
+            IdEmissionColor = Shader.PropertyToID("_EmissionColor"), IdShadeLift = Shader.PropertyToID("_ShadeLift");
 
         /// <summary>Loads a shader from Resources/Shaders (so it ships in builds), falling back to Shader.Find.</summary>
         public static Shader LoadShader(string resource, string shaderName)
@@ -91,10 +91,42 @@ namespace AiOn.Levels
                 _hillsNearMat = UnlitMaterial(unlit, "HillsNear", 0f, 0f);
                 _hillsFarMat = UnlitMaterial(unlit, "HillsFar", 0f, 0f);
                 // 광교산 rises to the north (three.js angle 1.5 pi = -z = north)
-                AddRenderer("HillsNear", HillRing(760f, 25f, 110f, 5, new[] { new Vector3(Mathf.PI * 1.5f, 0.35f, 0.9f), new Vector3(0.4f, 0.25f, 0.4f) }), _hillsNearMat);
-                AddRenderer("HillsFar", HillRing(1100f, 50f, 150f, 11, new[] { new Vector3(Mathf.PI * 1.35f, 0.5f, 0.6f), new Vector3(2.6f, 0.4f, 0.5f) }), _hillsFarMat);
+                AddRenderer("HillsNear", HillRing(HillsNearR, 25f, 110f, 5, new[] { new Vector3(Mathf.PI * 1.5f, 0.35f, 0.9f), new Vector3(0.4f, 0.25f, 0.4f) }), _hillsNearMat);
+                AddRenderer("HillsFar", HillRing(HillsFarR, 50f, 150f, 11, new[] { new Vector3(Mathf.PI * 1.35f, 0.5f, 0.6f), new Vector3(2.6f, 0.4f, 0.5f) }), _hillsFarMat);
             }
             else Debug.LogWarning("[SkyRig] AiOn/UnlitVertexColorNoFog shader missing; no hills or beacons");
+        }
+
+        /// <summary>Radii of the two hill rings (m).</summary>
+        public const float HillsNearR = 760f, HillsFarR = 1100f;
+
+        /// <summary>
+        /// How far a hill ring at <paramref name="distance"/> is blended toward the fog colour: the exp² fog's own amount
+        /// there, at least <paramref name="floor"/> (the original's fixed haze) and at most <paramref name="cap"/>, so the
+        /// ridge line still shows as a faint, pale silhouette over the hazed horizon in every preset (pure; tested).
+        /// </summary>
+        public static float HillHaze(float floor, float cap, float distance, float fogDensity)
+        {
+            float d = Mathf.Max(0f, fogDensity) * distance;
+            return Mathf.Clamp(1f - Mathf.Exp(-d * d), floor, Mathf.Max(floor, cap));
+        }
+
+        /// <summary>Most haze per ring: the far ring always paler than the near one (aerial perspective).</summary>
+        public const float HillsNearCap = 0.8f, HillsFarCap = 0.9f;
+
+        /// <summary>Distance (m) whose exp² fog amount sets the sky's horizon haze: the middle of the distant city ring.</summary>
+        public const float SkylineHazeR = 450f;
+
+        /// <summary>
+        /// How strongly the sky just above the horizon fades to the fog colour (0..0.95): the fog's own amount at the
+        /// distant skyline. The fogged city ring and hills then stand against a sky of nearly their own colour, as in real
+        /// haze, instead of fog-coloured slabs (or sky-coloured gaps between them) hanging along the top of aerial shots.
+        /// Never below <paramref name="floor"/> (the inspector's horizonHaze) (pure; tested).
+        /// </summary>
+        public static float SkyHorizonHaze(float fogDensity, float floor = 0f)
+        {
+            float d = Mathf.Max(0f, fogDensity) * SkylineHazeR;
+            return Mathf.Clamp(Mathf.Max(floor, 1f - Mathf.Exp(-d * d)), 0f, 0.95f);
         }
 
         static Material UnlitMaterial(Shader s, string name, float fog, float cull)
@@ -350,15 +382,27 @@ namespace AiOn.Levels
             _sky.SetVector(IdCloudSun, e.Sun.y > -4f ? sunDir : keyDir);
             _sky.SetFloat(IdCloudTime, _time);
 
+            // the photographed sky (day, afternoon, dusk): which one, turned so its bright side faces this preset's sun
+            _photoSunAz = e.Sun.x;
+            _photo.Want(PhotoFor(e.Name, e.NightAmount));
+            var kc = e.KeyColor.linear;
+            _sky.SetVector(IdPhotoSun, new Vector4(kc.r, kc.g, kc.b, 0) * (0.6f + 0.4f * Mathf.Clamp01(e.KeyIntensity / 4f)));
+            WritePhoto();
+
             _sky.SetVector(IdFogColor, (Vector4)fogLin);
-            _sky.SetFloat(IdHaze, horizonHaze);
             _sky.SetFloat(IdSkyVis, skyVis);
             RenderSettings.skybox = _sky;
 
             Color hills = e.Hills.linear;
-            // Hazed toward the fog (horizon) colour with distance: the ridges read as soft silhouettes, not cut-outs.
-            if (_hillsNearMat) _hillsNearMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, 0.3f));
-            if (_hillsFarMat) _hillsFarMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, 0.62f));
+            // Aerial perspective for the unlit, unfogged hill rings: hazed toward the fog colour by the exp² fog at their
+            // distance (never less than the original's 0.3 / 0.62, never more than HillsNearCap / HillsFarCap so the 광교산
+            // ridge stays), with their foot shading flattened by the same amount (at 0.6 it kept them darker than the fogged
+            // city in front). The sky behind them is hazed to the fog colour too (below), so they read as pale far ridges.
+            float density = RenderSettings.fog ? RenderSettings.fogDensity : 0f;
+            float nearHaze = HillHaze(0.3f, HillsNearCap, HillsNearR, density), farHaze = HillHaze(0.62f, HillsFarCap, HillsFarR, density);
+            if (_hillsNearMat) { _hillsNearMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, nearHaze)); _hillsNearMat.SetFloat(IdShadeLift, nearHaze); }
+            if (_hillsFarMat) { _hillsFarMat.SetVector(IdColor, (Vector4)Color.Lerp(hills, fogLin, farHaze)); _hillsFarMat.SetFloat(IdShadeLift, farHaze); }
+            _sky.SetFloat(IdHaze, SkyHorizonHaze(density, horizonHaze));
 
             float windows = !power ? 0f : (e.Lit.TryGetValue("windows", out var wl) ? wl : e.NightAmount);
             float glow = windowEmission * Mathf.Max(0f, windows);
@@ -379,8 +423,83 @@ namespace AiOn.Levels
             if (_sky == null) return;
             _time += Time.deltaTime;
             _sky.SetFloat(IdCloudTime, _time);
+            StepPhoto(Time.unscaledDeltaTime);
             UpdateBeacons();
             EnsureFarClip();
+        }
+
+        // ------------------------------------------------------------------------------------------------ sky photos
+
+        /// <summary>
+        /// The photographed skies (Poly Haven "puresky" HDRIs, CC0; Resources/Sky): the sun painted out and the rest stored
+        /// as an LDR equirect at a fixed scale. scale undoes that scale (linear); sunU is where the photo's sun was (0..1 of
+        /// the width), so the photo is turned to put it at the preset's sun azimuth.
+        /// </summary>
+        public static readonly (string resource, float scale, float sunU)[] Photos =
+        {
+            ("Sky/sky_day", 2.41f, 0.595f), ("Sky/sky_afternoon", 3.28f, 0.600f), ("Sky/sky_dusk", 5.26f, 0.606f),
+        };
+
+        /// <summary>Linear gain of the photos against the analytic sky (look knob).</summary>
+        public const float PhotoGain = 0.4f;
+        public const float PhotoFade = 1.5f;
+
+        /// <summary>Which photo a preset shows (index into Photos), -1 for none: the night (and the shelter) keep the analytic dome.</summary>
+        public static int PhotoFor(string preset, float nightAmount)
+        {
+            if (nightAmount >= 0.9f) return -1;
+            return preset switch { "afternoon" => 1, "dusk" => 2, _ => 0 };
+        }
+
+        /// <summary>The photo's yaw (turns) that puts its sun (at sunU) at the preset's sun azimuth (degrees from north).</summary>
+        public static float PhotoYaw(float sunU, float sunAzimuth) => Mathf.Repeat(sunU - sunAzimuth / 360f, 1f);
+
+        static readonly int IdHdriTex = Shader.PropertyToID("_HdriTex"), IdHdriTex2 = Shader.PropertyToID("_HdriTex2"),
+            IdHdri = Shader.PropertyToID("_Hdri"), IdHdriMix = Shader.PropertyToID("_HdriMix"),
+            IdHdriGain = Shader.PropertyToID("_HdriGain"), IdHdriGain2 = Shader.PropertyToID("_HdriGain2"),
+            IdHdriYaw = Shader.PropertyToID("_HdriYaw"), IdHdriYaw2 = Shader.PropertyToID("_HdriYaw2"),
+            IdPhotoSun = Shader.PropertyToID("_PhotoSun");
+        static readonly Texture2D[] s_photos = new Texture2D[3];
+        PhotoBlend _photo = PhotoBlend.None;
+        float _photoSunAz;
+
+        static Texture2D PhotoTex(int i)
+        {
+            if (i < 0 || i >= Photos.Length) return null;
+            if (!s_photos[i]) s_photos[i] = Resources.Load<Texture2D>(Photos[i].resource);
+            return s_photos[i];
+        }
+
+        /// <summary>Shows the wanted photo at once (a cut: a level load, a preset snapped without a blend).</summary>
+        public void SnapPhoto()
+        {
+            _photo.Snap();
+            WritePhoto();
+        }
+
+        void StepPhoto(float dt)
+        {
+            if (_photo.Step(dt / PhotoFade)) WritePhoto();
+        }
+
+        void WritePhoto()
+        {
+            if (_sky == null) return;
+            var a = PhotoTex(_photo.A);
+            bool on = a && _photo.Weight > 0.002f;
+            _sky.SetFloat(IdHdri, on ? _photo.Weight : 0f);
+            if (!on) return;
+            _sky.SetTexture(IdHdriTex, a);
+            _sky.SetFloat(IdHdriGain, Photos[_photo.A].scale * PhotoGain);
+            _sky.SetFloat(IdHdriYaw, PhotoYaw(Photos[_photo.A].sunU, _photoSunAz));
+            var b = PhotoTex(_photo.B);
+            _sky.SetFloat(IdHdriMix, b ? _photo.Mix : 0f);
+            if (b)
+            {
+                _sky.SetTexture(IdHdriTex2, b);
+                _sky.SetFloat(IdHdriGain2, Photos[_photo.B].scale * PhotoGain);
+                _sky.SetFloat(IdHdriYaw2, PhotoYaw(Photos[_photo.B].sunU, _photoSunAz));
+            }
         }
 
         void UpdateBeacons()
@@ -465,5 +584,56 @@ namespace AiOn.Levels
                 return t;
             }
         }
+    }
+
+    /// <summary>
+    /// Which sky photos show and how far the cross-fade has gone (pure; tested). A shows at weight Weight; while B is set
+    /// the sky fades from A to B by Mix. Going back to A mid-fade turns the fade round (no jump, and the sky does not end
+    /// on B); a third photo mid-fade starts from whichever of the two shows more.
+    /// </summary>
+    public struct PhotoBlend
+    {
+        public int A, B, Target;
+        public float Mix, Weight;
+
+        public static PhotoBlend None => new PhotoBlend { A = -1, B = -1, Target = -2 };
+
+        /// <summary>The preset wants photo want (-1: none, the night's analytic dome).</summary>
+        public void Want(int want)
+        {
+            if (want == Target) return;
+            Target = want;
+            if (want < 0) return; // the weight fades out; A (and a fade under way) stay for a quick return
+            if (A < 0 || Weight <= 0.002f) { A = want; B = -1; Mix = 0f; return; } // nothing on screen: no fade needed
+            if (B < 0) { if (want != A) { B = want; Mix = 0f; } return; }
+            if (want == B) return;
+            if (want == A) { A = B; B = want; Mix = 1f - Mix; return; } // back the way it came
+            if (Mix >= 0.5f) A = B; // a third photo: from the one that shows more
+            B = want; Mix = 0f;
+        }
+
+        /// <summary>Advances the fades by k (seconds / fade time); true when anything moved.</summary>
+        public bool Step(float k)
+        {
+            bool moved = false;
+            float wantW = Target >= 0 ? 1f : 0f;
+            if (!Mathf.Approximately(Weight, wantW)) { Weight = Mathf.MoveTowards(Weight, wantW, k); moved = true; }
+            if (B >= 0)
+            {
+                Mix = Mathf.MoveTowards(Mix, 1f, k); moved = true;
+                if (Mix >= 1f) { A = B; B = -1; Mix = 0f; }
+            }
+            return moved;
+        }
+
+        /// <summary>A cut: the wanted photo at once.</summary>
+        public void Snap()
+        {
+            if (Target >= 0) { A = Target; B = -1; Mix = 0f; Weight = 1f; }
+            else Weight = 0f;
+        }
+
+        /// <summary>The photo that shows most right now (-1: none).</summary>
+        public int Showing => Weight <= 0.002f ? -1 : B >= 0 && Mix >= 0.5f ? B : A;
     }
 }

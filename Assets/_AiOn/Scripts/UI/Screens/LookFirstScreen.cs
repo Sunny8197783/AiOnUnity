@@ -72,6 +72,14 @@ namespace AiOn.UI
             _stage = UiKit.Box("Stage", Window, new Color(0.06f, 0.07f, 0.08f, 1f)).rectTransform;
             UiKit.At(_stage, 40, 124, 760, 740);
             _stage.gameObject.AddComponent<RectMask2D>();
+            // the lit sets (UI/Studio/LookStudio) under the captions; the flat drawing only if the studio cannot be made
+            _studio = AiOn.UI.Studio.LookStudio.Create(this, AiOn.UI.Studio.MiniStudio.PixelsFor(Root.GetComponent<Canvas>(), new Vector2(760, 740)), _reduce);
+            if (_studio)
+            {
+                _view = _studio.Studio.Show(_stage);
+                _art = UiKit.Rect("Art", _stage);
+                UiKit.Fill(_art);
+            }
             _side = UiKit.Rect("Side", Window);
             UiKit.At(_side, 840, 124, 840, 740);
             var col = _side.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -85,6 +93,12 @@ namespace AiOn.UI
         }
 
         void OnDisable() { _moment?.Dispose(); _moment = null; }
+
+        AiOn.UI.Studio.LookStudio _studio;
+        RawImage _view;
+        RectTransform _art;
+        /// <summary>Where the captions and the phone go: over the studio picture, or the flat stage.</summary>
+        RectTransform Art => _art ? _art : _stage;
 
         // ---------------------------------------------------------------- the pages
 
@@ -308,6 +322,7 @@ namespace AiOn.UI
         {
             if (_pushLabel) _pushLabel.text = PushText();
             if (_wallImg) _wallImg.color = WallShade();
+            if (_studio) _studio.Push(L.Push);
             int n = Mathf.RoundToInt((float)L.Push * _cracks.Count);
             for (int i = 0; i < _cracks.Count; i++) if (_cracks[i]) _cracks[i].SetActive(i < n);
         }
@@ -372,6 +387,7 @@ namespace AiOn.UI
 
         void DrawStage()
         {
+            if (_studio) { DrawStudio(); return; }
             Clear(_stage);
             float W = 760, H = 740;
             var p = _review ? LookPhase.Done : L.Phase;
@@ -413,13 +429,60 @@ namespace AiOn.UI
             UiKit.At(strip.rectTransform, 40, 680, 700, 40);
         }
 
+        /// <summary>The lit sets: the door (with the fire as it is now), the balcony partition, or the phone (UI) for the 119 call.</summary>
+        void DrawStudio()
+        {
+            Clear(_art);
+            float W = 760, H = 740;
+            var p = _review ? LookPhase.Done : L.Phase;
+            bool large = L.Size == "large";
+            if (p == LookPhase.Report || (p == LookPhase.Done && L.Report.Played))
+            {
+                _view.enabled = false; _studio.Off();
+                DrawPhone(W, H);
+                return;
+            }
+            _view.enabled = true;
+            if (p == LookPhase.Partition)
+            {
+                _studio.Partition(L.BoxesLeft, L.Push);
+                Plate(0, H - 74, W, 74);
+                Caption("302호 베란다", 40, H - 52, UiKit.Ink);
+                Plate(W / 2 - 150, 22, 300, 40);
+                var over = UiKit.Label("Over", Art, "벽 너머 301호 베란다", 20, UiKit.Ink, TextAnchor.MiddleCenter);
+                UiKit.At(over.rectTransform, W / 2 - 150, 22, 300, 40);
+                return;
+            }
+            string handle = !L.Examined.Contains("handle") ? "none" : large ? "hot" : "warm";
+            bool sealing = L.Phase == LookPhase.Seal || (p == LookPhase.Done && L.Act == "stay");
+            _studio.Door(large, handle, sealing && L.Sealed.Contains("towel"), L.Wet);
+            if (sealing && (L.Sealed.Contains("window") || L.Sealed.Contains("away")))
+            {
+                Plate(24, 24, 180, L.Sealed.Contains("window") && L.Sealed.Contains("away") ? 80 : 44);
+                float y = 30;
+                if (L.Sealed.Contains("window")) { Caption("✓ 창문 닫음", 40, y, UiKit.Teal); y += 38; }
+                if (L.Sealed.Contains("away")) Caption("✓ 안방으로", 40, y, UiKit.Teal);
+            }
+            Plate(0, H - 128, W, 128);
+            Caption("302호 현관", 40, H - 112, UiKit.Ink);
+            var strip = UiKit.Label("Corridor", Art, "문 밖 복도 →  엘리베이터 · <b>계단 (가까움)</b> · 303호 · " + (large ? "<color=#f2b33d>304호 (불)</color>" : "304호 (불)"), 19, UiKit.Ink);
+            UiKit.At(strip.rectTransform, 40, H - 66, 700, 40);
+        }
+
+        /// <summary>A dark plate under captions so they read over the picture.</summary>
+        void Plate(float x, float y, float w, float h)
+        {
+            var img = UiKit.Box("Plate", Art, new Color(0.02f, 0.03f, 0.04f, 0.72f));
+            UiKit.At(img.rectTransform, x, y, w, h);
+        }
+
         Image _wallImg;
         readonly List<GameObject> _cracks = new();
         Color WallShade() => Color.Lerp(new Color(0.82f, 0.82f, 0.8f), new Color(0.25f, 0.24f, 0.23f), (float)L.Push);
 
         void Caption(string text, float x, float y, Color c)
         {
-            var t = UiKit.Label("Cap", _stage, text, 20, c);
+            var t = UiKit.Label("Cap", Art, text, 20, c);
             UiKit.At(t.rectTransform, x, y, 300, 30);
         }
 
@@ -454,15 +517,30 @@ namespace AiOn.UI
 
         void DrawPhone(float W, float H)
         {
-            UiKit.At(UiKit.Box("Bg", _stage, new Color(0.05f, 0.06f, 0.07f)).rectTransform, 0, 0, W, H);
-            var phone = UiKit.Box("Phone", _stage, new Color(0.1f, 0.12f, 0.15f)).rectTransform;
+            UiKit.At(UiKit.Box("Bg", Art, new Color(0.05f, 0.06f, 0.07f)).rectTransform, 0, 0, W, H);
+            var phoneImg = UiKit.Box("Phone", Art, new Color(0.1f, 0.12f, 0.15f));
+            if (_studio)
+            {
+                // a phone, not a box: a dark bezel with rounded corners around the call screen, the camera dot on top
+                var bezel = UiKit.Box("Bezel", Art, new Color(0.015f, 0.017f, 0.02f));
+                bezel.sprite = HudDraw.RoundedSprite; bezel.type = Image.Type.Sliced; bezel.pixelsPerUnitMultiplier = 0.35f;
+                UiKit.At(bezel.rectTransform, 156, 16, 448, 708);
+                bezel.rectTransform.SetSiblingIndex(phoneImg.rectTransform.GetSiblingIndex());
+                phoneImg.sprite = HudDraw.RoundedSprite; phoneImg.type = Image.Type.Sliced; phoneImg.pixelsPerUnitMultiplier = 0.5f;
+                phoneImg.color = new Color(0.07f, 0.09f, 0.11f);
+                var dot = UiKit.Box("Camera", Art, new Color(0.12f, 0.13f, 0.15f)); dot.sprite = HudDraw.DiscSprite;
+                UiKit.At(dot.rectTransform, 375, 19, 10, 10);
+            }
+            var phone = phoneImg.rectTransform;
             UiKit.At(phone, 170, 30, 420, 680);
             UiKit.At(UiKit.Label("Call", phone, "119 · 통화 중", 24, UiKit.Teal, TextAnchor.UpperCenter, FontStyle.Bold).rectTransform, 0, 24, 420, 36);
             float y = 80;
             var lines = L.Picked.Select(id => L.Card(id)?.Text).Where(s => s != null).ToList();
             foreach (var s in lines)
             {
-                var bub = UiKit.Box("Bubble", phone, new Color(UiKit.Teal.r, UiKit.Teal.g, UiKit.Teal.b, 0.22f)).rectTransform;
+                var bubImg = UiKit.Box("Bubble", phone, new Color(UiKit.Teal.r, UiKit.Teal.g, UiKit.Teal.b, 0.22f));
+                if (_studio) { bubImg.sprite = HudDraw.RoundedSprite; bubImg.type = Image.Type.Sliced; }
+                var bub = bubImg.rectTransform;
                 UiKit.At(bub, 40, y, 340, 84);
                 UiKit.At(UiKit.Label("T", bub, s, 18, UiKit.Ink).rectTransform, 14, 8, 312, 72);
                 y += 94;

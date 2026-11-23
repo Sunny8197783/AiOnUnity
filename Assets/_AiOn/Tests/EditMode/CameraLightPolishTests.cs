@@ -80,9 +80,10 @@ namespace AiOn.Tests
             var e = P("interiorDark", 0.5f, Color.blue, 1f, outdoor: false);
             EnvironmentController.DaylightVariant(e);
             Assert.That(e.NightAmount, Is.EqualTo(0f));
-            Assert.That(e.KeyIntensity, Is.EqualTo(0.6f).Within(1e-4f));
+            Assert.That(e.KeyIntensity, Is.GreaterThan(1.5f), "a morning sun through the windows (graphics realism pass; was a 0.6 window key)");
             Color.RGBToHSV(e.KeyColor, out _, out float s, out _);
-            Assert.That(s, Is.LessThan(0.1f), "a neutral daylight key, not blue moonlight");
+            Assert.That(s, Is.LessThan(0.25f), "a warm-neutral morning sun, not blue moonlight");
+            Assert.That(e.KeyColor.r, Is.GreaterThanOrEqualTo(e.KeyColor.b), "not blue");
             Assert.That(e.FillIntensity, Is.GreaterThanOrEqualTo(0.3f), "window daylight fills the room: the morning's objectives read without a flashlight");
         }
 
@@ -167,9 +168,10 @@ namespace AiOn.Tests
             EnvPreset.Tune(dusk);
             Color.RGBToHSV(dusk.Tint, out _, out float s, out _);
             Assert.That(s, Is.LessThanOrEqualTo(0.0601f));
-            var blackout = P("blackout", 0.6f, Color.white, 1f); blackout.FillIntensity = 0.5f;
+            var blackout = P("blackout", 0.6f, Color.white, 1f); blackout.FillIntensity = 0.5f; // env-presets.json: blackout hemi 0.5, night 1.8
             EnvPreset.Tune(blackout);
-            Assert.That(blackout.FillIntensity, Is.LessThan(0.5f * 0.6f), "darker than a plain night");
+            Assert.That(blackout.FillIntensity, Is.LessThan(night.FillIntensity * 0.75f), "darker than a lit night");
+            Assert.That(blackout.FillIntensity, Is.GreaterThan(0.5f * 0.6f), "but not a black frame under the trees");
             var room = P("interior", 2.2f, Color.white, 0f, outdoor: false); room.BloomThreshold = 0.9f;
             EnvPreset.Tune(room);
             Assert.That(room.Exposure, Is.EqualTo(0.71f).Within(1e-4f)); Assert.That(room.BloomThreshold, Is.GreaterThanOrEqualTo(1.1f));

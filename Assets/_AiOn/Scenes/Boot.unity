@@ -314,6 +314,7 @@ MonoBehaviour:
   - {fileID: 3370810037020805564, guid: 9975f30b49472184c9ae202174e8fc87, type: 3}
   - {fileID: 8250632775411283877, guid: be19fb756a92920459bc2a92fc08bdf4, type: 3}
   - {fileID: 4448927472838441680, guid: 1016fa4e0dc805c48ab76e29671326b9, type: 3}
+  - {fileID: 2954754628145917343, guid: 6409614789eb52041bf3f7dca8ef116f, type: 3}
   levelLayouts:
   - {fileID: 11400000, guid: afd7095a3a080cd409587fc49102c868, type: 2}
   - {fileID: 11400000, guid: 6ab53c5032732984ea2cb5790a095905, type: 2}
@@ -680,7 +681,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1917722783 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7243815336017886909, guid: 9975f30b49472184c9ae202174e8fc87, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8542713967367327931, guid: 9975f30b49472184c9ae202174e8fc87, type: 3}
   m_PrefabInstance: {fileID: 1917722780}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

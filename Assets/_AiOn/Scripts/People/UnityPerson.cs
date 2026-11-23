@@ -37,12 +37,13 @@ namespace AiOn.People
         }
 
         /// <summary>
-        /// "lie" (competition upgrade, the shelter CPR): lying on the back, head behind the feet, made from the idle clip with
-        /// the model tipped over (there is no lying clip; "down" is a take-cover crouch). Any other animation stands it up.
+        /// "lie" (competition upgrade, the shelter CPR): lying still on the back, head behind the feet, made from the first
+        /// frame of the idle clip, held, with the model tipped over (there is no lying clip; "down" is a take-cover crouch).
+        /// Any other animation stands it up and lets the clips run again.
         /// </summary>
         public const string Lie = "lie";
-        /// <summary>The back's depth below the spine when tipped over: lifts the body onto the floor.</summary>
-        const float LieLift = 0.13f;
+        /// <summary>How far the back reaches behind the feet when standing (heels, buttocks, shoulder blades): lifts the tipped body onto the floor.</summary>
+        public const float LieLift = 0.12f;
 
         public void SetAnim(string anim, double? speed = null)
         {
@@ -58,7 +59,23 @@ namespace AiOn.People
                 }
                 if (lie) anim = "idle";
             }
-            if (_anim) _anim.SetAnim(anim, speed.HasValue ? (float)speed.Value : (float?)null);
+            if (_anim)
+            {
+                if (!lie)
+                {
+                    _anim.Hold(false);
+                    var slump = _anim.GetComponent<LieSlump>();
+                    if (slump) Object.Destroy(slump);
+                }
+                _anim.SetAnim(anim, speed.HasValue ? (float)speed.Value : (float?)null);
+                var face = _anim.GetComponent<PersonFace>();
+                if (face) face.CloseEyes(lie);
+                if (lie && !_anim.Held)
+                {
+                    _anim.Hold(true); // a still body, not a swaying standing idle on its back
+                    Slump(_anim.GetComponent<Animator>());
+                }
+            }
             // people.js AUTO: carry shows the jug, phone the phone, while the animation lasts (unless set on by the story)
             var auto = AutoProp(anim);
             if (auto == _autoProp) return;
@@ -67,17 +84,35 @@ namespace AiOn.People
             if (auto != null && Root) PersonProps.Set(Root, auto, true);
         }
 
+        /// <summary>Degrees the head of a lying person rolls to one side (and the neck a third of it): slack, not lying at attention.</summary>
+        public const float LieHeadRoll = -22f;
+
+        /// <summary>The held lying pose made slack: the head rolled to one side about the spine (after the animator, each frame).</summary>
+        static void Slump(Animator a)
+        {
+            if (!a || !a.isHuman || a.GetComponent<LieSlump>()) return;
+            a.gameObject.AddComponent<LieSlump>().roll = LieHeadRoll;
+        }
+
         static string AutoProp(string anim) => anim switch { "carry" => "waterJug", "phone" => "phone", _ => null };
 
         readonly HashSet<string> _props = new();
         string _autoProp;
         public void Play(string clip) { if (_anim) _anim.Play(clip); }
 
+        /// <summary>Eye height of the person looked at (m above their floor).</summary>
+        public const float EyeHeight = 1.55f;
+
         public void LookAt(double? x, double? z)
         {
-            // Head-only look is not rigged yet: turn the whole body toward a close target, never away from it.
-            if (!Root || !x.HasValue || !z.HasValue) return;
-            var to = LevelLayout.ToUnity((float)x.Value, 0, (float)z.Value) - Root.transform.position;
+            // Heroes turn the head and eyes (PersonFace, Humanoid look IK) and keep looking until cleared; the body still
+            // turns a little toward a close target, never away from it, as before.
+            var face = _anim ? _anim.GetComponent<PersonFace>() : null;
+            if (!Root || !x.HasValue || !z.HasValue) { if (face) face.LookAt(null); return; }
+            var at = LevelLayout.ToUnity((float)x.Value, 0, (float)z.Value);
+            at.y = Root.transform.position.y + EyeHeight;
+            if (face) face.LookAt(at);
+            var to = at - Root.transform.position;
             to.y = 0;
             if (to.sqrMagnitude > 0.01f) Root.transform.rotation = Quaternion.Slerp(Root.transform.rotation, Quaternion.LookRotation(to), 0.15f);
         }
@@ -86,6 +121,7 @@ namespace AiOn.People
         {
             if (!Root) return;
             if (on) _props.Add(prop); else _props.Remove(prop);
+            if (prop == "cart" && _anim) _anim.HoldPose = on ? PersonClips.ArmsCart : null; // both hands on the handle
             if (!on && prop == _autoProp) return; // the animation still shows it
             PersonProps.Set(Root, prop, on); // baked children by name, else a built prop (jug, basket, cart, backpack...)
         }

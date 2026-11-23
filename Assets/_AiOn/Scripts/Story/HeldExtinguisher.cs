@@ -168,6 +168,10 @@ namespace AiOn.Story
             nz.transform.localPosition = new Vector3(0, 0, -0.05f);
             var nr = nz.GetComponent<Renderer>();
             nr.material.color = new Color(0.08f, 0.08f, 0.09f);
+            // rubber, not glossy plastic: its round end faced the camera and mirrored the fire as a white disc (visual QA)
+            if (nr.material.HasProperty("_Smoothness")) nr.material.SetFloat("_Smoothness", 0.12f);
+            if (nr.material.HasProperty("_SpecularHighlights")) { nr.material.SetFloat("_SpecularHighlights", 0f); nr.material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF"); }
+            if (nr.material.HasProperty("_EnvironmentReflections")) { nr.material.SetFloat("_EnvironmentReflections", 0f); nr.material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF"); }
             nr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
             _fill = new GameObject("HandLight").AddComponent<Light>();
@@ -266,12 +270,18 @@ namespace AiOn.Story
             _keys = UiKit.Label("Keys", plate, "", HudTheme.Eyebrow, HudTheme.Muted);
             UiKit.At(_keys.rectTransform, 20, 176, 410, 44);
 
-            // the next step / hint line: bottom centre
-            _hint = HudTheme.Shadowed(UiKit.Label("Hint", root, "", HudTheme.Body + 2, HudTheme.Text, TextAnchor.MiddleCenter));
-            var hr = _hint.rectTransform;
-            hr.anchorMin = hr.anchorMax = hr.pivot = new Vector2(0.5f, 0);
-            hr.anchoredPosition = new Vector2(0, 150); hr.sizeDelta = new Vector2(1100, 40);
+            // the next step / hint line: bottom centre, on its own dark plate (bare text was lost on the bright flames)
+            _hintPlate = HudTheme.Plate("HintPlate", root);
+            var hp = _hintPlate.rectTransform;
+            hp.anchorMin = hp.anchorMax = hp.pivot = new Vector2(0.5f, 0);
+            hp.anchoredPosition = new Vector2(0, 146); hp.sizeDelta = new Vector2(400, 48);
+            _hint = UiKit.Label("Hint", hp, "", HudTheme.Body + 2, HudTheme.Text, TextAnchor.MiddleCenter);
+            UiKit.Fill(_hint.rectTransform, 24, 4);
+            _hintPlate.gameObject.SetActive(false);
         }
+
+        Image _hintPlate;
+        string _hintShown = "";
 
         (RectTransform fill, Image img, Text text) Meter(RectTransform plate, float y, string label)
         {
@@ -483,7 +493,14 @@ namespace AiOn.Story
             _pinBar.gameObject.SetActive(!l.PinOut && l.PinProgress > 0);
             _pinFill.anchorMax = new Vector2((float)l.PinProgress, 1);
             bool showHint = l.Mode == "guided" || (l.Mode == "hint" && _hintOpen);
-            _hint.text = showHint && !l.Ended ? l.Hint() : "";
+            string hint = showHint && !l.Ended ? l.Hint() ?? "" : "";
+            if (hint != _hintShown)
+            {
+                _hintShown = hint;
+                _hint.text = hint;
+                _hintPlate.gameObject.SetActive(hint.Length > 0);
+                if (hint.Length > 0) _hintPlate.rectTransform.sizeDelta = new Vector2(Mathf.Min(1100, _hint.preferredWidth + 48), 48);
+            }
         }
 
         // ---------------------------------------------------------------- sound

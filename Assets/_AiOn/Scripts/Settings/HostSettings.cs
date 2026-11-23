@@ -148,6 +148,13 @@ namespace AiOn.Settings
             }
             if (_host) _host.FlashShadows = k.FlashShadows;
             AiOn.Rendering.LevelReflections.Allowed = QualityTiers.Rank(Tier) >= QualityTiers.Rank("medium"); // live probe from medium up
+            AiOn.Rendering.LevelSurfaces.Allowed = QualityTiers.Rank(Tier) >= QualityTiers.Rank("medium"); // PBR surface detail from medium up
+            AiOn.Rendering.LevelDecals.Allowed = QualityTiers.Rank(Tier) >= QualityTiers.Rank("low"); // decals from low up
+            // the extra lights' shadows (windows, the fire) follow the flashlight's: high and up only (the lower tiers' shadow
+            // atlas is 256-1024 px and their flashlight casts none)
+            AiOn.Rendering.WindowLights.ShadowsAllowed = k.FlashShadows;
+            // the 3장 morning's sun needs sun shadows to stay in the flat (ultralow has none)
+            if (AiOn.Levels.EnvironmentController.Instance) AiOn.Levels.EnvironmentController.Instance.ShadowsChanged();
             _gov.Hold(4);
         }
 

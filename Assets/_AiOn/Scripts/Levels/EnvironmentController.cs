@@ -163,11 +163,25 @@ namespace AiOn.Levels
             }
             if (e.Name == "blackout")
             {
-                e.FillIntensity *= 0.6f;
-                e.KeyIntensity *= 0.75f;
-                e.Exposure *= 0.85f;
+                // darker than a lit night, but the moon still shapes the street (it was cut to 0.75 and read as pitch black)
+                // the moonlit street in the shade of the trees and by 103동 was a black frame at 0.6 (the trilight fill is a
+                // gamma colour: 0.6 of a dim blue is next to nothing in linear); still about half a lit night's fill
+                e.FillIntensity *= 2.0f;
+                e.KeyIntensity *= 1.5f;
+                e.KeyColor = CapSaturation(e.KeyColor, 0.22f);
             }
-            if (e.Name == "interiorDark") e.FillIntensity *= 0.7f;
+            // the dark interior: more of the night's bounce (it read as pure black away from the guide lights), in a
+            // blue-grey rather than a saturated blue (red signs turned navy); windows (WindowLights), the moon key and the
+            // exits' emergency lamps (GuidingLights) carry the rest, so it stays a dark room
+            if (e.Name == "interiorDark")
+            {
+                // (the fill is a gamma colour: x2 was still RGB 0-4 on the walls away from the windows)
+                e.FillIntensity *= 4.0f; e.SkyFill = new Color(0.18f, 0.2f, 0.24f); e.GroundFill = new Color(0.09f, 0.09f, 0.1f); e.KeyIntensity *= 1.4f;
+                e.Exposure *= 1.19f; // +0.25 EV: a dark room reads as dark, not as a black frame
+                e.KeyColor = CapSaturation(e.KeyColor, 0.2f);
+                e.Tint = CapSaturation(e.Tint, 0.12f);
+                e.Saturation = Mathf.Max(e.Saturation, 0.85f);
+            }
             if (!e.Outdoor && e.Name.StartsWith("interior", System.StringComparison.Ordinal) && e.Name != "interiorDark")
             {
                 if (e.Name == "interior") e.Exposure *= 0.71f; // -0.5 EV
@@ -251,6 +265,10 @@ namespace AiOn.Levels
             AiOn.Rendering.AtmosphereDirector.Ensure(); // the cold base look, emergency grade and screen effects over this
             if (!GetComponent<AiOn.Rendering.GuidingLights>()) gameObject.AddComponent<AiOn.Rendering.GuidingLights>(); // exits, shelters, supplies
             if (!TryGetComponent(out _reflections)) _reflections = gameObject.AddComponent<AiOn.Rendering.LevelReflections>(); // live reflections
+            if (!GetComponent<AiOn.Rendering.WindowLights>()) gameObject.AddComponent<AiOn.Rendering.WindowLights>().Init(gameObject.scene.name.ToLowerInvariant()); // daylight / moonlight through the windows
+            if (!GetComponent<AiOn.Rendering.LevelSurfaces>()) gameObject.AddComponent<AiOn.Rendering.LevelSurfaces>(); // PBR detail on walls, floors, roads
+            if (!GetComponent<AiOn.Rendering.LevelDecals>()) gameObject.AddComponent<AiOn.Rendering.LevelDecals>(); // wear, notices, puddles
+            if (!GetComponent<AiOn.Rendering.ViewTrees>()) AiOn.Rendering.ViewTrees.Attach(gameObject); // leafy crowns in the window view
         }
 
         float _satBias;
@@ -351,7 +369,7 @@ namespace AiOn.Levels
         void BlendTo(string name, float seconds, bool keepGrade)
         {
             if (_all == null || !_all.TryGetValue(name, out var e)) { Debug.LogWarning($"[Env] unknown preset '{name}'"); return; }
-            if (name == "interiorDark" && DaylightOutside) e = DarkByDay(e);
+            if (name == "interiorDark" && DaylightOutside) e = DarkByDay(e, MainShadowsOn);
             bool first = Current == null;
             preset = name; Current = e;
             // core.js setEnv sets the preset's whole grade: a story grade made before it is dropped (one made after it,
@@ -362,6 +380,7 @@ namespace AiOn.Levels
                 _blendDur = 0; _blendK = 1; _to = e;
                 _shown.CopyFrom(e);
                 ApplyShown();
+                if (_skyRig) _skyRig.SnapPhoto();
                 return;
             }
             _from.CopyFrom(_shown);
@@ -379,6 +398,24 @@ namespace AiOn.Levels
         }
 
         EnvPreset _darkDay;
+        bool _darkDayShadows;
+
+        /// <summary>Whether the sun casts shadows on this quality tier (ultralow sets the shadow distance to 0).</summary>
+        public static bool MainShadowsOn
+        {
+            get
+            {
+                var a = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+                return !a || (a.supportsMainLightShadows && a.shadowDistance > 0.01f);
+            }
+        }
+
+        /// <summary>The quality tier changed (HostSettings.SetTier): the daylight variant depends on the sun's shadows.</summary>
+        public void ShadowsChanged()
+        {
+            if (Current != null && preset == "interiorDark" && DaylightOutside && _darkDay != null && _darkDayShadows != MainShadowsOn)
+                BlendTo("interiorDark", 0f, true);
+        }
 
         /// <summary>
         /// A blackout by day indoors: interiorDark lit from the windows instead of by the moon (a neutral daylight key at
@@ -386,28 +423,44 @@ namespace AiOn.Levels
         /// reaches past the walls, so the window daylight that spills into the rooms is the fill (DaylightSpillFill): bright
         /// enough that the morning's objectives (fridge, veranda shelf, radio) read without the flashlight.
         /// </summary>
-        EnvPreset DarkByDay(EnvPreset dark)
+        EnvPreset DarkByDay(EnvPreset dark, bool sunShadows)
         {
-            if (_darkDay != null) return _darkDay;
-            _darkDay = new EnvPreset();
+            if (_darkDay != null && _darkDayShadows == sunShadows) return _darkDay;
+            _darkDay ??= new EnvPreset();
             _darkDay.CopyFrom(dark);
-            DaylightVariant(_darkDay);
+            DaylightVariant(_darkDay, sunShadows);
+            _darkDayShadows = sunShadows;
             return _darkDay;
         }
 
         /// <summary>interiorDark turned into its daylight variant (pure; see DarkByDay).</summary>
-        /// <summary>The ambient fill of a powerless room by day (window spill; was 0.16, which left the 3장 morning near black).</summary>
-        public const float DaylightSpillFill = 0.36f;
+        /// <summary>
+        /// The ambient fill of a powerless room by day (window spill; was 0.16, which left the 3장 morning near black). The
+        /// windows' own light (WindowLights) and a real morning sun through the south glass now carry the room, so the
+        /// ambient is the soft bounce under them.
+        /// </summary>
+        public const float DaylightSpillFill = 0.34f;
 
-        public static void DaylightVariant(EnvPreset e)
+        /// <summary>The morning sun through the glass, and what it falls back to without sun shadows (ultralow: a 2.6 sun
+        /// with no shadows would light every south-east wall of the flat, corridor and stairwell through the walls).</summary>
+        public const float MorningSun = 2.6f, MorningSunNoShadows = 0.6f, DaylightSpillFillNoShadows = 0.42f;
+
+        public static void DaylightVariant(EnvPreset e) => DaylightVariant(e, true);
+
+        public static void DaylightVariant(EnvPreset e, bool sunShadows)
         {
-            e.KeyColor = new Color(0.91f, 0.93f, 0.96f);
-            e.KeyIntensity = 0.6f; // the window key
-            e.SkyFill = new Color(0.55f, 0.62f, 0.72f); e.GroundFill = new Color(0.22f, 0.21f, 0.2f);
-            e.FillIntensity = DaylightSpillFill;
-            e.FogColor = new Color(0.28f, 0.3f, 0.33f);
-            e.Tint = new Color(0.95f, 0.97f, 1.02f); e.TintAmount = 0.2f;
-            e.Saturation = 0.8f; e.Exposure = 1.1f;
+            // a low morning sun from the south-east through the veranda glass: warm-neutral, sharp-edged patches on the floor
+            e.Sun = e.Key = new Vector2(138f, 22f);
+            e.KeyColor = new Color(1f, 0.92f, 0.8f);
+            e.KeyIntensity = sunShadows ? MorningSun : MorningSunNoShadows;
+            // the bounce of a sunlit room: cool from the windows' sky, warm off the floor
+            e.SkyFill = new Color(0.66f, 0.68f, 0.71f); e.GroundFill = new Color(0.44f, 0.38f, 0.31f);
+            e.FillIntensity = sunShadows ? DaylightSpillFill : DaylightSpillFillNoShadows;
+            e.FogColor = new Color(0.5f, 0.52f, 0.55f);
+            e.FogDensity = Mathf.Min(e.FogDensity, 0.004f);
+            e.Tint = new Color(1f, 0.97f, 0.93f); e.TintAmount = 0.2f;
+            e.Saturation = 0.95f; e.Exposure = 1.2f;
+            e.BloomThreshold = Mathf.Max(1.1f, e.BloomThreshold);
             e.NightAmount = 0f; e.Stars = 0f; e.Moon = 0f;
             e.Zenith = new Color(0.55f, 0.65f, 0.78f); e.Horizon = new Color(0.78f, 0.82f, 0.86f);
         }

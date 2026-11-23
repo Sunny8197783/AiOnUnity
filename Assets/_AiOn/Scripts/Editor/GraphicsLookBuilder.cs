@@ -28,6 +28,10 @@ namespace AiOn.EditorTools
             BuildHaloMaterial();
             BuildMaterial("Outline", "AiOn/Outline");
             AddScreenFxFeature();
+            AddDecalFeature();
+            BuildDecalMaterials();
+            BuildFxMaterials();
+            TuneAmbientOcclusion();
             TuneShadows();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -184,6 +188,170 @@ namespace AiOn.EditorTools
                 feature.SetActive(true);
                 EditorUtility.SetDirty(data);
                 Debug.Log($"[Look] ScreenFx feature on {data.name}");
+            }
+        }
+
+        /// <summary>
+        /// URP decals on every renderer (once): DBuffer (albedo + normal) on the PC renderer, which already has the depth-normals
+        /// prepass for SSAO; screen-space on the mobile one (no extra prepass). LevelDecals places the projectors.
+        /// </summary>
+        static void AddDecalFeature()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:UniversalRendererData", new[] { "Assets" }))
+            {
+                var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(AssetDatabase.GUIDToAssetPath(guid));
+                if (!data) continue;
+                var feature = data.rendererFeatures.OfType<DecalRendererFeature>().FirstOrDefault();
+                if (!feature)
+                {
+                    feature = ScriptableObject.CreateInstance<DecalRendererFeature>();
+                    feature.name = "Decal";
+                    AssetDatabase.AddObjectToAsset(feature, data);
+                    AssetDatabase.TryGetGUIDAndLocalFileIdentifier(feature, out _, out long localId);
+                    var so = new SerializedObject(data);
+                    var list = so.FindProperty("m_RendererFeatures");
+                    var map = so.FindProperty("m_RendererFeatureMap");
+                    list.arraySize++;
+                    list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = feature;
+                    map.arraySize++;
+                    map.GetArrayElementAtIndex(map.arraySize - 1).longValue = localId;
+                    so.ApplyModifiedProperties();
+                }
+                bool mobile = data.name.Contains("Mobile");
+                var fso = new SerializedObject(feature);
+                fso.FindProperty("m_Settings.technique").intValue = mobile ? 2 : 1; // ScreenSpace : DBuffer
+                fso.FindProperty("m_Settings.maxDrawDistance").floatValue = 80f;
+                fso.FindProperty("m_Settings.dBufferSettings.surfaceData").intValue = 1; // albedo + normal
+                fso.FindProperty("m_Settings.screenSpaceSettings.normalBlend").intValue = 0;
+                fso.ApplyModifiedProperties();
+                feature.SetActive(true);
+                EditorUtility.SetDirty(data);
+                Debug.Log($"[Look] decal feature on {data.name} ({(mobile ? "screen space" : "DBuffer")})");
+            }
+        }
+
+        /// <summary>
+        /// Contact shadows that read (the renderer's SSAO was a faint 0.4 at a 0.3 m radius): stronger and wider on the PC
+        /// renderer, still from the depth-normals prepass, after-opaque off (it darkens the ambient only, not the lamps).
+        /// </summary>
+        static void TuneAmbientOcclusion()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:UniversalRendererData", new[] { "Assets" }))
+            {
+                var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(AssetDatabase.GUIDToAssetPath(guid));
+                if (!data || data.name.Contains("Mobile")) continue;
+                foreach (var f in data.rendererFeatures)
+                {
+                    if (!f || f.GetType().Name != "ScreenSpaceAmbientOcclusion") continue;
+                    var so = new SerializedObject(f);
+                    so.FindProperty("m_Settings.Intensity").floatValue = 0.85f;
+                    so.FindProperty("m_Settings.Radius").floatValue = 0.45f;
+                    so.FindProperty("m_Settings.DirectLightingStrength").floatValue = 0.2f;
+                    so.FindProperty("m_Settings.Falloff").floatValue = 60f;
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(data);
+                    Debug.Log($"[Look] SSAO tuned on {data.name}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The decal materials LevelDecals loads (Resources/Decals/&lt;picture&gt;.mat on URP's decal shader graph), and the
+        /// puddle: a thin transparent URP Lit sheet, dark and nearly mirror-smooth, its shape in the picture's alpha.
+        /// </summary>
+        static void BuildDecalMaterials()
+        {
+            const string dir = "Assets/_AiOn/Resources/Decals";
+            var decal = Shader.Find("Shader Graphs/Decal");
+            if (!decal) { Debug.LogError("[Look] URP decal shader not found"); return; }
+            foreach (var guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var name = Path.GetFileNameWithoutExtension(path);
+                if (name == "puddle_mask") continue;
+                var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                var mpath = $"{dir}/{name}.mat";
+                var m = AssetDatabase.LoadAssetAtPath<Material>(mpath);
+                if (!m) { m = new Material(decal); AssetDatabase.CreateAsset(m, mpath); }
+                m.shader = decal;
+                m.SetTexture("Base_Map", tex);
+                m.SetFloat("Normal_Blend", 0f);
+                m.enableInstancing = true;
+                EditorUtility.SetDirty(m);
+            }
+            var lit = Shader.Find("Universal Render Pipeline/Lit");
+            var ppath = $"{dir}/Puddle.mat";
+            var pm = AssetDatabase.LoadAssetAtPath<Material>(ppath);
+            if (!pm) { pm = new Material(lit); AssetDatabase.CreateAsset(pm, ppath); }
+            pm.shader = lit;
+            pm.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>($"{dir}/puddle_mask.png"));
+            pm.SetColor("_BaseColor", new Color(0.05f, 0.055f, 0.06f, 0.8f));
+            pm.SetFloat("_Smoothness", 0.97f);
+            // the mask's alpha fades the reflection too: with "preserve specular" the whole quad kept its sheen and read
+            // as a pale rectangle on the floor round a dark blob
+            pm.SetFloat("_BlendModePreserveSpecular", 0f);
+            pm.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            pm.SetFloat("_Metallic", 0f);
+            pm.SetFloat("_Surface", 1f);
+            pm.SetFloat("_Blend", 0f);
+            pm.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            pm.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            pm.SetFloat("_SrcBlendAlpha", (float)UnityEngine.Rendering.BlendMode.One);
+            pm.SetFloat("_DstBlendAlpha", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            pm.SetFloat("_ZWrite", 0f);
+            pm.SetFloat("_ReceiveShadows", 1f);
+            pm.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            pm.SetOverrideTag("RenderType", "Transparent");
+            pm.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 10;
+            EditorUtility.SetDirty(pm);
+        }
+
+        /// <summary>
+        /// The fire's and the room smoke's particle materials (Resources/Fx, see StoryFx.FlameSheetMat): URP Particles/Unlit
+        /// with the flipbook picture, soft particles (fade over 0.35 m against the depth buffer) and camera fading.
+        /// </summary>
+        static void BuildFxMaterials()
+        {
+            const string dir = "Assets/_AiOn/Resources/Fx";
+            var unlit = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            // smoke takes the scene's light (the fire's orange glow from below, the moon, a torch): an unlit grey puff
+            // read as a glowing orb in a dark corridor
+            var lit = Shader.Find("Universal Render Pipeline/Particles/Simple Lit");
+            foreach (var (name, tex, additive) in new[] { ("FxFlame", "fx_flame", true), ("FxSmoke", "fx_smoke", false) })
+            {
+                var path = $"{dir}/{name}.mat";
+                var shader = additive || !lit ? unlit : lit;
+                var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (!m) { m = new Material(shader); AssetDatabase.CreateAsset(m, path); }
+                m.shader = shader;
+                if (!additive) { m.SetFloat("_ReceiveShadows", 0f); m.EnableKeyword("_RECEIVE_SHADOWS_OFF"); m.SetFloat("_Smoothness", 0f); m.SetColor("_SpecColor", Color.black); }
+                m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>($"{dir}/{tex}.png"));
+                // the flames are additive and their tongue picture covers less than a soft dot: an HDR gain lets them read
+                // (and reach the bloom) without piling into a white blur
+                m.SetColor("_BaseColor", additive ? new Color(2.4f, 2.4f, 2.4f, 1f) : Color.white);
+                m.SetFloat("_Surface", 1f);
+                m.SetFloat("_Blend", additive ? 2f : 0f);
+                m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m.SetFloat("_DstBlend", (float)(additive ? UnityEngine.Rendering.BlendMode.One : UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha));
+                m.SetFloat("_ZWrite", 0f);
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.DisableKeyword("_BLENDMODE_ADD"); m.DisableKeyword("_BLENDMODE_ALPHA");
+                m.EnableKeyword(additive ? "_BLENDMODE_ADD" : "_BLENDMODE_ALPHA");
+                m.SetFloat("_SoftParticlesEnabled", 1f);
+                m.SetFloat("_SoftParticlesNearFadeDistance", 0f);
+                // flames rise out of whatever burns: a short fade, or the tongues inside the boxes vanish
+                float soft = additive ? 0.08f : 0.35f;
+                m.SetFloat("_SoftParticlesFarFadeDistance", soft);
+                m.SetVector("_SoftParticleFadeParams", new Vector4(0f, 1f / soft, 0f, 0f));
+                m.EnableKeyword("_SOFTPARTICLES_ON");
+                m.SetFloat("_CameraFadingEnabled", 1f);
+                m.SetFloat("_CameraNearFadeDistance", 0.3f);
+                m.SetFloat("_CameraFarFadeDistance", 0.9f);
+                m.SetVector("_CameraFadeParams", new Vector4(0.3f, 1f / 0.6f, 0f, 0f));
+                m.EnableKeyword("_FADING_ON");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                EditorUtility.SetDirty(m);
             }
         }
 

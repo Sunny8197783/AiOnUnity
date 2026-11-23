@@ -333,6 +333,9 @@ namespace AiOn.UI
                     // first person: the prompt hangs under the thing, inside the middle of the view
                     if (first) want = new Vector2(Mathf.Clamp(at.x, -620f, 620f), Mathf.Clamp(at.y - size * 0.5f - 46f, -290f, 330f));
                 }
+                // a person (third person): the prompt goes down by their feet, off the face and chest the player looks at
+                if (!first && showPrompt && p.kind == "npc")
+                    want = new Vector2(0, cam && ToCanvas(cam, p.Position, out var feet, out _) ? HudMotion.NpcPromptY(feet.y) : HudMotion.NpcPromptY(null));
                 _promptPos = _appear <= 0.02f || reduce ? want : Vector2.Lerp(_promptPos, want, 1f - Mathf.Exp(-14f * dt));
                 _promptBg.anchoredPosition = _promptPos;
                 _promptGroup.alpha = HudMotion.OutCubic(_appear);

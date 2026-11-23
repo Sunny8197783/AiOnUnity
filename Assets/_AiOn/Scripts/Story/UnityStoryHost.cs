@@ -465,7 +465,8 @@ namespace AiOn.Story
             if (_levelId == "apartment")
             {
                 // FIRE_SPOT (19.2, F3, -0.42): flames at (19.15, 5.62, -0.37); corridor smoke under the 3F ceiling; haze in 302.
-                _fire = StoryFx.CreateFire(root, "HallFire", LevelLayout.ToUnity(19.15f, 5.62f, -0.37f), 1.2f);
+                // the flames burn on top of the cardboard boxes there (0.68 m tall); the light hangs over the corridor, off the wall
+                _fire = StoryFx.CreateFire(root, "HallFire", LevelLayout.ToUnity(19.15f, 5.62f, -0.37f), 1.2f, 0.66f, new Vector3(0f, 0f, 0.6f));
                 _smoke = StoryFx.CreateSmoke(root, "CorridorSmoke", LevelLayout.ToUnity(3f, 7.0f, -1.0f), new Vector3(37.4f, 1.2f, 1.7f), new Color(0.32f, 0.31f, 0.3f));
                 _haze = StoryFx.CreateSmoke(root, "FlatHaze", LevelLayout.ToUnity(-3.65f, 7.2f, 4.0f), new Vector3(7.7f, 1.2f, 7.8f), new Color(0.34f, 0.32f, 0.3f));
             }

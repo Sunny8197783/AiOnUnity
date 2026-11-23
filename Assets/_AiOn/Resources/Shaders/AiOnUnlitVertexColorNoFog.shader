@@ -8,6 +8,7 @@ Shader "AiOn/UnlitVertexColorNoFog"
     {
         _Color ("Colour (linear)", Vector) = (1, 1, 1, 1)
         _FogAmount ("Fog amount (0 = no fog)", Range(0, 1)) = 0
+        _ShadeLift ("Lift the vertex shading toward 1 (haze flattens a far ridge)", Range(0, 1)) = 0
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 0
     }
 
@@ -32,6 +33,7 @@ Shader "AiOn/UnlitVertexColorNoFog"
             CBUFFER_START(UnityPerMaterial)
                 float4 _Color;
                 float _FogAmount;
+                float _ShadeLift;
                 float _Cull;
             CBUFFER_END
 
@@ -63,7 +65,7 @@ Shader "AiOn/UnlitVertexColorNoFog"
 
             half4 frag(Varyings i) : SV_Target
             {
-                float3 c = i.color.rgb * _Color.rgb;
+                float3 c = lerp(i.color.rgb, 1.0, _ShadeLift) * _Color.rgb;
                 float3 fogged = MixFog(c, i.fogFactor);
                 return half4(lerp(c, fogged, _FogAmount), 1.0);
             }
@@ -89,6 +91,7 @@ Shader "AiOn/UnlitVertexColorNoFog"
             CBUFFER_START(UnityPerMaterial)
                 float4 _Color;
                 float _FogAmount;
+                float _ShadeLift;
                 float _Cull;
             CBUFFER_END
 
@@ -124,6 +127,7 @@ Shader "AiOn/UnlitVertexColorNoFog"
             CBUFFER_START(UnityPerMaterial)
                 float4 _Color;
                 float _FogAmount;
+                float _ShadeLift;
                 float _Cull;
             CBUFFER_END
 

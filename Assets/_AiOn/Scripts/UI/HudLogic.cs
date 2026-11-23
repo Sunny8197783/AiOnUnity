@@ -106,6 +106,43 @@ namespace AiOn.UI
                 if (visibleLabels[i] == "official") { count++; if (first < 0) first = i; }
             return count >= cap ? first : -1;
         }
+
+        /// <summary>
+        /// Index of an official toast on screen that says nearly the same as <paramref name="text"/> (the new one takes its
+        /// place instead of stacking a second card of the same advice), or -1. Same = at least 40 % of the shorter one's
+        /// two-letter pieces (letters only, the "공습경보 —" heading dropped) appear in the other.
+        /// </summary>
+        public static int RepeatIndex(IReadOnlyList<string> visibleLabels, IReadOnlyList<string> visibleTexts, string incoming, string text)
+        {
+            if (incoming != "official" || visibleLabels == null || visibleTexts == null || string.IsNullOrEmpty(text)) return -1;
+            var a = Pieces(text);
+            for (int i = 0; i < visibleLabels.Count && i < visibleTexts.Count; i++)
+            {
+                if (visibleLabels[i] != "official" || string.IsNullOrEmpty(visibleTexts[i])) continue;
+                var b = Pieces(visibleTexts[i]);
+                int small = Math.Min(a.Count, b.Count);
+                if (small == 0) continue;
+                int shared = 0;
+                foreach (var p in a) if (b.Contains(p)) shared++;
+                if (shared * 5 >= small * 2) return i;
+            }
+            return -1;
+        }
+
+        static HashSet<string> Pieces(string text)
+        {
+            int dash = text.IndexOf(" — ", StringComparison.Ordinal);
+            if (dash > 0 && dash < 16) text = text.Substring(dash + 3);
+            var set = new HashSet<string>();
+            char prev = '\0';
+            foreach (char c in text)
+            {
+                if (!char.IsLetterOrDigit(c)) { prev = '\0'; continue; }
+                if (prev != '\0') set.Add(new string(new[] { prev, c }));
+                prev = c;
+            }
+            return set;
+        }
     }
 
     /// <summary>The chapter banner's opacity over time (fade in 0.4 s, hold 2.2 s, fade out 0.6 s; reduce motion: 1.5 s still).</summary>

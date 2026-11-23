@@ -658,9 +658,17 @@ namespace AiOn.UI
             var (tagText, tagColor) = Labels[key];
             text = EasyKorean.Of(text); // 쉬운 한국어: the plain wording when there is one
             // At most two official notices on screen: the oldest one makes way.
-            _toastLabels.Clear();
-            for (int i = 0; i < _toasts.childCount; i++) _toastLabels.Add(_toasts.GetChild(i).name);
-            int evict = ToastQueue.EvictIndex(_toastLabels, key);
+            _toastLabels.Clear(); _toastTexts.Clear();
+            for (int i = 0; i < _toasts.childCount; i++)
+            {
+                var c = _toasts.GetChild(i);
+                _toastLabels.Add(c.name);
+                var tx = c.Find("Text") is { } tt ? tt.GetComponent<Text>() : null;
+                _toastTexts.Add(tx ? tx.text : null);
+            }
+            // the same advice again (two sourced facts that say nearly the same): it takes the older card's place
+            int evict = ToastQueue.RepeatIndex(_toastLabels, _toastTexts, key, text);
+            if (evict < 0) evict = ToastQueue.EvictIndex(_toastLabels, key);
             if (evict >= 0) Detach(_toasts.GetChild(evict));
             var bg = HudTheme.Plate(key, _toasts, dense: true);
             var fit = bg.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -673,6 +681,8 @@ namespace AiOn.UI
             while (_toasts.childCount > 4) Detach(_toasts.GetChild(0));
             Destroy(bg.gameObject, Mathf.Max(1.2f, ms / 1000f));
         }
+
+        readonly List<string> _toastTexts = new();
 
         static void Detach(Transform t)
         {
@@ -989,6 +999,8 @@ namespace AiOn.UI
         public static event System.Action<string, string> TalkStarted;
         /// <summary>Raised when that dialog closes (TalkFacing hands the camera back).</summary>
         public static event System.Action TalkEnded;
+        /// <summary>Raised as each line (page) of a dialog shows, with its text as shown (TalkFacing moves the speaker's mouth for it).</summary>
+        public static event System.Action<string> TalkLineShown;
 
         public async Task<string> Talk(TalkOptions o)
         {
@@ -1046,6 +1058,7 @@ namespace AiOn.UI
                     count.text = lines.Count > 1 ? $"{i + 1} / {lines.Count}" : o.Progress ?? "";
                     bool last = i == lines.Count - 1;
                     Read(OverlaySpeech.TalkLine(o, lines[i], i == 0, last && hasChoices)); // low vision: each line as it shows
+                    try { TalkLineShown?.Invoke(lines[i]); } catch (System.Exception e) { Debug.LogException(e); }
                     if (last && hasChoices) break;
                     await Advance();
                 }

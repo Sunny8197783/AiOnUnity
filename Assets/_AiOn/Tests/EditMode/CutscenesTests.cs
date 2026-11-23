@@ -136,7 +136,7 @@ namespace AiOn.Tests
             });
             Assert.That(cine.Plays.Count, Is.EqualTo(2));
             Assert.That(cine.Plays[0].shots[0].Lines.Count, Is.EqualTo(3));
-            Assert.That(cine.Plays[0].shots[0].Lines[0].Text, Is.EqualTo("D-1 오전 · 원인0  →  D+3 오전 · 결과0"));
+            Assert.That(cine.Plays[0].shots[0].Lines[0].Text, Is.EqualTo("D-1 오전 · 원인0\n→  D+3 오전 · 결과0"));
             Assert.That(cine.Plays[0].shots[0].Lines[0].Speaker, Is.EqualTo("준비0"));
             Assert.That(ctx.LevelStates["town"]["buses"].ToString(), Is.EqualTo("departed")); // polish: the bay is empty in the closing shot (no replay of the pull-out)
             Assert.That(host.Level("town").State["buses"].ToString(), Is.EqualTo("departed"));
@@ -427,10 +427,15 @@ namespace AiOn.Tests
             });
             Assert.That(res, Is.EqualTo("done"));
             var people = host.Calls("spawnPerson").Select(c => (FakePerson)c.Data).ToList();
-            Assert.That(people.Select(p => p.Preset), Is.EqualTo(new[] { "crowd", "crowd", "elder", "crowd", "crowd" }));
+            Assert.That(people.Take(5).Select(p => p.Preset), Is.EqualTo(new[] { "crowd", "crowd", "elder", "crowd", "crowd" }));
             Assert.That(people[3].Props, Is.EquivalentTo(new[] { "backpack", "flashlight" }));
-            Assert.That(people.All(p => p.X < 56), Is.True, "everyone got past the gate toward the shelter");
-            Assert.That(host.Calls("removePerson").Count(), Is.EqualTo(5));
+            Assert.That(people.Take(5).All(p => p.X < 56), Is.True, "everyone got past the gate toward the shelter");
+            // the second shot's street is not empty under "사람들이 쏟아져 나온다" (visual QA)
+            Assert.That(people.Skip(5).Select(p => p.Preset), Is.EqualTo(Cutscenes.StreetWalkers.Select(w => w.preset)));
+            Assert.That(Enumerable.Range(0, Cutscenes.StreetWalkers.Length).All(i => people[5 + i].X < Cutscenes.StreetWalkers[i].x - 1), Is.True, "the street walkers head west toward the shelter");
+            Assert.That(host.Calls("removePerson").Count(), Is.EqualTo(5 + Cutscenes.StreetWalkers.Length));
+            Assert.That(Cutscenes.StreetWalkers.All(w => w.z >= Cutscenes.SidewalkZMin && w.z <= Cutscenes.SidewalkZMax), Is.True,
+                "on the south sidewalk, never through the road closure's barrier blocks");
             Assert.That(fx.LastFill, Is.EqualTo(2.2).Within(1e-9), "phone torch in the lead's hand (polish: short reach, soft, no blown-out walkers)");
             Assert.That(host.Captions, Is.EqualTo(new[] { "20:05 — 공습경보. 사이렌이 오르내리며 1분 동안 울린다.", "어두운 거리로 사람들이 쏟아져 나온다. 다들 지하로 향한다." }));
             Assert.That(Enters(host), Is.EqualTo(new[] { "apartment:home", "town:home", "apartment" }));
@@ -534,7 +539,7 @@ namespace AiOn.Tests
             var rows = Rows(2);
             var res = host.Run(async () => { await ctx.Goto("apartment", "home"); return await Cutscenes.RippleMontage(ctx, rows, "bus"); });
             Assert.That(res, Is.EqualTo("done"));
-            Assert.That(host.Captions, Is.EqualTo(new[] { "D-1 오전 · 원인0  →  D+3 오전 · 결과0", "D-1 오전 · 원인1  →  D+3 오전 · 결과1" }));
+            Assert.That(host.Captions, Is.EqualTo(new[] { "D-1 오전 · 원인0\n→  D+3 오전 · 결과0", "D-1 오전 · 원인1\n→  D+3 오전 · 결과1" }));
             Assert.That(host.Calls("caption").Select(c => (string)c.Data), Is.EqualTo(new[] { "준비0", "준비1" }));
             Assert.That(Enters(host), Is.EqualTo(new[] { "apartment:home", "town:home" }));
             Assert.That(host.State("buses").ToString(), Is.EqualTo("departed"));

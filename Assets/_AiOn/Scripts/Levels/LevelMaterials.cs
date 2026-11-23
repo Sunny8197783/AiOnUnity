@@ -252,13 +252,22 @@ namespace AiOn.Levels
             return c.a < 0.9f && c.maxColorComponent > 0.02f && m.GetFloat(Prop.RoughnessFactor) < GlassRoughness;
         }
 
-        /// <summary>Window glass roughness (smoothness 0.3): a soft sheen instead of a hot specular orb.</summary>
-        public const float GlassRoughness = 0.7f;
+        /// <summary>Window glass roughness (smoothness 0.65): a soft sheen instead of a hot specular orb. At 0.7 the rough,
+        /// lit pane read as a milky veil over the view (302호's veranda doors, glowing almost white at night).</summary>
+        public const float GlassRoughness = 0.35f;
+
+        /// <summary>Most opacity a clear pane keeps (the glTF glass is 0.16: with the room light on it, a grey film).</summary>
+        public const float GlassAlpha = 0.08f;
 
         static void Roughen(Material m)
         {
             if (m.HasProperty(Prop.RoughnessFactor)) m.SetFloat(Prop.RoughnessFactor, GlassRoughness);
             if (m.HasProperty(Prop.UrpSmoothness)) m.SetFloat(Prop.UrpSmoothness, 1f - GlassRoughness);
+            if (m.HasProperty(Prop.BaseColorFactor))
+            {
+                var c = m.GetColor(Prop.BaseColorFactor);
+                if (c.a > GlassAlpha) { c.a = GlassAlpha; m.SetColor(Prop.BaseColorFactor, c); }
+            }
         }
 
         static Texture GetTex(Material m, int gltf, int urp) =>

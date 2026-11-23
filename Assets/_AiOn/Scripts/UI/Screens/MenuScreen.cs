@@ -57,7 +57,12 @@ namespace AiOn.UI
             Window.GetComponent<Image>().color = MenuBits.Hex("#05070f");
             var host = UnityStoryHost.Instance;
             _still = host && host.ReduceMotion;
-            BuildSkyline();
+            // "그래픽 사실화": behind the menu, the real town at night (its own lit windows, street lamps, sky and fog) seen
+            // from across the road, the camera drifting slowly; the flat 2D skyline stays as the fallback when the town
+            // is not the loaded level (an editor test scene)
+            _backdrop = TitleBackdrop.Begin(host);
+            if (_backdrop) Window.GetComponent<Image>().color = new Color(0, 0, 0, 0);
+            else BuildSkyline();
 
             // Everything in front of the skyline sits on its own canvas after the skyline's: a nested canvas draws over
             // its parent's graphics, so without this the lit windows would draw across the text, buttons and panel.
@@ -255,12 +260,77 @@ namespace AiOn.UI
             }
         }
 
+        bool _backdrop;
+
+        void OnDisable() { if (_backdrop) { TitleBackdrop.End(UnityStoryHost.Instance); _backdrop = false; } }
+
         protected override void Update()
         {
             base.Update();
+            if (_backdrop) TitleBackdrop.Step(UnityStoryHost.Instance, Time.unscaledTime, _still);
             if (!_still && _sky != null) Animate(Time.unscaledTime * 1000.0);
             if (Time.unscaledTime - OpenedAt < 0.2f) return;
             _ring.Tick(Keyboard.current);
+        }
+    }
+
+    /// <summary>
+    /// The title's 3D backdrop: the town level at night from the pavement by the corner shops, 103동 and the moon above, the camera
+    /// drifting on a slow arc (still under reduce motion). The landing screen begins it when the town is the loaded level
+    /// and ends it when it closes; the story sets its own look and camera when a run starts.
+    /// </summary>
+    public static class TitleBackdrop
+    {
+        /// <summary>Camera path (Unity coordinates): from A to B and back over Period seconds, always looking at Target.</summary>
+        /// From across the main road, a little above the street lamps: 103동's lit facade and its neighbours in the open band
+        /// between the hero copy and the chapter panel, the corner shops and the lamps along the bottom.
+        public static readonly Vector3 A = new(18f, 10f, 34f), B = new(28f, 11.5f, 32f), Target = new(70f, 20f, -40f);
+        public const float Period = 90f, Fov = 50f;
+
+        /// <summary>Exposure lift (stops) of the night look behind the title: the street's own night grade read as a black
+        /// field behind the menu.</summary>
+        public const float ExposureLift = 1.2f;
+
+        static string s_envBefore;
+
+        /// <summary>The camera position at time t (pure; tested): a smooth back-and-forth between A and B.</summary>
+        public static Vector3 PositionAt(float t, bool still)
+        {
+            if (still) return Vector3.Lerp(A, B, 0.5f);
+            float k = 0.5f - 0.5f * Mathf.Cos(t * Mathf.PI * 2f / Period);
+            return Vector3.Lerp(A, B, k);
+        }
+
+        public static bool Begin(UnityStoryHost host)
+        {
+            var env = AiOn.Levels.EnvironmentController.Instance;
+            if (!host || host.LevelId != "town" || !env) return false;
+            // the preloaded town is in the look the story left it in (StoryDirector.Preload: afternoon); End puts it back
+            s_envBefore = host.Env;
+            host.SetEnv("night", 0);
+            env.SetGradeOverride(new Newtonsoft.Json.Linq.JObject { ["exposure"] = ExposureLift });
+            Step(host, Time.unscaledTime, host.ReduceMotion);
+            return true;
+        }
+
+        public static void Step(UnityStoryHost host, float t, bool still)
+        {
+            var rig = host ? host.cameraRig : null;
+            if (!rig || host.LevelId != "town") return; // another level loaded under the title (a test drive): leave its camera alone
+            rig.overrideActive = true; // set directly each frame (no CameraShot allocated per frame)
+            rig.overridePosition = PositionAt(t, still);
+            rig.overrideTarget = Target;
+            rig.overrideFov = Fov;
+        }
+
+        public static void End(UnityStoryHost host)
+        {
+            if (!host) return;
+            host.SetCameraOverride(null);
+            // the story resumes in the town's own look, not the title's night (Evac and the town resume paths rely on it)
+            if (s_envBefore != null && host.LevelId == "town" && host.Env == "night") host.SetEnv(s_envBefore, 0);
+            else if (AiOn.Levels.EnvironmentController.Instance) AiOn.Levels.EnvironmentController.Instance.SetGradeOverride(null);
+            s_envBefore = null;
         }
     }
 

@@ -18,9 +18,13 @@ namespace AiOn.Rendering
             "day" => 0.5f,
             "afternoon" => 0.45f,
             "interiorNight" => 0.7f,
+            DarkByDay => 0.55f, // a powerless room in daylight (EnvironmentController.DaylightVariant)
             "dusk" => 0.8f,
             _ => 1f,
         };
+
+        /// <summary>The name BaseWeightFor takes for interiorDark while the windows show day (not a preset of its own).</summary>
+        public const string DarkByDay = "interiorDark@day";
 
         /// <summary>Peak of the emergency grade for a blast this far away (metres): full within 25 m, nothing past 220 m.</summary>
         public static float BlastPeak(float distance) => Mathf.Lerp(1f, 0.25f, Mathf.InverseLerp(25f, 160f, distance)) * (distance > 220f ? 0f : 1f);
@@ -214,6 +218,7 @@ namespace AiOn.Rendering
             float now = Time.unscaledTime, dt = Time.unscaledDeltaTime;
             var env = EnvironmentController.Instance;
             string preset = env && env.Current != null ? env.preset : "interior";
+            if (preset == "interiorDark" && env && env.Shown.NightAmount < 0.5f) preset = AtmosphereMath.DarkByDay;
 
             bool siren = now < _sirenUntil;
             float emergency = Mathf.Max(CurrentPulse(), _manualEmergency);

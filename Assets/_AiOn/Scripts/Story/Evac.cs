@@ -77,6 +77,9 @@ namespace AiOn.Story
             else if (ctx.Resume != "fire4")
             {
                 int days = Math.Max(1, 6 - G.Day);
+                // the ledger ("앞으로 3일 · 집") is planned at home: 3장 can end out in town, where the ledger stood over a car
+                // park in the shade of the blocks across the road, the lower half of the frame black (visual QA)
+                if (ctx.Engine.LevelId != "apartment") await ctx.Goto("apartment", "home", "interiorDark");
                 var ledger = await ctx.Modal(() => StoryCommon.DayLedger(ctx, days, "home"));
                 await ctx.Skip("D+3 월", "D+6 목 10:00", new[] { "하루 한두 시간씩 전기가 들어왔다 나갔다. 급수소 줄은 날마다 길어졌다." }.Concat(ledger.Take(4)).ToList());
                 G.Day = 6; G.Minute = 10 * 60;
@@ -285,13 +288,18 @@ namespace AiOn.Story
             var G = ctx.G;
             G.Chapter = "evac";
             ctx.Hud.SetChapter("5장", "공식 대피");
-            ctx.OutdoorEnv = "day";
+            // the day look only from D+12: the ledger and the skip still play over D+7's night (22:50), not in daylight
+            if (ctx.Resume == "depart") ctx.OutdoorEnv = "day";
             if (ctx.Resume != "depart")
             {
+                // resumed here (이어하기, 장면 바로가기) the town behind the title is still in its afternoon look: the ledger
+                // is D+7 22:50, so the street shows that night until the skip to D+12
+                if (ctx.Engine.LevelId == "town") ctx.Engine.SetEnv(ctx.OutdoorEnv, 0);
                 var place = KnowString(G, "stayMove") == "move" ? "shelter" : "home";
                 var ledger = await ctx.Modal(() => StoryCommon.DayLedger(ctx, Math.Max(1, 12 - G.Day), place));
                 await ctx.Skip("D+7", "D+12 수", new[] { place == "shelter" ? "닷새가 더 지났다. 임시 거처에서 지내다 오늘 아침 짐을 챙기러 집에 들렀다." : "닷새가 더 지났다. 이웃 몇 집은 이미 떠났다." }.Concat(ledger.Take(4)).ToList());
                 G.Day = 12; G.Minute = G.Cond.EvacNoticeAt;
+                ctx.OutdoorEnv = "day";
                 PrepActions.ApplyHome(ctx);
                 await ctx.Goto("apartment", "home", "interiorDark");
                 ctx.Refresh();

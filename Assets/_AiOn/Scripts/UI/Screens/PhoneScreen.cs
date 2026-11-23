@@ -377,7 +377,7 @@ namespace AiOn.UI
         protected override void Build()
         {
             _shade = Root.Find("Shade")?.GetComponent<Image>();
-            if (_shade) _shade.color = new Color(30 / 255f, 2 / 255f, 4 / 255f, 0.55f);
+            if (_shade) _shade.color = new Color(22 / 255f, 8 / 255f, 10 / 255f, 0.5f); // a dim shade with a trace of red (it washed the whole room red)
             Window.GetComponent<Image>().color = Hex("#fbfbfc");
             Window.anchorMin = Window.anchorMax = Window.pivot = new Vector2(0.5f, 1);
 
@@ -421,8 +421,10 @@ namespace AiOn.UI
             float x = 0;
             if (_level == "critical" && t > 0.4f && t < 1.4f) x = Mathf.Sin((t - 0.4f) * Mathf.PI * 2 / 0.125f) * 8 * (1 - (t - 0.4f));
             Window.anchoredPosition = new Vector2(x, y);
-            if (_shade && _level == "critical" && t < 3f)
-                _shade.color = new Color(30 / 255f + 0.25f * Mathf.Abs(Mathf.Sin(t * Mathf.PI)), 2 / 255f, 4 / 255f, 0.55f);
+            // 위급: the red pulses while the alert lands, then settles to the dim shade (it used to hold the room red)
+            if (_shade && _level == "critical" && t < 3.6f)
+                _shade.color = Color.Lerp(new Color(22 / 255f, 8 / 255f, 10 / 255f, 0.5f),
+                    new Color(30 / 255f + 0.25f * Mathf.Abs(Mathf.Sin(t * Mathf.PI)), 2 / 255f, 4 / 255f, 0.55f), Mathf.Clamp01((3.6f - t) / 1.2f));
 
             var kb = Keyboard.current;
             if (kb == null || t < 0.3f) return;

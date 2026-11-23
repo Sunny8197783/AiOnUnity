@@ -1,0 +1,48 @@
+{
+  "_about": "LevelSurfaces: which level-model materials (glTF names) get which real-world surface detail (AiOn/Surface). Sets are packed CC0 Poly Haven maps (Resources/Surfaces/surf_<set>_n|a.jpg). scale = tiles per metre (1 / the set's real size); normal, albedo = strengths; rough = roughness variation gain around mean; offset = roughness offset; macro = slow variation.",
+  "kinds": {
+    "plaster":       { "set": "plaster",  "scale": 0.5,  "normal": 0.55, "albedo": 0.3,  "rough": 2.5, "mean": 0.92, "offset": 0,     "macro": 0.15 },
+    "ceiling":       { "set": "plaster",  "scale": 0.5,  "normal": 0.35, "albedo": 0.2,  "rough": 1.5, "mean": 0.92, "offset": 0,     "macro": 0.1 },
+    "exterior":      { "set": "concrete", "scale": 0.37, "normal": 0.7,  "albedo": 0.35, "rough": 2.5, "mean": 0.74, "offset": 0,     "macro": 0.25 },
+    "concrete":      { "set": "concrete", "scale": 0.37, "normal": 0.9,  "albedo": 0.6,  "rough": 3,   "mean": 0.74, "offset": 0,     "macro": 0.3 },
+    "brick":         { "set": "concrete", "scale": 0.6,  "normal": 0.5,  "albedo": 0.3,  "rough": 2,   "mean": 0.74, "offset": 0,     "macro": 0.2 },
+    "facade":        { "set": "concrete", "scale": 0.37, "normal": 0.3,  "albedo": 0.22, "rough": 1.5, "mean": 0.74, "offset": 0,     "macro": 0.2 },
+    "floorConcrete": { "set": "garage",   "scale": 0.53, "normal": 0.8,  "albedo": 0.55, "rough": 3,   "mean": 0.53, "offset": 0,     "macro": 0.3 },
+    "pavement":      { "set": "garage",   "scale": 0.8,  "normal": 0.6,  "albedo": 0.35, "rough": 2,   "mean": 0.53, "offset": 0,     "macro": 0.25 },
+    "epoxy":         { "set": "garage",   "scale": 0.53, "normal": 0.45, "albedo": 0.45, "rough": 4,   "mean": 0.53, "offset": -0.12, "macro": 0.35 },
+    "asphalt":       { "set": "asphalt",  "scale": 0.48, "normal": 1.0,  "albedo": 0.8,  "rough": 3,   "mean": 0.66, "offset": 0,     "macro": 0.3 },
+    "wood":          { "set": "wood",     "scale": 1.67, "normal": 0.45, "albedo": 0.3,  "rough": 2,   "mean": 0.89, "offset": 0,     "macro": 0.1 },
+    "tile":          { "set": "plaster",  "scale": 1.2,  "normal": 0.18, "albedo": 0.12, "rough": 1,   "mean": 0.92, "offset": 0,     "macro": 0.1 },
+    "paint":         { "set": "plaster",  "scale": 1.5,  "normal": 0.2,  "albedo": 0.08, "rough": 1,   "mean": 0.92, "offset": 0,     "macro": 0.05 }
+  },
+  "levels": {
+    "apartment": {
+      "m~m207": "exterior", "m~m201": "concrete", "m~m200": "exterior", "m~m205": "asphalt", "m~m210": "concrete", "m~m215": "concrete",
+      "m~m2": "ceiling", "m~m204": "pavement", "m~m39": "plaster", "m~m3": "floorConcrete", "m~m56": "plaster", "m~m79": "plaster",
+      "m~m40": "concrete", "m~m19": "wood", "m~m55": "tile", "m~m1": "tile", "m~m4": "tile", "m~m29": "pavement", "m~m22": "plaster",
+      "m~m28": "plaster", "m~m86": "plaster", "m~m82": "tile", "m~m9": "paint", "m~m23": "wood"
+    },
+    "town": {
+      "m~m6": "asphalt", "m~m24~m38~m42~m0": "asphalt", "m~m29~m36~m1": "pavement", "m~m3~m11~m43~m3": "floorConcrete", "m~m19": "concrete",
+      "m~m33~m14": "exterior", "m~m136": "brick", "m~m37~m4": "concrete", "m~m255": "concrete", "m~m55": "concrete", "m~m177": "concrete",
+      "m~m12": "exterior", "m~m22": "exterior", "m~m23": "exterior",
+      "lit:windows~m66": "facade", "lit:windows~m65": "facade", "lit:windows~m64": "facade", "lit:windows~m15": "facade", "lit:windows~m52": "facade",
+      "lit:windows~m60": "facade", "lit:windows~m53": "facade", "lit:windows~m49": "facade", "lit:windows~m62": "facade", "lit:windows~m59": "facade",
+      "lit:windows~m50": "facade", "lit:windows~m61": "facade", "lit:windows~m34": "facade", "lit:windows~m46": "facade", "lit:windows~m58": "facade",
+      "lit:windows~m63": "facade", "lit:windows~m35": "facade", "lit:windows~m32": "facade", "lit:windows~m47": "facade", "lit:windows~m42": "facade",
+      "lit:windows~m51": "facade", "lit:windows~m57": "facade"
+    },
+    "mart": {
+      "m~m3~m11": "ceiling", "m~m9": "ceiling", "m~m7": "plaster", "m~m6": "tile", "m~m24": "asphalt", "m~m16": "wood"
+    },
+    "store": {
+      "m~m24~m38": "asphalt", "m~m7~m1": "plaster", "m~m2": "ceiling", "m~m0": "tile", "m~m29~m36": "pavement"
+    },
+    "office": {
+      "m~m24~m38~m42": "asphalt", "m~m3~m11~m43": "floorConcrete", "m~m5": "ceiling", "m~m7~m1~m1": "plaster", "m~m69": "wood", "m~m44": "concrete"
+    },
+    "shelter": {
+      "m~m1": "concrete", "m~m2": "concrete", "m~m0": "epoxy", "m~m6": "plaster", "m~m16": "concrete", "m~m33": "plaster"
+    }
+  }
+}

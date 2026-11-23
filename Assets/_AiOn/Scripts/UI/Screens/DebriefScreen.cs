@@ -382,7 +382,7 @@ namespace AiOn.UI
             var buttons = new List<(string, bool, bool, Action)>();
             Button copy = null;
             if (!string.IsNullOrEmpty(_v.Share)) buttons.Add(("결과 복사", false, false, () => Copy(copy)));
-            buttons.Add(("학습 리포트", false, false, () => { if (_postQuiz) Go("report"); else if (Ready && Time.unscaledTime - OpenedAt >= HoldFor) _ = ReportScreen.Open(null); }));
+            buttons.Add(("학습 리포트", false, false, () => { if (_postQuiz) Go("report"); else if (Ready && Time.unscaledTime - OpenedAt >= HoldFor) ReportOver(); }));
             buttons.Add(("인쇄하기", false, false, Print));
             buttons.Add(("메인 메뉴", false, false, () => Go("menu")));
             buttons.Add(("처음부터 다시", !_postQuiz, !_postQuiz, () => Go("restart")));
@@ -402,6 +402,18 @@ namespace AiOn.UI
         List<Button> _buttons;
         bool _armed;
 
+        /// <summary>The learning report over this document, which is hidden meanwhile: the report window is a little
+        /// smaller, and the paper's edges showed above and below it as grey bars.</summary>
+        async void ReportOver()
+        {
+            var cg = Window ? Window.GetComponent<CanvasGroup>() : null;
+            if (Window && !cg) cg = Window.gameObject.AddComponent<CanvasGroup>();
+            float was = cg ? cg.alpha : 1;
+            if (cg) cg.alpha = 0;
+            try { await ReportScreen.Open(null); }
+            finally { if (cg) cg.alpha = was; }
+        }
+
         protected override void Update()
         {
             if (!_armed && _buttons != null)
@@ -411,7 +423,7 @@ namespace AiOn.UI
                 foreach (var b in _buttons) if (b) b.GetComponent<CanvasGroup>().alpha = a;
                 if (t >= HoldFor) foreach (var b in _buttons) if (b) b.interactable = true;
                 if (a >= 1) _armed = true;
-                if (t >= HoldFor && _openReport) { _openReport = false; _ = ReportScreen.Open(null); } // back from the quiz: the report it was asked for
+                if (t >= HoldFor && _openReport) { _openReport = false; ReportOver(); } // back from the quiz: the report it was asked for
             }
             base.Update();
         }

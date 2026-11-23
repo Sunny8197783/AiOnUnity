@@ -95,7 +95,7 @@ namespace AiOn.Tests
             Assert.That(EchoMarksView.TrailAlpha(1), Is.GreaterThan(EchoMarksView.TrailAlpha(2)));
             Assert.That(EchoMarksView.TrailAlpha(2), Is.GreaterThan(EchoMarksView.TrailAlpha(3)));
             Assert.That(EchoMarksView.TrailAlpha(0), Is.EqualTo(EchoMarksView.TrailAlpha(1)));
-            Assert.That(EchoMarksView.TrailAlpha(1), Is.LessThan(0.4f)); // faint
+            Assert.That(EchoMarksView.TrailAlpha(1), Is.LessThan(0.2f)); // faint (chalk, not tape)
         }
 
         [Test]
@@ -139,8 +139,11 @@ namespace AiOn.Tests
             Assert.That(EchoMarksView.GhostVisibility(0.5f, 10f), Is.EqualTo(0f), "at the lens: gone");
             Assert.That(EchoMarksView.GhostVisibility(10f, 0.3f), Is.EqualTo(0f), "on the player's spot: gone");
             Assert.That(EchoMarksView.GhostVisibility(10f, 10f), Is.EqualTo(1f));
-            Assert.That(EchoMarksView.GhostVisibility(2f, 10f), Is.GreaterThan(0f).And.LessThan(1f));
-            Assert.That(EchoMarksView.GhostVisibility(2.5f, 10f), Is.GreaterThan(EchoMarksView.GhostVisibility(2f, 10f)));
+            // the life-size Rocketbox ghost fills more of the view than the old capsule: gone within 2 m of the lens, full past 5 m
+            Assert.That(EchoMarksView.GhostVisibility(2f, 10f), Is.EqualTo(0f));
+            Assert.That(EchoMarksView.GhostVisibility(3f, 10f), Is.GreaterThan(0f).And.LessThan(1f));
+            Assert.That(EchoMarksView.GhostVisibility(3.5f, 10f), Is.GreaterThan(EchoMarksView.GhostVisibility(3f, 10f)));
+            Assert.That(EchoMarksView.GhostVisibility(5f, 10f), Is.EqualTo(1f));
             Assert.That(EchoMarksView.GhostAlpha, Is.LessThanOrEqualTo(0.25f), "a faint trace, not a solid figure");
         }
 
@@ -206,6 +209,16 @@ namespace AiOn.Tests
             Assert.That(EchoMarksView.MarkKey("note", 1, 2, "a"), Is.EqualTo(EchoMarksView.MarkKey("note", 1.0001, 2, "a")));
             Assert.That(EchoMarksView.MarkKey("note", 1, 2, "a"), Is.Not.EqualTo(EchoMarksView.MarkKey("note", 1, 2, "b")));
             Assert.That(EchoMarksView.MarkKey("note", 1, 2, "a"), Is.Not.EqualTo(EchoMarksView.MarkKey("cross", 1, 2, "a")));
+        }
+
+        [Test]
+        public void Ghost_WaitsUntilThePlayerHasMoved()
+        {
+            Assert.That(EchoMarksView.GhostAfterMove(0f), Is.EqualTo(0f));
+            Assert.That(EchoMarksView.GhostAfterMove(0.9f), Is.EqualTo(0f));
+            Assert.That(EchoMarksView.GhostAfterMove(2f), Is.InRange(0.1f, 0.9f));
+            Assert.That(EchoMarksView.GhostAfterMove(3f), Is.EqualTo(1f));
+            Assert.That(EchoMarksView.GhostAfterMove(10f), Is.EqualTo(1f));
         }
     }
 }

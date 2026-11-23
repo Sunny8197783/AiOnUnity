@@ -32,6 +32,7 @@ namespace AiOn.Rendering
         {
             if (renderingData.cameraData.cameraType != CameraType.Game) return;
             if (Excluded && renderingData.cameraData.camera == Excluded) return; // the 우리 집 안전 준비 print camera (a PNG, not the view)
+            if (AiOn.UI.Studio.MiniStudio.Cameras.Contains(renderingData.cameraData.camera)) return; // a minigame's set picture
             var stack = VolumeManager.instance.stack;
             var signal = stack.GetComponent<AnalogSignal>();
             var mask = stack.GetComponent<MaskView>();

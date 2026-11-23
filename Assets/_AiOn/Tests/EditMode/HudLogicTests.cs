@@ -81,6 +81,17 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void An_official_toast_repeating_one_on_screen_replaces_it()
+        {
+            var labels = new[] { "official", "self" };
+            var texts = new[] { "공습경보 — 공습경보가 울리면 즉시 가까운 지하시설이나 유리창이 없는 건물 안으로 대피하고 TV·라디오·문자 안내에 따릅니다.", "지갑과 신분증은 거실 탁자 위에 있다." };
+            Assert.That(ToastQueue.RepeatIndex(labels, texts, "official", "공습경보가 울리면 생존배낭을 가지고 대피시설이나 지하 장소로 빨리 이동합니다."), Is.EqualTo(0));
+            Assert.That(ToastQueue.RepeatIndex(labels, texts, "official", "소화기는 안전핀을 뽑고 바람을 등진 채 빗자루로 쓸듯이 뿌립니다."), Is.EqualTo(-1), "a different topic stacks");
+            Assert.That(ToastQueue.RepeatIndex(labels, texts, "self", "공습경보가 울리면 생존배낭을 가지고 대피시설이나 지하 장소로 빨리 이동합니다."), Is.EqualTo(-1), "only officials");
+            Assert.That(ToastQueue.RepeatIndex(new[] { "self" }, new[] { texts[0] }, "official", texts[0]), Is.EqualTo(-1), "a 내 기록 card is never replaced");
+        }
+
+        [Test]
         public void Banner_fades_in_holds_and_out()
         {
             Assert.That(ChapterBanner.Alpha(-1, false), Is.Zero);

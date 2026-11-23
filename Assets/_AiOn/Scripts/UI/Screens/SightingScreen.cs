@@ -277,9 +277,31 @@ namespace AiOn.UI
             DrawCard(24, 356, W - 48, 370);
         }
 
+        /// <summary>The remembered path mouth as a lit set (UI/Studio/SightStudio); made once, null if it cannot be.</summary>
+        AiOn.UI.Studio.SightStudio _studio;
+        bool _studioTried;
+
         /// <summary>The path's mouth seen from above: the pavement, two trails of wet prints (one larger), two tags, the bag. Nobody.</summary>
         void DrawTraces(float x, float y, float w, float h)
         {
+            if (_studio == null && !_studioTried)
+            {
+                _studioTried = true;
+                _studio = AiOn.UI.Studio.SightStudio.Create(this, AiOn.UI.Studio.MiniStudio.PixelsFor(Root.GetComponent<Canvas>(), new Vector2(w, h)));
+            }
+            if (_studio)
+            {
+                // the remembered path mouth, lit (UI/Studio/SightStudio), its two labels on plates
+                var view = UiKit.Box("Ground", _stage, Ground).rectTransform;
+                UiKit.At(view, x, y, w, h);
+                view.gameObject.AddComponent<RectMask2D>();
+                _studio.Studio.Show(view);
+                var lp = UiKit.Box("HillPlate", view, new Color(0.02f, 0.03f, 0.04f, 0.68f)).rectTransform; UiKit.At(lp, 8, 8, 130, 28);
+                UiKit.At(UiKit.Label("HillLabel", view, "뒷산 산책로", 16, UiKit.Ink, TextAnchor.MiddleCenter).rectTransform, 8, 8, 130, 28);
+                var rp = UiKit.Box("RoadPlate", view, new Color(0.02f, 0.03f, 0.04f, 0.68f)).rectTransform; UiKit.At(rp, w - 196, 8, 188, 28);
+                UiKit.At(UiKit.Label("RoadLabel", view, "큰길·버스정류장 →", 16, UiKit.Ink, TextAnchor.MiddleCenter).rectTransform, w - 196, 8, 188, 28);
+                return;
+            }
             var g = UiKit.Box("Ground", _stage, Ground).rectTransform;
             UiKit.At(g, x, y, w, h);
             UiKit.At(UiKit.Box("Hill", g, new Color(0.16f, 0.22f, 0.16f)).rectTransform, 0, 0, 170, h);

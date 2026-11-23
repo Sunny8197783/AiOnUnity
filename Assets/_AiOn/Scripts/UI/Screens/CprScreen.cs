@@ -140,12 +140,43 @@ namespace AiOn.UI
             return rt;
         }
 
-        /// <summary>Where the hands go: the lower half of the breastbone (the torso runs 200-640, the collar is at 214).</summary>
+        /// <summary>Where the hands go in the flat drawing: the lower half of the breastbone (the torso runs 200-640, the collar is at 214).</summary>
         const float ChestY = 330;
+
+        /// <summary>The rendered set (UI/Studio/CprStudio: the Rocketbox grandfather and real arms); null falls back to the flat drawing.</summary>
+        AiOn.UI.Studio.CprStudio _studio;
+        float _chestX = 380, _chestY = ChestY;
 
         void BuildStage()
         {
             _stage.gameObject.AddComponent<RectMask2D>(); // the forearms run off the bottom edge
+            _studio = AiOn.UI.Studio.CprStudio.Create(this, AiOn.UI.Studio.MiniStudio.PixelsFor(Root.GetComponent<Canvas>(), new Vector2(820, 776)), _reduce);
+            if (_studio) BuildStudioStage(); else BuildFlatStage();
+            BuildStageOverlay();
+        }
+
+        /// <summary>The rendered picture: the set's view under the overlay, the beat ring over the hands' spot as the camera sees it.</summary>
+        void BuildStudioStage()
+        {
+            _studio.Studio.Show(_stage);
+            _studio.Frame(true); // the overlay sits where the pressing framing shows his chest
+            var v = _studio.ChestOnView;
+            _studio.Frame(false); // until someone presses: him alone, centred
+            _chestX = v.x * 820; _chestY = (1 - v.y) * 776;
+            _point = Centered(Disc("Point", _stage, new Color(1, 1, 1, 0.12f), HudDraw.RingSprite).rectTransform, _chestX, _chestY, 62, 62);
+            _point.gameObject.SetActive(false); // placed for the pressing framing: shown with it
+            _padA = Centered(UiKit.Rect("PadA", _stage), 0, 0, 1, 1); _padB = Centered(UiKit.Rect("PadB", _stage), 0, 0, 1, 1); // the pads are in the set
+            _padA.gameObject.SetActive(false); _padB.gameObject.SetActive(false);
+            _ring = Centered(Disc("BeatRing", _stage, UiKit.Teal, HudDraw.RingSprite).rectTransform, _chestX, _chestY, 200, 200);
+            _ringImg = _ring.GetComponent<Image>();
+            _hands = Centered(UiKit.Rect("Hands", _stage), _chestX, _chestY, 10, 10); // the arms are in the set
+            _handsBase = _hands.anchoredPosition;
+            _sleeves = new Image[0];
+            _hands.gameObject.SetActive(false); _ring.gameObject.SetActive(false);
+        }
+
+        void BuildFlatStage()
+        {
             UiKit.Fill(Rounded("Floor", _stage, Floor).rectTransform);
             Centered(Rounded("Mat", _stage, Mat).rectTransform, 380, 400, 560, 720);
             // the patient, head up the screen (his right side is on our left)
@@ -173,9 +204,21 @@ namespace AiOn.UI
             Centered(Rounded("PalmOver", _hands, Skin).rectTransform, 5, 5 - 6, 136, 96);
             for (int i = 0; i < 4; i++) Centered(Rounded("Finger" + i, _hands, Skin * 0.97f + new Color(0, 0, 0, 0.03f)).rectTransform, 5 - 48 + i * 32, 5 - 62, 26, 50);
             _hands.gameObject.SetActive(false); _ring.gameObject.SetActive(false);
+        }
 
+        void BuildStageOverlay()
+        {
             // depth meter (what the press felt like); the target band is 약 5cm
-            var meter = Rounded("DepthMeter", _stage, new Color(1, 1, 1, 0.08f)).rectTransform;
+            if (_studio)
+            {
+                // a dark plate under the meter, the count and the beat dot, so they read over the picture
+                var plate = Rounded("MeterPlate", _stage, new Color(0.03f, 0.05f, 0.06f, 0.72f)).rectTransform;
+                UiKit.At(plate, 704, 186, 110, 466);
+                var countPlate = Rounded("CountPlate", _stage, new Color(0.03f, 0.05f, 0.06f, 0.62f)).rectTransform;
+                UiKit.At(countPlate, 16, 16, 190, 84);
+                _compressOnly.Add(plate.gameObject); _compressOnly.Add(countPlate.gameObject);
+            }
+            var meter = Rounded("DepthMeter", _stage, new Color(1, 1, 1, _studio ? 0.14f : 0.08f)).rectTransform;
             UiKit.At(meter, 742, 230, 34, 380);
             var band = UiKit.Box("Target", meter, new Color(UiKit.Teal.r, UiKit.Teal.g, UiKit.Teal.b, 0.28f)).rectTransform;
             band.anchorMin = new Vector2(0, 0.75f); band.anchorMax = new Vector2(1, 0.92f); band.offsetMin = band.offsetMax = Vector2.zero;
@@ -299,6 +342,7 @@ namespace AiOn.UI
         void ShowStep(string feedbackId = null)
         {
             _page = Page.Steps;
+            if (_studio) { _studio.Frame(false); if (_point) _point.gameObject.SetActive(false); }
             ClearSide();
             var p = L.Phase;
             _title.text = CprText.Title(p);
@@ -360,6 +404,7 @@ namespace AiOn.UI
         void ShowCompress()
         {
             _page = Page.Compress;
+            if (_studio) { _studio.Frame(true); if (_point) _point.gameObject.SetActive(true); }
             ClearSide();
             _title.text = CprText.Title(CprPhase.Compress);
             _hands.gameObject.SetActive(true); _ring.gameObject.SetActive(true);
@@ -423,6 +468,7 @@ namespace AiOn.UI
             _hands.gameObject.SetActive(false); _ring.gameObject.SetActive(false);
             foreach (var g in _compressOnly) g.SetActive(false);
             _edgeImg.color = new Color(0, 0, 0, 0);
+            if (_studio) _studio.Drive("none", 0f, Vector2.zero, 0f); // the paramedics have him now
             SideLabel("Body", CprText.HandoverBody, 24, UiKit.Ink, 0, 170);
             SideLabel("Done", $"가슴압박 {CprLogic.Clock(L.CompressTime(L.EndAt))} · 압박 {L.Compressions}회 · 교대 {L.Swaps}번", 20, UiKit.Dim, 190, 40);
             var b = SideButton("돌아보기 ▶", true, ShowDebrief, 700, 70);
@@ -439,6 +485,7 @@ namespace AiOn.UI
             var ev = CprLogic.Evaluate(r);
             _title.text = CprText.DebriefTitle;
             Clear(_stage);
+            if (_studio) { Destroy(_studio.gameObject); _studio = null; } // the chart takes the whole left
             // the chart over the whole left: the true quality and what the gauge showed
             var chartBox = Rounded("ChartBox", _stage, new Color(1, 1, 1, 0.04f)).rectTransform;
             UiKit.At(chartBox, 0, 0, 820, 470);
@@ -553,6 +600,7 @@ namespace AiOn.UI
             {
                 if (gp != null && PadNav(gp)) return;
                 if (_torso) _torso.localScale = GaspScale();
+                if (_studio) _studio.Drive("none", 0f, Vector2.zero, Gasp01());
                 if (kb != null)
                     for (int i = 0; i < _choiceKeys.Count && i < 3; i++)
                         if ((i == 0 && (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame || (_choiceKeys.Count == 1 && kb.enterKey.wasPressedThisFrame)))
@@ -700,6 +748,12 @@ namespace AiOn.UI
             float s = 1f - 0.06f * _press;
             _hands.localScale = new Vector3(s, s, 1);
             if (_hands.gameObject.activeSelf != anyHands) _hands.gameObject.SetActive(anyHands);
+            if (_studio)
+            {
+                // the same press and tremble on the real arms (a pixel of the drawing is about a millimetre there)
+                _studio.Drive(anyHands ? who : "none", _press, shake * 0.001f, 0f);
+                _studio.ShowAed(L.Phase != CprPhase.Compress || L.AedDone, L.Phase is CprPhase.AedAnalyze or CprPhase.AedShock || L.AedDone);
+            }
 
             // the depth meter shows the last press as it felt
             if (L.PressSeq != _seenPress)
@@ -831,10 +885,16 @@ namespace AiOn.UI
         /// <summary>The breathing check: his chest stays still but gives a gasp every few seconds (still with reduce motion).</summary>
         Vector3 GaspScale()
         {
-            if (_reduce || _page != Page.Steps || L == null || L.Phase != CprPhase.Breath) return Vector3.one;
-            float ph = Time.unscaledTime % 3.4f;
-            float b = ph < 0.3f ? Mathf.Sin(ph / 0.3f * Mathf.PI) : 0f;
+            float b = Gasp01();
             return new Vector3(1f + 0.015f * b, 1f + 0.035f * b, 1f);
+        }
+
+        /// <summary>The gasp as 0..1 (the rendered chest lifts by it, the flat torso scales by it); 0 with reduce motion.</summary>
+        float Gasp01()
+        {
+            if (_reduce || _page != Page.Steps || L == null || L.Phase != CprPhase.Breath) return 0f;
+            float ph = Time.unscaledTime % 3.4f;
+            return ph < 0.3f ? Mathf.Sin(ph / 0.3f * Mathf.PI) : 0f;
         }
         float _hintAt, _aedLabelAt;
         CprSwap _shownSwap = (CprSwap)(-1);

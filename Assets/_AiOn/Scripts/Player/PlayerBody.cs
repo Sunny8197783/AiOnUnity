@@ -41,19 +41,12 @@ namespace AiOn.Player
             get
             {
                 if (!person) return null;
-                if (_handOf != person) { _handOf = person; _hand = FindDeep(person.transform, "rHand"); }
+                if (_handOf != person) { _handOf = person; _hand = PersonRig.Find(person.transform, "rHand"); if (_hand == person.transform) _hand = null; }
                 return _hand;
             }
         }
         Transform _hand;
         PersonAnimator _handOf;
-
-        static Transform FindDeep(Transform t, string name)
-        {
-            if (t.name == name) return t;
-            for (int i = 0; i < t.childCount; i++) { var f = FindDeep(t.GetChild(i), name); if (f) return f; }
-            return null;
-        }
 
         /// <summary>controls.js: on a flight steeper than 0.35 while walking, stairsUp or stairsDown by the way it goes.</summary>
         public static string StairAnim(Vector3 groundNormal, Vector3 planarVelocity, float speed)
@@ -69,6 +62,8 @@ namespace AiOn.Player
         void LateUpdate()
         {
             if (!player) return;
+            // a scene saved before its body prefab was rebuilt holds a stale link: take the body's animator again
+            if (!person) person = GetComponentInChildren<PersonAnimator>(true);
             float dt = Time.deltaTime, y = player.transform.position.y;
             float hs = player.HorizontalSpeed;
             bool active = person && person.isActiveAndEnabled;
