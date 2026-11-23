@@ -194,9 +194,13 @@ namespace AiOn.UI
         public static readonly string[] AboutCredits =
         {
             "기획·개발: 〈경보 이전〉 제작팀 (Claude Code와 함께 제작)",
-            "3D 렌더링: Three.js r180 (MIT 라이선스)",
-            "소리: 녹음 파일 없이 Web Audio로 직접 합성",
-            "글꼴: 기기에 설치된 Pretendard · Noto Sans KR · 맑은 고딕",
+            "엔진: Unity 6.3 (URP). Three.js로 만든 원작을 옮기고 확장했습니다",
+            "인물: Microsoft Rocketbox Avatar Library (MIT, Copyright (c) 2020 Microsoft) · 텍스처를 바꾸고 눈동자를 다시 칠함",
+            "소리: \"Oculus Audio Pack 01\" by Oculus VR, LLC, CC BY 4.0 (파일 이름을 바꾸고 OGG로 변환) · Wyzowl sfx-kit (CC0) · felix.blume 바람 소리 (CC0) · Lisa Redfern 여름밤 (퍼블릭 도메인) · 일부 효과음은 직접 합성",
+            "텍스처·하늘·소품: Poly Haven, ambientCG, Kenney (CC0)",
+            "아이콘: Noto Emoji (Apache 2.0)",
+            "글꼴: Pretendard (SIL Open Font License 1.1)",
+            "전체 목록과 원본 주소: 저장소의 Assets/_AiOn/ThirdParty/THIRD_PARTY.md",
         };
         public static string AboutSourcesHead(int n) => $"참고한 공식 자료 {n}건";
 
