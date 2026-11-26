@@ -122,6 +122,11 @@ namespace AiOn.Story
         /// the original's one-line skip instead of 「임시 거처의 하루」 when the class picks 'move'). Set by the director.
         /// </summary>
         public bool TeacherRun;
+        /// <summary>
+        /// A run from a prepared state (장면 바로가기, a 교사용 모드 step: StoryDirector.DemoRun), whichever moment it started
+        /// from: demo-only shortcuts (the CPR screen's sooner AED) key on this, not on the resume key. Set by the director.
+        /// </summary>
+        public bool DemoRun;
 
         // Hooks the director fills; chapters call them with ?.
         public Action<string> SetPlayer;

@@ -379,12 +379,13 @@ namespace AiOn.UI
             var keys = UiKit.Box("Keys", Window, new Color(0, 0, 0, 0.18f)).rectTransform;
             UiKit.At(keys, 500, 140, 600, 600);
             // the whole key table (UiKeys), Q/G/C/X/B included: rows shrink so every key fits the 600 px box
-            int nk = MenuLogic.PauseKeys.Length;
+            var rows = MenuLogic.PauseKeysFor(DemoKeyHint.On); // a prepared run adds F10 처음 화면으로
+            int nk = rows.Length;
             float rowH = Mathf.Min(44, (600 - 24) / (float)nk);
             int ks = rowH >= 40 ? 20 : 18;
             for (int i = 0; i < nk; i++)
             {
-                var k = MenuLogic.PauseKeys[i];
+                var k = rows[i];
                 MenuBits.Label(keys, "Key", k[0], ks, UiKit.Ink, 24, 12 + i * rowH, 300, rowH, TextAnchor.MiddleLeft, FontStyle.Bold);
                 MenuBits.Label(keys, "What", k[1], ks, UiKit.Dim, 330, 12 + i * rowH, 260, rowH, TextAnchor.MiddleLeft);
             }
@@ -476,7 +477,13 @@ namespace AiOn.UI
             // Left: the four choices (그래픽 품질, 시점, 글자 크기, 체험 모드). Right: 조작 (one slider and one switch), 소리,
             // 접근성. Measured at the default text size: left about 645 px, right about 730 px, both inside the 770 px views,
             // so nothing starts cut off under the fade; a larger text size still scrolls with the cue.
-            foreach (var g in _form.LeftRadios) RadioGroupUi(left, g, W);
+            // 화면 밝기 (feedback B3) is a slider under 그래픽 품질; the left column may now scroll a little, with the cue.
+            var boxes = new List<RectTransform>();
+            foreach (var g in _form.LeftRadios)
+            {
+                boxes.Add(RadioGroupUi(left, g, W));
+                if (g.Name == "quality") RangeUi(left, _form.Brightness, W);
+            }
             // 쉬운 한국어 · 도우미 모드 (competition upgrade): one row of two switches, so the left column still fits its view
             Legend(left, SettingsForm.TogetherLegend);
             var together = UiKit.Rect("Together", left);
@@ -501,10 +508,19 @@ namespace AiOn.UI
             _ring.Add(cancel);
             _ring.Add(apply);
 
-            // the original focuses the first checked input
+            // the original focuses the first checked input (by its box: the brightness row sits between the groups in the ring)
             int first = 0;
             for (int i = 0; i < _form.LeftRadios.Count; i++) if (_form.Radio[_form.LeftRadios[i].Name] != null) { first = i; break; }
-            _ring.Focus(first);
+            _ring.Focus(boxes[first]);
+        }
+
+        /// <summary>
+        /// 화면 밝기 shows at once while its slider moves (the world behind the screen brightens); 적용 keeps it and 취소 puts the
+        /// saved value back, since the director applies whichever object the screen returns (HostSettings.Apply).
+        /// </summary>
+        void Preview(string name)
+        {
+            if (name == SettingsForm.BrightnessKey) AiOn.Rendering.AtmosphereDirector.Brightness = AiOn.Settings.SettingsMath.Brightness(_form.BrightnessStops);
         }
 
         void Submit()
@@ -519,7 +535,7 @@ namespace AiOn.UI
             UiKit.Height(UiKit.Label("Legend", col, text, 24, UiKit.Ink, style: FontStyle.Bold), 32);
         }
 
-        void RadioGroupUi(RectTransform col, RadioGroup g, float width)
+        RectTransform RadioGroupUi(RectTransform col, RadioGroup g, float width)
         {
             Legend(col, g.Legend);
             int n = g.Options.Length;
@@ -560,6 +576,7 @@ namespace AiOn.UI
                 _refresh[g.Name]();
             }, Submit);
             if (g.Note != null) MenuBits.Para(col, g.Note, 18, UiKit.Dim);
+            return box;
         }
 
         void RangeUi(RectTransform col, RangeDef r, float width)
@@ -591,13 +608,14 @@ namespace AiOn.UI
             slider.maxValue = r.Max / (float)r.Step;
             slider.wholeNumbers = true;
             slider.SetValueWithoutNotify(_form.Range[r.Name] / (float)r.Step);
-            slider.onValueChanged.AddListener(x => { _form.SetRange(r.Name, x * r.Step); output.text = _form.RangeText(r.Name); });
+            slider.onValueChanged.AddListener(x => { _form.SetRange(r.Name, x * r.Step); output.text = _form.RangeText(r.Name); Preview(r.Name); });
             _ring.Add(row, null, d =>
             {
                 // the browser: Right/Up raise a range, Left/Down lower it
                 _form.StepRange(r.Name, d);
                 slider.SetValueWithoutNotify(_form.Range[r.Name] / (float)r.Step);
                 output.text = _form.RangeText(r.Name);
+                Preview(r.Name);
             }, Submit);
         }
 

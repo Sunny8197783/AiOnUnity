@@ -172,6 +172,13 @@ namespace AiOn.UI
         /// <summary>The pause key list, from the one key table (UiKeys) so Q/G/C/X/B and later keys show here too.</summary>
         public static readonly string[][] PauseKeys = UiKeys.PauseRows();
 
+        /// <summary>
+        /// The pause key list for this run: in a prepared run (장면 바로가기, 교사용 모드: DemoKeyHint.On) a last row for F10,
+        /// the same key the key strip names. The player's own story shows PauseKeys as before.
+        /// </summary>
+        public static string[][] PauseKeysFor(bool demo) =>
+            demo ? PauseKeys.Append(new[] { DemoKeyHint.Key, DemoKeyHint.Word }).ToArray() : PauseKeys;
+
         /// <summary>Esc in the pause menu: closes the confirm box if open (null = stay), else resumes.</summary>
         public static string PauseEscape(ref bool confirmOpen)
         {
@@ -304,7 +311,12 @@ namespace AiOn.UI
             ["profile"] = "none", ["memoryCue"] = true,
             // competition upgrade (after the original's keys): 쉬운 한국어, 도우미 모드
             [AiOn.Game.EasyKorean.SettingKey] = false, [AiOn.Game.Companion.SettingKey] = false,
+            // feedback B3: 화면 밝기, stops of exposure over every look (0 = as tuned)
+            [BrightnessKey] = 0,
         };
+
+        /// <summary>The 화면 밝기 setting's key: stops of exposure, 0 .. 1.5 (SettingsMath.Brightness).</summary>
+        public const string BrightnessKey = "brightness";
 
         /// <summary>The left column's last group (competition upgrade): reading and playing together.</summary>
         public const string TogetherLegend = "쉽게 읽기 · 함께 하기";
@@ -312,6 +324,8 @@ namespace AiOn.UI
         public readonly JObject Cur;
         public readonly List<RadioGroup> LeftRadios;
         public readonly RangeDef Sensitivity, Volume;
+        /// <summary>화면 밝기: hundredths of a stop, 0 .. 150 in steps of 25 (shown as 기본, +1 .. +6).</summary>
+        public readonly RangeDef Brightness;
         public readonly RangeDef[] BusRanges;
         public readonly ToggleDef Minimap, Mute;
         public readonly ToggleDef[] AccessToggles;
@@ -354,6 +368,9 @@ namespace AiOn.UI
                 new RangeDef { Name = "volUi", Label = "버튼 소리", Min = 0, Max = 100, Format = pct },
             };
             foreach (var r in new[] { Sensitivity, Volume }.Concat(BusRanges)) Range[r.Name] = Sanitize(r, Math.Floor(UiJs.Num(Cur[r.Name]) * 100 + 0.5)); // Math.round
+            // 화면 밝기 (feedback B3): a value that is not a number is 0, not the midpoint the other ranges take
+            Brightness = new RangeDef { Name = BrightnessKey, Label = "화면 밝기", Min = 0, Max = 150, Step = 25, Format = v => v <= 0 ? "기본" : $"+{v / 25}" };
+            Range[BrightnessKey] = Sanitize(Brightness, Math.Floor(AiOn.Settings.SettingsMath.Brightness(UiJs.Num(Cur[BrightnessKey])) * 100 + 0.5));
 
             Minimap = new ToggleDef { Name = "minimap", Label = "미니맵 표시", Sub = "오른쪽 위의 작은 지도 (북쪽이 위)" };
             Mute = new ToggleDef { Name = "mute", Label = "소리 끄기", Sub = "사이렌과 경보음도 꺼집니다. 자막은 계속 나옵니다." };
@@ -383,7 +400,11 @@ namespace AiOn.UI
             return (int)s;
         }
 
-        public RangeDef RangeOf(string name) => name == "volume" ? Volume : name == "sensitivity" ? Sensitivity : BusRanges.First(b => b.Name == name);
+        public RangeDef RangeOf(string name) => name == "volume" ? Volume : name == "sensitivity" ? Sensitivity : name == BrightnessKey ? Brightness : BusRanges.First(b => b.Name == name);
+
+        /// <summary>The 화면 밝기 the form shows now, in stops (the screen previews it while the slider moves).</summary>
+        public double BrightnessStops => Range[BrightnessKey] / 100.0;
+
         public string RangeText(string name) => RangeOf(name).Format(Range[name]);
         public void SetRange(string name, double v) => Range[name] = Sanitize(RangeOf(name), v);
         /// <summary>One step up or down (arrow keys on a range input).</summary>
@@ -413,6 +434,7 @@ namespace AiOn.UI
             o["volEffects"] = Clean(Range["volEffects"] / 100.0);
             o["volUi"] = Clean(Range["volUi"] / 100.0);
             foreach (var t in TogetherToggles) o[t.Name] = Toggle[t.Name];
+            o[BrightnessKey] = Clean(BrightnessStops);
             return o;
         }
 

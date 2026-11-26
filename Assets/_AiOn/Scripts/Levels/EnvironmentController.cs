@@ -274,6 +274,35 @@ namespace AiOn.Levels
         float _satBias;
         AiOn.Rendering.LevelReflections _reflections;
 
+        // AtmosphereDirector's light over every preset: stops added to the exposure (화면 밝기, a night cutscene's lift) and
+        // multipliers on the ambient fill and the key (the night cutscene's lift; 1 = as the preset)
+        float _exposureBias, _fillGain = 1f, _keyGain = 1f;
+        ColorAdjustments _smokeColor;
+
+        /// <summary>The smoke grade's own exposure (its volume sets it outright, so the exposure bias is added to it too).</summary>
+        public const float SmokeExposure = -0.9f;
+
+        /// <summary>
+        /// Light over every preset (AtmosphereDirector each frame; a no-op while unchanged): stops added to the exposure
+        /// (the 화면 밝기 setting plus a night cutscene's lift), and multipliers on the ambient fill and the key light.
+        /// </summary>
+        public void SetLightBias(float exposureStops, float fillGain, float keyGain)
+        {
+            if (Mathf.Approximately(exposureStops, _exposureBias) && Mathf.Approximately(fillGain, _fillGain) && Mathf.Approximately(keyGain, _keyGain)) return;
+            _exposureBias = exposureStops; _fillGain = fillGain; _keyGain = keyGain;
+            if (_smokeColor) _smokeColor.postExposure.Override(SmokeExposure + _exposureBias);
+            if (Current == null || !_color) return;
+            ApplyKeyAndFill(_shown);
+            _color.postExposure.Override(PostExposure(_shown, _gExp, exposureOffset, _exposureBias));
+        }
+
+        /// <summary>
+        /// The colour grade's exposure (stops) for a look: the preset's exposure and grade exposure, a story grade's stops
+        /// (null: none), the URP offset and the light bias (화면 밝기, a night cutscene's lift).
+        /// </summary>
+        public static float PostExposure(EnvPreset e, float? storyStops, float offset, float bias) =>
+            Mathf.Log(Mathf.Max(0.05f, e.Exposure), 2f) + e.GradeExposure + (storyStops ?? 0f) + offset + bias;
+
         /// <summary>Saturation points added over every preset's grade (the base look's cold desaturation).</summary>
         public void SetSaturationBias(float points)
         {
@@ -317,7 +346,8 @@ namespace AiOn.Levels
             dof.gaussianMaxRadius.Override(1.5f);
             dof.highQualitySampling.Override(true);
             var sc = sp.Add<ColorAdjustments>(true);
-            sc.postExposure.Override(-0.9f);
+            sc.postExposure.Override(SmokeExposure + _exposureBias);
+            _smokeColor = sc;
             sc.saturation.Override(-35f);
             sc.contrast.Override(-12f);
             sc.colorFilter.Override(new Color(1f, 0.86f, 0.68f));
@@ -484,19 +514,7 @@ namespace AiOn.Levels
         {
             var e = _shown;
 
-            if (keyLight)
-            {
-                keyLight.transform.rotation = Quaternion.LookRotation(-EnvPreset.DirectionTo(e.Key), Vector3.up);
-                keyLight.color = e.KeyColor;
-                keyLight.intensity = e.KeyIntensity * keyScale * _roomDim;
-                keyLight.shadows = LightShadows.Soft;
-            }
-
-            RenderSettings.ambientMode = AmbientMode.Trilight;
-            float fill = e.FillIntensity * fillScale * _roomDim;
-            RenderSettings.ambientSkyColor = e.SkyFill * fill;
-            RenderSettings.ambientGroundColor = e.GroundFill * fill;
-            RenderSettings.ambientEquatorColor = Color.Lerp(e.SkyFill, e.GroundFill, 0.5f) * fill;
+            ApplyKeyAndFill(e);
 
             RenderSettings.fog = e.FogDensity > 0;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
@@ -519,7 +537,7 @@ namespace AiOn.Levels
                 skyMaterial.SetFloat("_SunSize", night > 0.5f ? 0.02f : 0.04f);
             }
 
-            _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, e.Exposure), 2f) + e.GradeExposure + exposureOffset);
+            _color.postExposure.Override(PostExposure(e, _gExp, exposureOffset, _exposureBias));
             _color.saturation.Override((e.Saturation - 1f) * 100f + _satBias);
             _color.contrast.Override((e.Contrast - 1f) * 100f);
             // The original mixes the tint in at tintAmount (post.js); 1.5x washed afternoon orange and dusk lavender.
@@ -543,6 +561,24 @@ namespace AiOn.Levels
             if (SmokeLevel > 0) { _smokeFogBase = -1; SetSmoke(SmokeLevel); } // a preset change mid-escape keeps the smoke
         }
 
+        /// <summary>The key (sun/moon) light and the ambient fill for a look, with the room's dimming and the light bias's gains.</summary>
+        void ApplyKeyAndFill(EnvPreset e)
+        {
+            if (keyLight)
+            {
+                keyLight.transform.rotation = Quaternion.LookRotation(-EnvPreset.DirectionTo(e.Key), Vector3.up);
+                keyLight.color = e.KeyColor;
+                keyLight.intensity = e.KeyIntensity * keyScale * _roomDim * _keyGain;
+                keyLight.shadows = LightShadows.Soft;
+            }
+
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            float fill = e.FillIntensity * fillScale * _roomDim * _fillGain;
+            RenderSettings.ambientSkyColor = e.SkyFill * fill;
+            RenderSettings.ambientGroundColor = e.GroundFill * fill;
+            RenderSettings.ambientEquatorColor = Color.Lerp(e.SkyFill, e.GroundFill, 0.5f) * fill;
+        }
+
         /// <summary>Environment reflection strength: 1 by day, down to 0.15 at full night, a little less again without power.</summary>
         public static float ReflectionFor(float nightAmount, bool power, bool outdoor)
         {
@@ -561,7 +597,7 @@ namespace AiOn.Levels
         void ApplyGradeOverride()
         {
             if (_gSat.HasValue) _color.saturation.Override((_gSat.Value - 1f) * 100f + _satBias);
-            if (_gExp.HasValue) _color.postExposure.Override(Mathf.Log(Mathf.Max(0.05f, _shown.Exposure), 2f) + _shown.GradeExposure + _gExp.Value + exposureOffset);
+            if (_gExp.HasValue) _color.postExposure.Override(PostExposure(_shown, _gExp, exposureOffset, _exposureBias));
             if (_gVig.HasValue) _vignette.intensity.Override(_gVig.Value * 0.8f);
             if (_gTint.HasValue) _color.colorFilter.Override(_gTint.Value);
         }

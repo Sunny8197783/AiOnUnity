@@ -19,6 +19,13 @@ namespace AiOn.Tests
         static JObject _golden;
         static JObject Golden => _golden ??= GoldenRuns.ParseFixture("golden-challenges.json");
 
+        /// <summary>The original's link, which its goldens end the share texts with.</summary>
+        public const string OriginalUrl = "https://sunny8197783.github.io/AiOn/";
+
+        /// <summary>Port change: the share text links the Unity build's release page (Challenges.PublicUrl), not the
+        /// original's web game; a golden text is compared with the link swapped.</summary>
+        public static string PortUrl(string golden) => golden?.Replace(OriginalUrl, Challenges.PublicUrl);
+
         static GameState Run(string path, params string[] ids) => GoldenRuns.Run(path, ids);
 
         static GameState Timed(GameState g, int ms = 60000, int retries = 0)
@@ -138,6 +145,17 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void Share_link_is_the_unity_release_page_not_the_original_web_game()
+        {
+            Assert.AreEqual("https://github.com/Sunny8197783/AiOnUnity/releases", Challenges.PublicUrl);
+            Assert.AreNotEqual(OriginalUrl, Challenges.PublicUrl);
+            var g = Timed(Run("stay"));
+            var text = Challenges.ShareText(Pick(g), (RunNews)null, Challenges.RunStats(g));
+            StringAssert.EndsWith("\n" + Challenges.PublicUrl, text);
+            StringAssert.DoesNotContain("github.io", text);
+        }
+
+        [Test]
         public void FinishRun_stores_the_ending_in_the_gallery_and_the_run_in_the_records_together()
         {
             var g = Timed(Run("stay", "blackout_radio", "rumor_checked"));
@@ -158,7 +176,7 @@ namespace AiOn.Tests
         {
             GoldenRuns.AssertGolden(Challenges.All, Golden["challenges"]);
             CollectionAssert.AreEqual(Golden["timed"].Select(x => (string)x), Challenges.Timed);
-            Assert.AreEqual((string)Golden["publicUrl"], Challenges.PublicUrl);
+            Assert.AreEqual(PortUrl((string)Golden["publicUrl"]), Challenges.PublicUrl);
             foreach (var t in (JArray)Golden["times"]) Assert.AreEqual((string)t["text"], Challenges.FmtMs((double)t["ms"]), $"{t["ms"]} ms");
         }
 
@@ -250,9 +268,9 @@ namespace AiOn.Tests
                 var fate = Pick(g);
                 var r = Challenges.AddRun((string)null, g, fate.Id, 1, "2026-11-02");
                 AssertSameJson(JToken.FromObject(r.News), s["news"], $"{s["run"]}: news");
-                Assert.AreEqual((string)s["text"], Challenges.ShareText(fate, r.News, Challenges.RunStats(g)), $"{s["run"]}: share text");
-                Assert.AreEqual((string)s["text"], Challenges.ShareText(fate, (JObject)s["news"], Challenges.RunStats(g)), $"{s["run"]}: share text from the stored news");
-                Assert.AreEqual((string)s["noNews"], Challenges.ShareText(fate, (RunNews)null, Challenges.RunStats(g)), $"{s["run"]}: share text without news");
+                Assert.AreEqual(PortUrl((string)s["text"]), Challenges.ShareText(fate, r.News, Challenges.RunStats(g)), $"{s["run"]}: share text");
+                Assert.AreEqual(PortUrl((string)s["text"]), Challenges.ShareText(fate, (JObject)s["news"], Challenges.RunStats(g)), $"{s["run"]}: share text from the stored news");
+                Assert.AreEqual(PortUrl((string)s["noNews"]), Challenges.ShareText(fate, (RunNews)null, Challenges.RunStats(g)), $"{s["run"]}: share text without news");
             }
         }
     }

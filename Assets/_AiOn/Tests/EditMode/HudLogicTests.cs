@@ -168,5 +168,40 @@ namespace AiOn.Tests
             Assert.That(UiKeys.CardLines(), Does.Contain("H — 이 조작법 다시 보기"));
             Assert.That(UiKeys.CardLines().Count, Is.EqualTo(UiKeys.All.Length));
         }
+
+        [Test]
+        public void A_prepared_run_adds_F10_to_the_key_strip_on_a_line_of_its_own()
+        {
+            var strip = UiKeys.StripText(6);
+            Assert.That(DemoKeyHint.Strip(strip, false), Is.EqualTo(strip), "the player's own story: no F10");
+            var demo = DemoKeyHint.Strip(strip, true);
+            Assert.That(demo.Split('\n').Length, Is.EqualTo(strip.Split('\n').Length + 1));
+            Assert.That(demo, Does.StartWith(strip));
+            Assert.That(demo.Split('\n').Last(), Does.Contain(">F10<").And.EndWith(" 처음 화면으로"));
+            Assert.That(DemoKeyHint.Key, Is.EqualTo(StoryDirector.DemoTitleKey), "the key the strip names is the key the Director takes");
+            Assert.That(DemoKeyHint.Strip("", true), Does.Not.StartWith("\n"));
+        }
+
+        [Test]
+        public void The_continue_mark_waits_with_the_talk_box_and_blinks_unless_motion_is_reduced()
+        {
+            Assert.That(ContinueCue.Text, Is.EqualTo("▼ Space · 클릭"));
+            // every line waits for the key but the last one before choices (those are clicked or numbered)
+            Assert.That(ContinueCue.Waits(0, 1, false), Is.True, "one line, no choices: the 오답 해설 card waits for the key");
+            Assert.That(ContinueCue.Waits(0, 3, true) && ContinueCue.Waits(1, 3, true), Is.True);
+            Assert.That(ContinueCue.Waits(2, 3, true), Is.False);
+            Assert.That(ContinueCue.Waits(0, 1, true), Is.False);
+            // the blink: bright at the start, dim half a period on, bright again; always between Low and High
+            Assert.That(ContinueCue.Alpha(0, false), Is.EqualTo(ContinueCue.High).Within(1e-4));
+            Assert.That(ContinueCue.Alpha(ContinueCue.Period / 2, false), Is.EqualTo(ContinueCue.Low).Within(1e-4));
+            Assert.That(ContinueCue.Alpha(ContinueCue.Period, false), Is.EqualTo(ContinueCue.High).Within(1e-4));
+            for (float t = 0; t < 5; t += 0.05f)
+            {
+                float a = ContinueCue.Alpha(t, false);
+                Assert.That(a, Is.InRange(ContinueCue.Low - 1e-4f, ContinueCue.High + 1e-4f));
+                Assert.That(ContinueCue.Alpha(t, true), Is.EqualTo(ContinueCue.Steady), "움직임 줄이기: no blink");
+            }
+            Assert.That(ContinueCue.Steady, Is.GreaterThan(ContinueCue.Low), "still easy to see when it does not blink");
+        }
     }
 }

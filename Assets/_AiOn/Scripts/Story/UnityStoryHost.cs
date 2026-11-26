@@ -51,6 +51,9 @@ namespace AiOn.Story
         LevelSpawnPoints _spawns;
         ShopGoods _goods;
         bool _held;
+        readonly int _generation = AiOn.Settings.TitleReturn.Generation; // the title return this host was made under
+        /// <summary>Destroyed, or left behind by a title return and still being unloaded (TitleReturn.Generation).</summary>
+        bool Stale => !this || _generation != AiOn.Settings.TitleReturn.Generation;
         LevelCrowd _crowd;
         Light _flashlight;
         float _airTop;
@@ -191,6 +194,9 @@ namespace AiOn.Story
 
         public async Task Enter(string levelId, string spawn, Action prepare = null)
         {
+            // The old run after a title return (a screen or cutscene its teardown resolved, then ctx.Goto): no level is
+            // loaded over the new title (LoadSceneAsync is static and would still run); the chain is let go here, as in Open.
+            if (Stale) await new TaskCompletionSource<bool>().Task;
             Loading = true;
             try { await EnterLevel(levelId, spawn, prepare); }
             finally { Loading = false; }
@@ -625,6 +631,11 @@ namespace AiOn.Story
 
         public void SetControls(bool on)
         {
+            // A host left behind by a title return (destroyed, or still being unloaded): the old run's chain may still
+            // reach here (a card after a screen its teardown resolved). TitleReturn cleared the holds first: a hold taken
+            // now would outlive the host and freeze the next run with Esc ignored, and a late let-go would take the new
+            // title's hold instead of its own. Such a host does neither.
+            if (Stale) { _held = false; return; }
             if (!on && !_held) { InputGate.Hold(); _held = true; }
             else if (on && _held) { InputGate.Release(); _held = false; }
         }
@@ -736,6 +747,9 @@ namespace AiOn.Story
                 foreach (var (key, code) in SkipKeys)
                     if (kb[key].wasPressedThisFrame) Key?.Invoke(code);
             }
+            // F10 counts always, a talk, card, screen or cutscene up or not: the Director acts on it only in a prepared run
+            // (StoryDirector.DemoToTitle: back to the title). Not while a level loads: the title's own load would race it.
+            if (kb != null && kb.f10Key.wasPressedThisFrame && !Loading) Key?.Invoke(StoryDirector.DemoTitleKey);
 
             if (player)
             {
@@ -829,7 +843,7 @@ namespace AiOn.Story
         }
 
         // ---------- saving ----------
-        public static string SavePath => Path.Combine(Application.persistentDataPath, "aion-save.json");
+        public static string SavePath => Path.Combine(Application.persistentDataPath, AiOn.Game.SaveFolderMigration.CheckpointFile);
 
         public void Checkpoint(string key)
         {
@@ -864,6 +878,9 @@ namespace AiOn.Story
 
         public async Task<JToken> Open(string screen, JObject options)
         {
+            // The old run after a title return (a screen its teardown resolved goes on to the next one): no new screen is
+            // built while the scene unloads ('objects were not cleaned up'); the await never resumes and the chain is let go.
+            if (Stale) return await new TaskCompletionSource<JToken>().Task;
             if (Screens.TryGetValue(screen, out var open))
             {
                 AiOn.Game.Companion.PushScreen(screen); // 도우미 모드's F1 hint knows what is on screen

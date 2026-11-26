@@ -254,6 +254,7 @@ namespace AiOn.UI
             _swap = _vague = _takeBack = _aedButton = _skip = null;
             _nav.Clear(); _navColors.Clear(); _cursor = -1;
             _gaugeFill = null;
+            _factBoxes.Clear(); _compressFact = null; // destroyed with the side
             _choiceKeys.Clear();
             if (EventSystem.current) EventSystem.current.SetSelectedGameObject(null); // Space must not press a focused button
         }
@@ -300,16 +301,43 @@ namespace AiOn.UI
 
         const float FactH = 108;
 
-        void FactBox(string id, float y)
+        RectTransform FactBox(string id, float y)
         {
-            var text = FactText(id);
-            if (string.IsNullOrEmpty(text)) return;
+            var text = id != null ? FactText(id) : null;
+            if (string.IsNullOrEmpty(text)) return null;
             var src = FactSource(id);
             var box = Rounded("Fact_" + id, _side, new Color(UiKit.Teal.r, UiKit.Teal.g, UiKit.Teal.b, 0.1f)).rectTransform;
             UiKit.At(box, 0, y, 780, FactH);
             var t = UiKit.Label("Text", box, text, 19, UiKit.Ink);
             UiKit.At(t.rectTransform, 18, 10, 744, 50);
             if (src != null) { var s = UiKit.Label("Source", box, "출처: " + src, 14, UiKit.Dim); UiKit.At(s.rectTransform, 18, 62, 744, 40); }
+            return box;
+        }
+
+        readonly List<GameObject> _factBoxes = new();
+        RectTransform _compressFact;
+
+        /// <summary>A step page's facts (CprText.StepFacts), stacked up from the old place; drawn again after a wrong pick.</summary>
+        void ShowStepFacts(CprPhase p, string feedbackId)
+        {
+            foreach (var g in _factBoxes) if (g) Destroy(g);
+            _factBoxes.Clear();
+            var ids = CprText.StepFacts(p, feedbackId);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var box = FactBox(ids[i], 600 - (ids.Count - 1 - i) * (FactH + 8));
+                if (box) _factBoxes.Add(box.gameObject);
+            }
+        }
+
+        /// <summary>A feedback line, then the fact behind it (low vision hears them in the order they are shown).</summary>
+        string Told(string feedbackId)
+        {
+            var line = CprText.Feedback(feedbackId);
+            var id = CprText.FactFor(feedbackId);
+            var fact = id != null ? FactText(id) : null;
+            if (string.IsNullOrEmpty(fact)) return line;
+            return line.Length > 0 ? line + " " + fact : fact;
         }
 
         void ShowIntro()
@@ -332,7 +360,7 @@ namespace AiOn.UI
 
         void Begin()
         {
-            L = new CprLogic(_wide, _oneButton, (string)_o["stage"] ?? "guided");
+            L = new CprLogic(_wide, _oneButton, (string)_o["stage"] ?? "guided", _demo); // 장면 바로가기: the AED comes sooner
             _kicker.text = CprText.Kicker;
             ShowStep();
         }
@@ -362,17 +390,21 @@ namespace AiOn.UI
             _feedback = SideLabel("Feedback", CprText.Feedback(feedbackId), 21, UiKit.Amber, y + 10, 90);
             if (p == CprPhase.Breath)
             {
-                FactBox("cpr_breath", 600 - FactH - 8);
-                FactBox("cpr_gasp", 600);
                 _timer = SideLabel("Timer", "", 26, UiKit.Teal, y + 100, 40, FontStyle.Bold);
                 _shownSecond = -1;
             }
-            else FactBox(p == CprPhase.Check ? "cpr_check" : "cpr_point", 600);
-            // low vision: the whole step in one go (what happened, the title, the situation, the numbered choices), never cut
+            // the facts: the one behind the feedback (the step just answered) and the breathing check's 10 seconds; a step's
+            // answer never shows before its pick (it read as the right choice)
+            ShowStepFacts(p, feedbackId);
+            // low vision: the whole step in one go (what happened and its fact, the title, the situation, the step's own fact,
+            // the numbered choices), in the order shown, never cut
             var spoken = new System.Text.StringBuilder();
-            var fb = CprText.Feedback(feedbackId);
-            if (fb.Length > 0) spoken.Append(fb).Append(' ');
+            var told = Told(feedbackId);
+            if (told.Length > 0) spoken.Append(told).Append(' ');
             spoken.Append(_title.text).Append(". ").Append(body);
+            var own = CprText.BeforeFact(p);
+            var ownText = own != null ? FactText(own) : null;
+            if (!string.IsNullOrEmpty(ownText)) spoken.Append(' ').Append(ownText);
             for (int i = 0; i < choices.Length; i++) spoken.Append(' ').Append(i + 1).Append("번, ").Append(choices[i].label).Append('.');
             _speech.Say(spoken.ToString());
             // ...and the 10-second clock starts once it has been read (about 0.13 s a character): screen-reader time is never late
@@ -398,7 +430,13 @@ namespace AiOn.UI
             bool moved = L.Phase != _shownPhase;
             _shownPhase = L.Phase;
             if (moved && L.Feedback is "checked" or "call_named") ShowStep(L.Feedback); // speaks the feedback with the new step
-            else if (_feedback) { _feedback.text = CprText.Feedback(L.Feedback); _speech.Say(_feedback.text); }
+            else if (_feedback)
+            {
+                // a wrong pick: the feedback, and now the step's fact with it
+                _feedback.text = CprText.Feedback(L.Feedback);
+                ShowStepFacts(L.Phase, L.Feedback);
+                _speech.Say(Told(L.Feedback));
+            }
         }
 
         void ShowCompress()
@@ -412,6 +450,8 @@ namespace AiOn.UI
             SideLabel("Body", CprText.CompressBody, 20, UiKit.Dim, 0, 64);
             _feedback = SideLabel("Feedback", CprText.Feedback(L.Feedback), 30, UiKit.Ink, 70, 84, FontStyle.Bold);
             _timer = SideLabel("Timer", "", 22, UiKit.Dim, 160, 32);
+            // 장면 바로가기: the AED comes sooner than in the story; say so on the page
+            if (L.Demo) UiKit.At(UiKit.Label("DemoNote", _side, CprText.DemoAedNote, 17, UiKit.Amber, TextAnchor.MiddleRight).rectTransform, 380, 160, 400, 32);
             SideLabel("GaugeLabel", CprText.GaugeLabel, 19, UiKit.Dim, 200, 28);
             var track = Rounded("GaugeTrack", _side, new Color(1, 1, 1, 0.1f)).rectTransform;
             UiKit.At(track, 0, 232, 640, 34);
@@ -424,6 +464,8 @@ namespace AiOn.UI
             _who = SideLabel("Who", "", 20, UiKit.Ink, 282, 56);
             _hint = SideLabel("Hint", "", 20, UiKit.Amber, 340, 56);
             _aedLabel = SideLabel("Aed", "", 22, UiKit.Ink, 400, 96, FontStyle.Bold);
+            // the breathing check's fact comes with its feedback (never before the pick); it gives way to the first step line
+            _compressFact = FactBox(CprText.FactFor(L.Feedback), 400);
             _aedButton = SideButton("", true, () => L.AedButton(Clock()), 500, 70);
             _aedImage = _aedButton.GetComponent<Image>();
             _logicPhase = CprPhase.Compress;
@@ -440,7 +482,9 @@ namespace AiOn.UI
             _shownPhase = (CprPhase)(-1); _shownSecond = -1; _shownCount = -1;
             _seenPress = L.PressSeq; _depthWord.text = "약 5cm"; _depthWord.color = UiKit.Dim; _depthFillRt.anchorMax = new Vector2(1, 0);
             _schedBeat = -CprLogic.LeadInBeats;
-            _speech.Say(CprText.CompressBody);
+            // low vision: the breathing check's feedback and its fact, then the dispatcher (and the demo's note), as shown
+            var told = Told(L.Feedback);
+            _speech.Say((told.Length > 0 ? told + " " : "") + CprText.CompressBody + (L.Demo ? " " + CprText.DemoAedNote : ""));
         }
 
         CprPhase _logicPhase;
@@ -796,7 +840,11 @@ namespace AiOn.UI
                 _seenFeedback = L.FeedbackSeq;
                 var line = CprText.Feedback(L.Feedback);
                 bool step = L.Feedback != null && (L.Feedback.StartsWith("aed") || L.Feedback.StartsWith("swap") || L.Feedback == "neighbour" || L.Feedback == "take_back");
-                if (step) { _aedLabel.text = line; _aedLabelAt = Time.unscaledTime; _speech.Say(line); }
+                if (step)
+                {
+                    _aedLabel.text = line; _aedLabelAt = Time.unscaledTime; _speech.Say(line);
+                    if (_compressFact) { Destroy(_compressFact.gameObject); _compressFact = null; } // the step line takes its place
+                }
                 else _feedback.text = line;
                 _feedback.color = L.Feedback == "good" ? UiKit.Teal : UiKit.Ink;
             }

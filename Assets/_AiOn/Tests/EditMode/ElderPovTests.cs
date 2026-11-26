@@ -290,6 +290,32 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void ThePointOfViewCard_ComesOverBlack_NotOverTheShelter_AndThePictureComesBack()
+        {
+            var (host, ctx) = Rig("help");
+            Play(host, ctx);
+            var card = host.Log.Single(c => c.Kind == "card" && c.Text == "시점 전환 · 304호 어르신");
+            var before = host.Log.Where(c => c.Seq < card.Seq).ToList();
+            var blackAt = before.LastOrDefault(c => c.Kind == "fade");
+            Assert.That(blackAt?.Text, Is.EqualTo("1"), "the shelter fades to black before her card");
+            Assert.That(before.Last(c => c.Kind == "enter").Text, Is.EqualTo("shelter:spot"), "still in the shelter: the black hides it");
+            var aptAt = host.Log.Single(c => c.Kind == "enter" && c.Text == "apartment:corridor3F");
+            Assert.That(aptAt.Seq, Is.GreaterThan(card.Seq), "her corridor after the card");
+            Assert.That(host.Log.First(c => c.Kind == "fade" && c.Seq > aptAt.Seq).Text, Is.EqualTo("0"), "the picture back in her corridor");
+            Assert.That(host.Black, Is.EqualTo(0), "no black left at the end");
+            Assert.That(host.Log.Count(c => c.Kind == "fade" && c.Text == "1"), Is.EqualTo(1), "one fade to black, for the card only");
+        }
+
+        [Test]
+        public void ASkippedOffer_NeverGoesBlack()
+        {
+            var (host, ctx) = Rig("go");
+            host.AnswerCard("skip");
+            Play(host, ctx, walk: false);
+            Assert.That(host.Calls("fade"), Is.Empty);
+        }
+
+        [Test]
         public void Skip_RecordsOnce_AndGoesNowhere()
         {
             var (host, ctx) = Rig("go");

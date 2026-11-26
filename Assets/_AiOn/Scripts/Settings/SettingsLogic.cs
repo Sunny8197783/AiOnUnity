@@ -213,6 +213,12 @@ namespace AiOn.Settings
         /// <summary>The text scale the menu offers (0.9 .. 1.3); anything else is 1.</summary>
         public static float TextScale(double v) => double.IsNaN(v) || v <= 0 ? 1f : (float)Math.Max(0.8, Math.Min(1.5, v));
 
+        /// <summary>The brightest the 화면 밝기 setting goes, in stops over every look.</summary>
+        public const double BrightnessMax = 1.5;
+
+        /// <summary>The 화면 밝기 setting: stops of exposure added over every look, clamp(v, 0, 1.5); NaN (nothing saved, not a number) is 0.</summary>
+        public static float Brightness(double v) => double.IsNaN(v) ? 0f : (float)Math.Max(0, Math.Min(BrightnessMax, v));
+
         /// <summary>A text's size at a scale (rounded, at least 1).</summary>
         public static int Scaled(int baseSize, float scale) => Math.Max(1, (int)Math.Round(baseSize * scale, MidpointRounding.AwayFromZero));
 

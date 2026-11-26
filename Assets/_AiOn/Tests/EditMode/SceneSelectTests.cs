@@ -415,6 +415,9 @@ namespace AiOn.Tests
                 Assert.That(r.LastG.Events.Count(e => e.Type == "arrived"), Is.EqualTo(1), "the arrival is not played again");
                 Assert.That(r.LastG.Events.Count(e => e.Type == "cpr"), Is.EqualTo(1));
             }
+            if (m.Chapter == "dday")
+                Assert.That((bool)r.Host.Opens.First(o => o.screen == CprScene.Screen).options["demo"], Is.True,
+                    "every prepared run that reaches the CPR gets the sooner AED and the skip, not only the CPR shortcut");
             if (id == "fire")
                 Assert.That(r.Host.Cards.Any(c => c.Title == MountainLogic.RecordTitle), Is.False, "no record card for a D+2 day this run did not show");
             if (m.Chapter == "dday")

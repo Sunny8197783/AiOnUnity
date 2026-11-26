@@ -232,6 +232,16 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void A_one_button_card_takes_Space_as_the_talk_box_taught_two_buttons_only_Enter()
+        {
+            Assert.IsTrue(CardFocus.Confirms(1, enter: false, space: true), "「어르신으로」, 「달력 보기」: ▼ Space · 클릭");
+            Assert.IsTrue(CardFocus.Confirms(1, enter: true, space: false));
+            Assert.IsTrue(CardFocus.Confirms(2, enter: true, space: false), "Enter still takes the primary");
+            Assert.IsFalse(CardFocus.Confirms(2, enter: false, space: true), "a player still pressing Space through the talk does not pick between two");
+            Assert.IsFalse(CardFocus.Confirms(1, enter: false, space: false));
+        }
+
+        [Test]
         public void Time_skip_group_is_centred_with_the_bar_under_the_text()
         {
             var y = StoryScreens.SkipLayout(48, 40, 3, 42);

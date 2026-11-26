@@ -73,11 +73,56 @@ namespace AiOn.UI
         public static string Skip(string to, string line, bool first) => (first ? Plain(to) + ". " : "") + Plain(line);
     }
 
+    /// <summary>
+    /// The small "계속" mark at the bottom right of the talk box while it waits for Enter / Space / E / a click (pure,
+    /// EditMode-tested). It blinks softly; under 움직임 줄이기 it stays still.
+    /// </summary>
+    public static class ContinueCue
+    {
+        public const string Text = "▼ Space · 클릭";
+        /// <summary>One blink (seconds): bright, dim, bright.</summary>
+        public const float Period = 1.2f;
+        public const float Low = 0.3f, High = 1f, Steady = 0.85f;
+
+        /// <summary>The mark's alpha t seconds after it showed: from High down to Low and back each Period; Steady under reduced motion.</summary>
+        public static float Alpha(float t, bool reduceMotion)
+        {
+            if (reduceMotion) return Steady;
+            float k = 0.5f + 0.5f * Mathf.Cos(Mathf.Max(0, t) * 2 * Mathf.PI / Period);
+            return Mathf.Lerp(Low, High, k);
+        }
+
+        /// <summary>Whether line i of n waits for the advance key: every line but the last one of a talk with choices (those are clicked or numbered).</summary>
+        public static bool Waits(int line, int lines, bool hasChoices) => !(hasChoices && line >= lines - 1);
+    }
+
+    /// <summary>
+    /// 장면 바로가기 / 교사용 모드 (StoryDirector.DemoRun): F10 goes back to the title from anywhere, and the key strip says
+    /// so (pure, EditMode-tested). The player's own story shows no such key.
+    /// </summary>
+    public static class DemoKeyHint
+    {
+        public const string Key = "F10", Word = "처음 화면으로";
+        /// <summary>A prepared run is playing (the Director sets it; the title return clears it).</summary>
+        public static bool On;
+
+        /// <summary>The key strip with F10 on a line of its own under it while on.</summary>
+        public static string Strip(string strip, bool on) =>
+            on ? (string.IsNullOrEmpty(strip) ? "" : strip + "\n") + "<b><color=#e8eef0>" + Key + "</color></b> " + Word : strip;
+    }
+
     /// <summary>Keyboard focus on a card's actions (pure, EditMode-tested).</summary>
     public static class CardFocus
     {
         /// <summary>The original's armedAfter(220): a card ignores keys and clicks this long after it opens.</summary>
         public const float ArmSeconds = 0.22f;
+
+        /// <summary>
+        /// Whether a key takes a card's primary action (not a decision card, which needs a focused button first): Enter
+        /// always, and Space when the card has one button only, as the talk box's "▼ Space · 클릭" taught. With two or more
+        /// buttons Space does nothing, so a player still pressing through the talk before does not pick for them.
+        /// </summary>
+        public static bool Confirms(int actions, bool enter, bool space) => enter || (space && actions == 1);
 
         /// <summary>
         /// The next focused action. From none (-1) an arrow lands on the button on its side (left: the first, right:
@@ -177,7 +222,7 @@ namespace AiOn.UI
         int _captionToken;
         bool _hidden, _batteryWanted, _bagWanted, _statsWanted = true;
         Text _keysText;
-        bool _keysPov, _keysWalk;
+        bool _keysPov, _keysWalk, _keysDemo;
 
         // Compass strip, minimap, stamina bar and key strip (original hud.js 59-68): each is wanted by the story or the
         // player's state, and shows only while the HUD is up and no cutscene runs.
@@ -224,7 +269,7 @@ namespace AiOn.UI
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { _talkDepth = 0; TalkOpen = false; }
+        static void ResetStatics() { _talkDepth = 0; TalkOpen = false; DemoKeyHint.On = false; }
 
         /// <summary>The cards, time skips and talks open now (ModalScope): OnDestroy lets go of what they hold.</summary>
         readonly List<ModalScope> _scopes = new(4);
@@ -649,6 +694,38 @@ namespace AiOn.UI
             ShowToast(text, label, ms);
         }
 
+        /// <summary>Above every window (UiScreen orders are 220 and up), so a Notice shows over a card or a screen.</summary>
+        public const int NoticeOrder = 400;
+        GameObject _notice;
+
+        /// <summary>
+        /// A short line at the top, over everything (cards and screens included), for a key the player just pressed
+        /// (교사용 모드's first F10: "press again"). A toast waits for open windows to close, which is too late for that.
+        /// </summary>
+        public void Notice(string text, int ms)
+        {
+            if (!this || string.IsNullOrEmpty(text)) return;
+            if (_notice) Destroy(_notice);
+            var go = new GameObject("Notice", typeof(RectTransform));
+            go.transform.SetParent(_root, false);
+            var canvas = go.AddComponent<Canvas>();
+            canvas.overrideSorting = true; canvas.sortingOrder = NoticeOrder;
+            UiKit.Fill((RectTransform)go.transform);
+            var plate = UiKit.Box("Plate", go.transform, new Color(0.05f, 0.08f, 0.09f, 0.94f)).rectTransform;
+            plate.anchorMin = plate.anchorMax = plate.pivot = new Vector2(0.5f, 1);
+            plate.anchoredPosition = new Vector2(0, -36); plate.sizeDelta = new Vector2(820, 64);
+            UiKit.Fill(UiKit.Label("Text", plate, EasyKorean.Of(text), 24, UiKit.Ink, TextAnchor.MiddleCenter).rectTransform);
+            Read(text); // low vision: said as well
+            _notice = go;
+            _ = DropNotice(go, ms / 1000f);
+        }
+
+        async Task DropNotice(GameObject go, float seconds)
+        {
+            await Wait(seconds); // unscaled: a decision card slows time
+            if (go) Destroy(go);
+        }
+
         /// <summary>The alert popup's text (the phone's 안전안내문자 / 위급재난문자): a "메모:" toast repeating it is dropped.</summary>
         public void SetAlert(string text) => _toastQ.AlertText = text;
 
@@ -951,10 +1028,11 @@ namespace AiOn.UI
             var kb = Keyboard.current;
             if (kb != null && kb.hKey.wasPressedThisFrame) _keyTimer.Show(KeyStripTimer.Again);
             bool roaming = up && _compassWanted && !InputGate.Blocked;
-            if (UiKeys.OtherPov != _keysPov || UiKeys.WalkOnly != _keysWalk) // someone else's turn: only their keys
+            // someone else's turn: only their keys; a prepared run: F10 처음 화면으로 under them
+            if (UiKeys.OtherPov != _keysPov || UiKeys.WalkOnly != _keysWalk || DemoKeyHint.On != _keysDemo)
             {
-                _keysPov = UiKeys.OtherPov; _keysWalk = UiKeys.WalkOnly;
-                if (_keysText) _keysText.text = UiKeys.StripText(6, _keysPov, _keysWalk);
+                _keysPov = UiKeys.OtherPov; _keysWalk = UiKeys.WalkOnly; _keysDemo = DemoKeyHint.On;
+                if (_keysText) _keysText.text = DemoKeyHint.Strip(UiKeys.StripText(6, _keysPov, _keysWalk), _keysDemo);
                 _keyTimer.Show(KeyStripTimer.Again);
             }
             bool keys = HudVisibility.KeyStrip(up, roaming, _keyTimer.Tick(roaming, dt)) && !UiKeys.StripSuppressed;
@@ -1015,7 +1093,7 @@ namespace AiOn.UI
         }
 
         static int _talkDepth;
-        const float TalkWidth = 1240, TalkBottom = 50, TalkMinH = 140, TalkMaxH = 300, ChoiceMinW = 520, ChoiceMaxW = 1000;
+        const float TalkWidth = 1240, TalkBottom = 50, TalkMinH = 140, TalkMaxH = 300, ChoiceMinW = 520, ChoiceMaxW = 1000, CuePad = 44;
         static readonly Color ChoiceBg = new(0.12f, 0.17f, 0.19f, 0.98f), ChoiceOffBg = new(0.07f, 0.09f, 0.1f, 0.98f);
         static readonly Color ChoiceTaken = new(0.55f, 0.6f, 0.62f), ChoiceLocked = new(0.45f, 0.49f, 0.51f);
         // a Button tint multiplier: ChoiceBg (0.12, 0.17, 0.19) becomes about (0.24, 0.2, 0.13), a warm amber-brown
@@ -1027,6 +1105,7 @@ namespace AiOn.UI
         /// <summary>The talk box sized to its line (140 to 300 px), at the bottom: the centre stays free for the speaker.</summary>
         async Task<string> TalkBody(TalkOptions o)
         {
+            if (!this) await Abandoned(); // the old run after a title return: no box under the destroyed root (left in the new scene)
             o = EasyKorean.Talk(o); // 쉬운 한국어: lines and choices as shown (the ids are the same)
             var lines = new List<string>();
             foreach (var l in o.Lines ?? new List<string>()) if (!string.IsNullOrEmpty(l)) lines.Add(l);
@@ -1047,6 +1126,13 @@ namespace AiOn.UI
                 var role = UiKit.Label("Role", box, o.Role ?? "", 21, UiKit.Dim); UiKit.At(role.rectTransform, 34, 60, 940, 30);
                 role.gameObject.SetActive(hasRole);
                 var count = UiKit.Label("Count", box, "", 20, UiKit.Dim, TextAnchor.UpperRight); UiKit.At(count.rectTransform, TalkWidth - 34 - 210, 22, 210, 30);
+                // the "계속" mark, bottom right, while the box waits for the advance key (Advance shows it and blinks it)
+                var cue = UiKit.Label("Continue", box, ContinueCue.Text, 18, UiKit.Dim, TextAnchor.LowerRight);
+                var cueRt = cue.rectTransform;
+                cueRt.anchorMin = cueRt.anchorMax = cueRt.pivot = new Vector2(1, 0); cueRt.anchoredPosition = new Vector2(-34, 12); cueRt.sizeDelta = new Vector2(260, 26);
+                cue.raycastTarget = false;
+                cue.horizontalOverflow = HorizontalWrapMode.Overflow; cue.verticalOverflow = VerticalWrapMode.Overflow; // a larger 글자 크기 grows it up and left
+                cue.gameObject.SetActive(false);
                 float lineTop = hasRole ? 100 : 68, lineW = TalkWidth - 68;
                 var line = UiKit.Label("Line", box, "", 28, UiKit.Ink); UiKit.At(line.rectTransform, 34, lineTop, lineW, 40);
                 for (int i = 0; i < lines.Count; i++)
@@ -1054,13 +1140,14 @@ namespace AiOn.UI
                     line.text = lines[i];
                     float lh = Mathf.Ceil(line.preferredHeight);
                     line.rectTransform.sizeDelta = new Vector2(lineW, lh);
-                    box.sizeDelta = new Vector2(TalkWidth, Mathf.Clamp(lineTop + lh + 30, TalkMinH, TalkMaxH));
+                    bool waits = ContinueCue.Waits(i, lines.Count, hasChoices);
+                    box.sizeDelta = new Vector2(TalkWidth, Mathf.Clamp(lineTop + lh + (waits ? CuePad : 30), TalkMinH, TalkMaxH)); // room under the line for the mark
                     count.text = lines.Count > 1 ? $"{i + 1} / {lines.Count}" : o.Progress ?? "";
                     bool last = i == lines.Count - 1;
                     Read(OverlaySpeech.TalkLine(o, lines[i], i == 0, last && hasChoices)); // low vision: each line as it shows
                     try { TalkLineShown?.Invoke(lines[i]); } catch (System.Exception e) { Debug.LogException(e); }
-                    if (last && hasChoices) break;
-                    await Advance();
+                    if (!waits) break;
+                    await Advance(this, cue);
                 }
                 if (!hasChoices) return null;
                 // 도우미 모드: a judgement stops for the pair to talk it over before the choices come up (once per
@@ -1069,7 +1156,7 @@ namespace AiOn.UI
                     await CompanionPanel.Discuss(lines[lines.Count - 1], Companion.OpenChoices(o.Choices));
                 return await Choose(box, o.Choices);
             }
-            finally { Destroy(box.gameObject); }
+            finally { if (box) Destroy(box.gameObject); }
         }
 
         /// <summary>
@@ -1079,6 +1166,7 @@ namespace AiOn.UI
         /// </summary>
         async Task<string> Choose(RectTransform box, List<TalkChoice> choices)
         {
+            if (!this) await Abandoned(); // torn down before the choices were built (a title return): never resumes
             var list = UiKit.Rect("Choices", _root);
             list.anchorMin = list.anchorMax = list.pivot = new Vector2(0.5f, 0);
             list.anchoredPosition = new Vector2(0, TalkBottom + box.sizeDelta.y + 8);
@@ -1142,6 +1230,7 @@ namespace AiOn.UI
                 await Task.Yield();
                 while (!tcs.Task.IsCompleted)
                 {
+                    if (!this) await Abandoned(); // torn down under the choices (a title return): never resumes
                     var kb = Keyboard.current;
                     if (kb != null)
                         for (int i = 0; i < choices.Count && i < 9; i++)
@@ -1151,7 +1240,7 @@ namespace AiOn.UI
                 }
                 return await tcs.Task;
             }
-            finally { Destroy(list.gameObject); }
+            finally { if (list) Destroy(list.gameObject); }
         }
 
         /// <summary>
@@ -1177,6 +1266,7 @@ namespace AiOn.UI
         /// </summary>
         public async Task<string> Card(CardOptions o)
         {
+            if (!this) await Abandoned(); // the old run after a title return: no card under the destroyed root
             o = EasyKorean.Card(o); // 쉬운 한국어
             var actions = o.Actions != null && o.Actions.Count > 0 ? o.Actions : new List<CardAction> { new("ok", "확인", true) };
             bool decision = o.Kind == "decision";
@@ -1272,6 +1362,7 @@ namespace AiOn.UI
                 var primaryAction = actions.Find(a => a.Primary) ?? actions[0];
                 while (!tcs.Task.IsCompleted)
                 {
+                    if (!this) await Abandoned(); // torn down under the card (a title return): never resumes
                     var kb = Keyboard.current;
                     if (kb != null && Time.unscaledTime >= armAt)
                     {
@@ -1284,13 +1375,13 @@ namespace AiOn.UI
                             if (dir != 0) { focus = CardFocus.Step(focus, actions.Count, dir, kb.tabKey.wasPressedThisFrame); PaintFocus(); UiSound.Play("tick"); }
                             else if ((enter || kb.spaceKey.wasPressedThisFrame) && focus >= 0) tcs.TrySetResult(actions[focus].Id);
                         }
-                        else if (enter) tcs.TrySetResult(primaryAction.Id);
+                        else if (CardFocus.Confirms(actions.Count, enter, kb.spaceKey.wasPressedThisFrame)) tcs.TrySetResult(primaryAction.Id);
                     }
                     await Task.Yield();
                 }
                 return await tcs.Task;
             }
-            finally { Destroy(shade.gameObject); }
+            finally { if (shade) Destroy(shade.gameObject); }
         }
 
         static string KindLabel(string kind) => kind switch
@@ -1306,6 +1397,7 @@ namespace AiOn.UI
         /// </summary>
         public async Task TimeSkip(string from, string to, IReadOnlyList<string> text)
         {
+            if (!this) await Abandoned(); // the old run after a title return (a cutscene that threw falls back here): never resumes
             using var modal = new ModalScope(this, false, counts: true);
             // as dark as the original's .96 veil (uGUI blends in linear space here)
             var shade = UiKit.Box("TimeSkip", _root, new Color(0, 0, 0, ScreenDecor.A(0.96f)), raycast: true).rectTransform; UiKit.Fill(shade);
@@ -1374,19 +1466,41 @@ namespace AiOn.UI
         /// <summary>Set to advance the current line as if a key was pressed (tests and automation drive the dialog this way).</summary>
         public static bool AdvanceRequested;
 
-        /// <summary>Waits for a fresh Enter / Space / E / click (the press that opened the screen does not count).</summary>
-        static async Task Advance()
+        /// <summary>
+        /// Waits for a fresh Enter / Space / E / click (the press that opened the screen does not count). The cue (the talk
+        /// box's "계속" mark) shows once the press can count and blinks (ContinueCue) until it comes.
+        /// </summary>
+        static async Task Advance(StoryOverlay owner, Text cue)
         {
             await Wait(0.22f);
-            while (true)
+            float shown = Time.unscaledTime;
+            try
             {
-                if (AdvanceRequested) { AdvanceRequested = false; return; }
-                var kb = Keyboard.current; var m = Mouse.current; var g = Gamepad.current;
-                if ((kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
-                    || (m != null && m.leftButton.wasPressedThisFrame) || (g != null && g.buttonSouth.wasPressedThisFrame)) return;
-                await Task.Yield();
+                while (true)
+                {
+                    if (!owner) await Abandoned(); // torn down under the talk (a title return): never resumes
+                    if (AdvanceRequested) { AdvanceRequested = false; return; }
+                    var kb = Keyboard.current; var m = Mouse.current; var g = Gamepad.current;
+                    if ((kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
+                        || (m != null && m.leftButton.wasPressedThisFrame) || (g != null && g.buttonSouth.wasPressedThisFrame)) return;
+                    if (cue)
+                    {
+                        if (!cue.gameObject.activeSelf) cue.gameObject.SetActive(true);
+                        var host = AiOn.Story.UnityStoryHost.Instance;
+                        cue.canvasRenderer.SetAlpha(ContinueCue.Alpha(Time.unscaledTime - shown, host && host.ReduceMotion));
+                    }
+                    await Task.Yield();
+                }
             }
+            finally { if (cue) cue.gameObject.SetActive(false); }
         }
+
+        /// <summary>
+        /// The await of a talk, choice or card whose overlay was destroyed (a title return mid-talk): a task that never
+        /// completes and that nothing keeps, so the old run's chain is let go instead of touching the destroyed boxes the
+        /// next time a key is pressed (StoryDirector.Stale stops the awaits that do come back).
+        /// </summary>
+        static Task Abandoned() => new TaskCompletionSource<bool>().Task;
 
         /// <summary>While a dialog or card is open the player is held and the cursor is free for clicking.</summary>
         sealed class ModalScope : IDisposable
@@ -1398,6 +1512,9 @@ namespace AiOn.UI
             public ModalScope(StoryOverlay owner, bool freeCursor, bool counts = false)
             {
                 _owner = owner;
+                // an overlay already destroyed (a title return; the old run's chain goes on to a talk or card): its
+                // OnDestroy that would let go has run, so the scope holds nothing and the next run is not left frozen
+                if (!owner) { _done = true; return; }
                 _owner._scopes.Add(this);
                 _cursor = freeCursor;
                 _counts = counts;

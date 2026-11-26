@@ -58,6 +58,38 @@ namespace AiOn.Rendering
             if (outdoor) return original * (1.3f + 2.4f * Mathf.Clamp01(night));
             return original * (preset == "underground" || preset == "interiorDark" ? 0.75f : 0.5f);
         }
+
+        /// <summary>
+        /// A cutscene outdoors at night, at full lift (feedback B3: the 20:05 siren scene measured a mean luma of 5-16 of 255
+        /// against the office's 88): stops added to the exposure, and how many times the ambient fill and the moon key. The
+        /// fill and the moon carry the people and the street; lamps, phone torches and fires get only the stops, so they do
+        /// not blow out, and the sky only the stops, so it stays a night sky. The fill multiplies the trilight's gamma colour
+        /// (1.7 there is about 3x in linear light), the key its linear intensity: with the stops, about 7.5x on the shaded
+        /// street and 3.8x on the moonlit side.
+        /// </summary>
+        public const float CineNightStops = 1.25f, CineNightFill = 1.7f, CineNightKey = 1.6f;
+
+        /// <summary>
+        /// How much of the night cutscene lift the look on screen takes (0..1): none outside a cutscene or indoors (the dark
+        /// rooms have their own fills and guide lights); from half night to full night it comes in, and a lit night (street
+        /// lamps on) takes half. Reads the shown look, so it follows a time-lapse's blend.
+        /// </summary>
+        public static float CineNightLift(bool cinematic, EnvPreset shown)
+        {
+            if (!cinematic || shown == null || !shown.Outdoor) return 0f;
+            float night = Mathf.Clamp01((shown.NightAmount - 0.5f) * 2f);
+            float street = shown.Lit != null && shown.Lit.TryGetValue("street", out var s) ? Mathf.Clamp01(s) : 0f;
+            return night * (1f - 0.5f * street);
+        }
+
+        /// <summary>Stops over every look: the 화면 밝기 setting plus a night cutscene's lift.</summary>
+        public static float ExposureBias(float brightness, float lift) => brightness + Mathf.Clamp01(lift) * CineNightStops;
+
+        /// <summary>The ambient fill's multiplier for a night cutscene's lift (1 without).</summary>
+        public static float FillGain(float lift) => 1f + Mathf.Clamp01(lift) * (CineNightFill - 1f);
+
+        /// <summary>The key (moon) light's multiplier for a night cutscene's lift (1 without).</summary>
+        public static float KeyGain(float lift) => 1f + Mathf.Clamp01(lift) * (CineNightKey - 1f);
     }
 
     /// <summary>
@@ -80,6 +112,12 @@ namespace AiOn.Rendering
         /// <summary>Set by the settings (reduce motion): no jitter, roll or shake and no throbbing red.</summary>
         public static bool ReduceMotion { get; set; }
 
+        /// <summary>Set by the settings (화면 밝기): stops of exposure over every look, 0 .. 1.5 (SettingsMath.Brightness).</summary>
+        public static float Brightness { get; set; }
+
+        /// <summary>The decision focus's own exposure (its volume sets it outright, so the brightness is added to it too).</summary>
+        public const float FocusExposure = -0.45f;
+
         Volume _base, _emergency, _signal, _mask;
         MaskView _maskFx;
         AnalogSignal _signalFx;
@@ -92,7 +130,7 @@ namespace AiOn.Rendering
         float _lastBias = float.NaN;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { s_inst = null; ReduceMotion = false; }
+        static void ResetStatics() { s_inst = null; ReduceMotion = false; Brightness = 0f; }
 
         static AtmosphereDirector Get()
         {
@@ -161,7 +199,9 @@ namespace AiOn.Rendering
         }
 
         Volume _focus;
+        UnityEngine.Rendering.Universal.ColorAdjustments _focusColor;
         int _focusCount;
+        float _stops; // ExposureBias in force (the focus adds it to its own exposure)
 
         void BuildFocus()
         {
@@ -178,8 +218,9 @@ namespace AiOn.Rendering
             dof.gaussianMaxRadius.Override(1.5f);
             dof.highQualitySampling.Override(true);
             var ca = p.Add<UnityEngine.Rendering.Universal.ColorAdjustments>(true);
-            ca.postExposure.Override(-0.45f);
+            ca.postExposure.Override(FocusExposure + _stops);
             ca.saturation.Override(-25f);
+            _focusColor = ca;
         }
 
         void Burst(float seconds)
@@ -231,6 +272,13 @@ namespace AiOn.Rendering
             if (_base) _base.weight = Mathf.MoveTowards(_base.weight, baseW, dt * 0.5f);
             float bias = AtmosphereMath.SaturationBias(_base ? _base.weight : baseW);
             if (env && !Mathf.Approximately(bias, _lastBias)) { _lastBias = bias; env.SetSaturationBias(bias); }
+
+            // exposure and light over the preset: the 화면 밝기 setting, and the lift a cutscene gets at night outdoors (B3:
+            // the siren scene was a black frame). It comes and goes with the cut, under the cutscene's own camera change.
+            float lift = env && env.Current != null ? AtmosphereMath.CineNightLift(AiOn.UI.GameHud.Cinematic, env.Shown) : 0f;
+            _stops = AtmosphereMath.ExposureBias(Brightness, lift);
+            if (env) env.SetLightBias(_stops, AtmosphereMath.FillGain(lift), AtmosphereMath.KeyGain(lift));
+            if (_focusColor && !Mathf.Approximately(_focusColor.postExposure.value, FocusExposure + _stops)) _focusColor.postExposure.Override(FocusExposure + _stops);
 
             // radio: a steady weak signal with a dropout every few seconds
             if (_radio > 0 && now >= _nextBurst)

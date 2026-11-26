@@ -13,6 +13,11 @@
 // power, pads, hands off while it analyses, shock, compress again at once. It always ends with the paramedics taking
 // over (구급대 인계); there is no other ending.
 //
+// A prepared run (장면 바로가기, 교사용 모드: the screen's "demo" option; CprScene sets it from StoryContext.DemoRun)
+// brings the AED sooner, DemoAedAt instead of AedAt, and the hidden fatigue sooner (DemoFatigueStart, DemoFatigueRamp), so
+// a judge's short visit reaches both the AED and the moment the presses get shallow while the gauge stays high; the screen
+// says so on the page. The story keeps AedAt, HandoverAt, FatigueStart and FatigueRamp.
+//
 // Times are seconds on the caller's clock (the screen passes AudioSettings.dspTime-based seconds, unaffected by
 // Time.timeScale). Call Tick(t) every frame and Press(t)/Release(t) on the button's edges.
 using System;
@@ -98,6 +103,17 @@ namespace AiOn.Game
 
         /// <summary>Seconds after the first beat when the AED arrives, and the earliest handover.</summary>
         public const double AedAt = 100, HandoverAt = 150, AfterShockMin = 20;
+        /// <summary>
+        /// 장면 바로가기 only (Demo): the AED this many seconds after the first beat, and the earliest handover (the
+        /// AfterShockMin after the shock still applies, so the paramedics come about 20 s after it). Game numbers, not facts.
+        /// </summary>
+        public const double DemoAedAt = 25, DemoHandoverAt = DemoAedAt + AfterShockMin;
+        /// <summary>
+        /// Prepared runs only (Demo): the hidden fatigue starts after this many seconds of one's own compressing and is full
+        /// this many seconds later, so a rescuer alone gets shallow (DemoSoloShallowAt) before the DemoAedAt AED. Game
+        /// numbers for the short visit (the page says the time was shortened), not facts; the felt fatigue is unchanged.
+        /// </summary>
+        public const double DemoFatigueStart = 6, DemoFatigueRamp = 12;
         public const double AnalyzeSeconds = 5;
         /// <summary>An AED step nobody takes in this long is done by the volunteer (no soft lock).</summary>
         public const double AutoStepAfter = 12;
@@ -126,17 +142,33 @@ namespace AiOn.Game
         public const double RhythmCover = 0.75, RhythmQuality = 0.5;
         /// <summary>Compression time when a rescuer alone (no swap) can no longer reach ShallowBelow, however long the hold (a game number).</summary>
         public static double SoloShallowAt => FatigueStart + FatigueRamp * (1 - ShallowBelow) / FatigueDepthCap;
+        /// <summary>SoloShallowAt with the prepared runs' fatigue clock (DemoFatigueStart, DemoFatigueRamp).</summary>
+        public static double DemoSoloShallowAt => DemoFatigueStart + DemoFatigueRamp * (1 - ShallowBelow) / FatigueDepthCap;
+        /// <summary>SoloShallowAt for a run (DemoSoloShallowAt in a prepared run).</summary>
+        public static double SoloShallowAtFor(bool demo) => demo ? DemoSoloShallowAt : SoloShallowAt;
+        /// <summary>
+        /// Few presses of one's own and no swap (nobody pressing, or the breathing check that moved on by itself): the
+        /// debrief says only that, not "혼자 계속 눌렀다" or "교대를 요청하지 않았습니다", which would contradict it.
+        /// </summary>
+        public static bool FewAlone(CprResult r) => r != null && r.FirstSwapAt < 0 && r.Compressions < MinOwnPresses;
 
         // ---------------------------------------------------------------- options
 
         public readonly bool Wide, OneButton;
         /// <summary>Drills ladder stage: guided | hint | free.</summary>
         public readonly string Stage;
+        /// <summary>A prepared run (the screen's "demo" option): the AED at DemoAedAt, the fatigue on the demo clock. The story: false.</summary>
+        public readonly bool Demo;
 
-        public CprLogic(bool wide = false, bool oneButton = false, string stage = "guided")
+        public CprLogic(bool wide = false, bool oneButton = false, string stage = "guided", bool demo = false)
         {
-            Wide = wide; OneButton = oneButton; Stage = stage ?? "guided";
+            Wide = wide; OneButton = oneButton; Stage = stage ?? "guided"; Demo = demo;
         }
+
+        /// <summary>Seconds after the first beat when the AED arrives in this run (AedAt; DemoAedAt in a demo).</summary>
+        public double AedTime => Demo ? DemoAedAt : AedAt;
+        /// <summary>The earliest handover in this run (HandoverAt; DemoHandoverAt in a demo).</summary>
+        public double HandoverTime => Demo ? DemoHandoverAt : HandoverAt;
 
         // ---------------------------------------------------------------- state
 
@@ -192,10 +224,13 @@ namespace AiOn.Game
         // ---------------------------------------------------------------- derived
 
         public static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
-        public static double FatigueOf(double work) => Clamp01((work - FatigueStart) / FatigueRamp);
-        public double Fatigue => FatigueOf(Work);
+        public static double FatigueOf(double work) => FatigueOf(work, false);
+        /// <summary>The fatigue after this much own compressing, on the story's clock or (demo) the prepared runs' one.</summary>
+        public static double FatigueOf(double work, bool demo) =>
+            demo ? Clamp01((work - DemoFatigueStart) / DemoFatigueRamp) : Clamp01((work - FatigueStart) / FatigueRamp);
+        public double Fatigue => FatigueOf(Work, Demo);
         /// <summary>The fatigue the rescuer feels: none until FeltAfter seconds of work.</summary>
-        public double FeltFatigue => FeltFatigueOf(Work);
+        public double FeltFatigue => Work >= FeltAfter ? Fatigue : 0;
         public static double FeltFatigueOf(double work) => work >= FeltAfter ? FatigueOf(work) : 0;
 
         public static double PerfectWindowFor(bool wide, double fatigue) => Math.Min(MaxWindow, PerfectWindow * (wide ? WideFactor : 1)) * (1 - FatigueNarrow * fatigue);
@@ -473,7 +508,7 @@ namespace AiOn.Game
 
             while (BeatTime(_next) + Interval * 0.5 < t) Resolve(_next++, t);
 
-            if (Phase == CprPhase.Compress && !AedArrived && CompressTime(t) >= AedAt)
+            if (Phase == CprPhase.Compress && !AedArrived && CompressTime(t) >= AedTime)
             {
                 AedArrived = true;
                 if (_pending) Finish(t - _pressAt, true);
@@ -487,7 +522,7 @@ namespace AiOn.Game
             if (Phase == CprPhase.AedAnalyze && _down && !_touchCounted && t - _downAt >= AnalyzeGrace) Touch(t);
             if (Phase == CprPhase.AedAnalyze && t - _analyzeFrom >= AnalyzeSeconds) { Phase = CprPhase.AedShock; _stepAt = t; Say("aed_shock_ready"); }
 
-            if (Phase == CprPhase.Compress && AedDone && CompressTime(t) >= Math.Max(HandoverAt, _shockCt + AfterShockMin))
+            if (Phase == CprPhase.Compress && AedDone && CompressTime(t) >= Math.Max(HandoverTime, _shockCt + AfterShockMin))
             {
                 if (_pending) Finish(t - _pressAt, true);
                 Phase = CprPhase.Handover; EndAt = t; Swap = CprSwap.None;
@@ -576,7 +611,7 @@ namespace AiOn.Game
             var mine = Curve.Where(s => s.Who == "me").ToList();
             return new CprResult
             {
-                Played = true, Stage = Stage, Wide = Wide, OneButton = OneButton,
+                Played = true, Stage = Stage, Wide = Wide, OneButton = OneButton, Demo = Demo,
                 CheckMistakes = CheckMistakes, VagueCalls = VagueCalls, SelfCalls = SelfCalls, Named = Named,
                 BreathSeconds = BreathSeconds, BreathWrong = BreathWrong,
                 Compressions = Compressions, Misses = Misses, Rushed = Rushed, Leans = Leans,
@@ -612,7 +647,8 @@ namespace AiOn.Game
             Row("cprRhythm", rhythmOk, "박자에 맞춰 끊기지 않게 눌렀다",
                 r.Compressions < MinOwnPresses ? "직접 누른 압박이 적었다" : cover < RhythmCover ? "박자를 자주 놓쳐 압박이 끊겼다" : "박자·깊이·이완이 고르지 않았다", "cpr_depth_rate");
             bool swapEarly = r.FirstSwapAt >= SwapMinOwn && (r.ShallowAt < 0 || r.FirstSwapAt <= r.ShallowAt + 10);
-            Row("cprSwap", swapEarly, "지치기 전에 이웃을 지목해 교대를 요청했다",
+            // few own presses and no swap: "혼자 계속 눌렀다" would contradict "직접 누른 압박이 적었다", so the rhythm row says it alone
+            if (!FewAlone(r)) Row("cprSwap", swapEarly, "지치기 전에 이웃을 지목해 교대를 요청했다",
                 r.FirstSwapAt < 0 ? "교대를 요청하지 않고 혼자 계속 눌렀다" : r.FirstSwapAt < SwapMinOwn ? "거의 누르지 않고 바로 교대를 넘겼다" : "압박이 얕아지고 한참 뒤에야 교대를 요청했다", "cpr_fatigue");
             bool aedOk = r.AedTouches == 0 && r.ResumeDelay >= 0 && r.ResumeDelay <= ResumeGood;
             Row("cprAed", aedOk, "분석 중에는 손을 떼고, 충격 뒤 바로 압박을 다시 시작했다",
@@ -637,16 +673,22 @@ namespace AiOn.Game
                 int g = (int)Math.Round(Clamp01(r.GaugeAtShallow) * 100);
                 lines.Add($"압박 {Clock(r.ShallowAt)}부터 깊이가 약 5cm에 못 미쳤습니다. 그때 게이지는 {g}%를 보여 주었습니다{(r.GaugeAtShallow >= 0.7 ? " — 괜찮다고 느꼈지만 실제로는 얕아지고 있었습니다." : ".")}");
             }
+            else if (FewAlone(r))
+            {
+                // few presses and no swap (as the rows say): not "혼자 계속 눌렀다면" or "교대를 요청하지 않았습니다" next to it
+                lines.Add("직접 누른 압박이 적었습니다.");
+            }
             else
             {
                 lines.Add(r.Compressions < MinOwnPresses ? "직접 누른 압박이 적었습니다." : "직접 누르는 동안 압박 깊이가 유지됐습니다.");
                 // the lesson the run did not show: alone, it gets shallow long before it feels so
-                lines.Add($"혼자 계속 눌렀다면 압박 {Clock(SoloShallowAt)}쯤부터 얕아졌겠지만, 게이지는 그대로 높게 보였을 것입니다.");
+                lines.Add($"혼자 계속 눌렀다면 압박 {Clock(SoloShallowAtFor(r.Demo))}쯤부터 얕아졌겠지만, 게이지는 그대로 높게 보였을 것입니다.");
             }
             if (r.FirstSwapAt >= 0) lines.Add($"압박 {Clock(r.FirstSwapAt)}에 이웃을 지목해 교대를 요청했습니다{(r.Swaps > 1 ? $" (모두 {r.Swaps}번)" : "")}.");
-            else lines.Add("교대를 요청하지 않았습니다. 지친 느낌은 질이 떨어지고 한참 뒤에야 옵니다.");
+            else if (!FewAlone(r)) lines.Add("교대를 요청하지 않았습니다. 지친 느낌은 질이 떨어지고 한참 뒤에야 옵니다.");
             if (r.AedTouches > 0) lines.Add($"AED 분석 중에 손이 {r.AedTouches}번 닿아 분석을 다시 했습니다.");
             if (r.ResumeDelay >= 0) lines.Add($"충격 뒤 {r.ResumeDelay.ToString("0.0", CultureInfo.InvariantCulture)}초 만에 압박을 다시 시작했습니다.");
+            if (r.Demo) lines.Add(CprText.DemoDebriefNote); // the times above are the demo's, not the fact's beside them
             return lines;
         }
     }
@@ -668,6 +710,8 @@ namespace AiOn.Game
     public sealed class CprResult
     {
         public bool Played, Wide, OneButton, Named, BreathWrong;
+        /// <summary>A prepared run's CPR (the demo AED and fatigue clock): the debrief's "alone" time is the demo one.</summary>
+        public bool Demo;
         public string Stage;
         public int CheckMistakes, VagueCalls, SelfCalls, Compressions, Misses, Rushed, Leans, Swaps, VagueSwaps, AedTouches, AedAuto;
         public double BreathSeconds = -1, Quality, ShallowAt = -1, GaugeAtShallow = -1, FirstSwapAt = -1, TakeBackGap = -1, ResumeDelay = -1, Seconds;
@@ -688,6 +732,7 @@ namespace AiOn.Game
                 ["firstSwapAt"] = R(FirstSwapAt), ["swaps"] = Swaps, ["vagueSwaps"] = VagueSwaps, ["takeBackGap"] = R(TakeBackGap),
                 ["aedTouches"] = AedTouches, ["aedAuto"] = AedAuto, ["resumeDelay"] = R(ResumeDelay), ["seconds"] = R(Seconds),
             };
+            if (Demo) o["demo"] = true; // only a prepared run's: the story's event is as before
             if (curve)
                 o["curve"] = new JObject
                 {
@@ -706,7 +751,7 @@ namespace AiOn.Game
             static bool B(JToken v) => v != null && v.Type == JTokenType.Boolean && (bool)v;
             static int I(JToken v) => v != null && (v.Type == JTokenType.Integer || v.Type == JTokenType.Float) ? (int)(double)v : 0;
             static double D(JToken v, double def) => v != null && (v.Type == JTokenType.Integer || v.Type == JTokenType.Float) ? (double)v : def;
-            r.Played = B(o["played"]); r.Wide = B(o["wide"]); r.OneButton = B(o["oneButton"]); r.Named = B(o["named"]); r.BreathWrong = B(o["breathWrong"]);
+            r.Played = B(o["played"]); r.Demo = B(o["demo"]); r.Wide = B(o["wide"]); r.OneButton = B(o["oneButton"]); r.Named = B(o["named"]); r.BreathWrong = B(o["breathWrong"]);
             r.Stage = o["stage"]?.Type == JTokenType.String ? (string)o["stage"] : null;
             r.CheckMistakes = I(o["checkMistakes"]); r.VagueCalls = I(o["vague"]); r.SelfCalls = I(o["self"]);
             r.Compressions = I(o["compressions"]); r.Misses = I(o["misses"]); r.Rushed = I(o["rushed"]); r.Leans = I(o["leans"]);

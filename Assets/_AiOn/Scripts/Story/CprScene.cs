@@ -46,8 +46,9 @@ namespace AiOn.Story
             return new JObject
             {
                 ["stage"] = stage, ["profile"] = ctx.Settings.Profile ?? "", ["reduceMotion"] = ctx.Settings.ReduceMotion, ["facts"] = facts,
-                // started from 장면 바로가기: the screen may skip to the handover after the shock (a judge's short visit)
-                ["demo"] = ctx.Resume == DDay.CprResume,
+                // a prepared run (장면 바로가기 or 교사용 모드, from any moment that reaches the shelter): the sooner AED and
+                // the skip to the handover after the shock (a judge's short visit). The story: false.
+                ["demo"] = ctx.DemoRun,
             };
         }
 

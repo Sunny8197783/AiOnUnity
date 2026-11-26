@@ -98,7 +98,8 @@ namespace AiOn.Tests
                 ("smoke_escape", new JObject { ["towel"] = false, ["crouch"] = false }), ("fire_shout", null),
                 ("rumor_checked", null), ("rumor_believed", new JObject { ["truth"] = false }), ("rumor_followed", null), ("rumor_spread", null),
                 ("rumor_corrected", null), ("note_left", null), ("ate_spoiled", null), ("tossed_food", null), ("water_fetched", null),
-                ("cpr", new JObject { ["played"] = true, ["vague"] = 1, ["named"] = true, ["breathSec"] = 12, ["firstSwapAt"] = -1, ["aedTouches"] = 1, ["resumeDelay"] = 1 })));
+                // enough own presses for the swap row (with few presses and no swap only the rhythm row speaks: CprLogic.Evaluate)
+                ("cpr", new JObject { ["played"] = true, ["vague"] = 1, ["named"] = true, ["breathSec"] = 12, ["compressions"] = 40, ["firstSwapAt"] = -1, ["aedTouches"] = 1, ["resumeDelay"] = 1 })));
             Assert.That(all.Axes.Count, Is.EqualTo(LearningReport.AxisDefs.Length));
             foreach (var row in all.Rows)
             {

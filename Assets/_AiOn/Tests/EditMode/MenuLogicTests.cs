@@ -52,6 +52,17 @@ namespace AiOn.Tests
             Assert.That(MenuLogic.PauseKeys.Length, Is.EqualTo(UiKeys.All.Length));
         }
 
+        [Test]
+        public void Pause_KeyList_HasF10_OnlyInAPreparedRun()
+        {
+            Assert.That(MenuLogic.PauseKeysFor(false), Is.SameAs(MenuLogic.PauseKeys), "the player's own story: as before");
+            var demo = MenuLogic.PauseKeysFor(true);
+            Assert.That(demo.Length, Is.EqualTo(MenuLogic.PauseKeys.Length + 1));
+            Assert.That(demo.Last(), Is.EqualTo(new[] { DemoKeyHint.Key, DemoKeyHint.Word }), "the key the strip names");
+            Assert.That(DemoKeyHint.Key, Is.EqualTo(AiOn.Story.StoryDirector.DemoTitleKey));
+            Assert.That(MenuLogic.PauseKeys.Length, Is.EqualTo(UiKeys.All.Length), "the shared list is not changed");
+        }
+
         // ---------- settings ----------
 
         [Test]
@@ -60,7 +71,7 @@ namespace AiOn.Tests
             var f = new SettingsForm(new JObject());
             TestSupport.AssertJson(f.Submit(), @"{quality:'medium',volume:0.7,mute:false,captions:true,reduceMotion:false,textScale:1,view:'third',
                 sensitivity:1,minimap:true,volAmbience:1,volEffects:1,volUi:1,profile:'none',memoryCue:true,
-                easyKorean:false,companion:false,qualityAuto:false}"); // competition upgrade: 쉬운 한국어 · 도우미 모드 after the original's keys
+                easyKorean:false,companion:false,brightness:0,qualityAuto:false}"); // competition upgrade: 쉬운 한국어 · 도우미 모드 after the original's keys; feedback B3: 화면 밝기
             Assert.That(f.Submit().Properties().Last().Name, Is.EqualTo("qualityAuto"), "qualityAuto is appended after cur's keys");
             Assert.That((string)f.Submit()["quality"], Is.EqualTo("medium"));
         }

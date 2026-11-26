@@ -361,6 +361,8 @@ namespace AiOn.Tests
             Assert.That(g.Extra.ContainsKey("relay"), "서연's relay times");
             Assert.That((string)g.Events.Single(e => e.Type == "smoke_choice" && (string)e.Details["pick"] != "handle").Details["pick"], Is.EqualTo("stay"));
             Assert.That(h.Cards.First(c => c.Actions.Count > 0).Title, Is.EqualTo("체험 모드"));
+            Assert.That((bool)h.Opens.Single(o => o.screen == CprScene.Screen).options["demo"], Is.False, "the story's CPR keeps the AED at 100 s");
+            Assert.That(r.D.Ctx.DemoRun, Is.False);
             Assert.That(r.Store.Get(StoryDirector.SaveKey), Is.EqualTo(""), "'restart' clears the save");
             Assert.That(r.D.G, Is.Null);
         }

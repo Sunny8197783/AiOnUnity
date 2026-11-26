@@ -13,9 +13,9 @@ namespace AiOn.Tests
     {
         const double Start = 3; // the breathing check answered at t = 3: compressing starts here
 
-        static CprLogic Ready(bool wide = false, bool oneButton = false, string stage = "free")
+        static CprLogic Ready(bool wide = false, bool oneButton = false, string stage = "free", bool demo = false)
         {
-            var L = new CprLogic(wide, oneButton, stage);
+            var L = new CprLogic(wide, oneButton, stage, demo);
             Assert.That(L.Check("tap"), Is.EqualTo("checked"));
             Assert.That(L.Call("named", 1), Is.EqualTo("call_named"));
             Assert.That(L.Breath("none", Start), Is.EqualTo("breath_ok"));
@@ -613,6 +613,231 @@ namespace AiOn.Tests
             Assert.That(L.SkipToHandover(L.Now + 0.1), Is.True);
             Assert.That(L.Phase, Is.EqualTo(CprPhase.Handover));
             Assert.That(L.Result().Seconds, Is.LessThan(CprLogic.HandoverAt));
+        }
+
+        // ------------------------------------------------------------------ feedback 11-25: B1 demo AED, B4 facts after the pick, B6 rows
+
+        /// <summary>The AED's three steps the way the 3분 시연 경로 takes them (the on-screen button, each once it unlocks).</summary>
+        static double TakeTheAedSteps(CprLogic L)
+        {
+            TickTo(L, L.Now + 0.1);
+            for (int i = 0; i < 3; i++)
+            {
+                double x = L.Now + (i == 2 ? CprLogic.AnalyzeSeconds + CprLogic.StepLock + 0.1 : 1.2);
+                TickTo(L, x);
+                Assert.That(L.AedButton(x), Is.True, "AED step " + i);
+            }
+            Assert.That(L.AedDone, Is.True);
+            return L.Now;
+        }
+
+        [Test]
+        public void Demo_TheAedComesAfterAbout25Seconds_TheStoryKeeps100()
+        {
+            Assert.That(CprLogic.DemoAedAt, Is.EqualTo(25));
+            Assert.That(new CprLogic().Demo, Is.False, "the story's default");
+            Assert.That(new CprLogic().AedTime, Is.EqualTo(CprLogic.AedAt));
+            Assert.That(new CprLogic().HandoverTime, Is.EqualTo(CprLogic.HandoverAt));
+            Assert.That(CprLogic.AedAt, Is.EqualTo(100), "the main story's AED time is unchanged");
+            Assert.That(CprLogic.HandoverAt, Is.EqualTo(150));
+
+            var story = Ready();
+            Play(story, 0, CprLogic.DemoAedAt + 2);
+            Assert.That(story.Phase, Is.EqualTo(CprPhase.Compress), "no AED yet in the story");
+            Assert.That(story.AedArrived, Is.False);
+
+            var demo = Ready(demo: true);
+            Assert.That(demo.AedTime, Is.EqualTo(CprLogic.DemoAedAt));
+            Play(demo, 0, CprLogic.DemoAedAt - 1);
+            Assert.That(demo.AedArrived, Is.False);
+            Play(demo, BeatAt(demo, CprLogic.DemoAedAt - 1), CprLogic.DemoAedAt + 1);
+            Assert.That(demo.AedArrived, Is.True);
+            Assert.That(demo.Phase, Is.EqualTo(CprPhase.AedPower));
+            Assert.That(demo.Feedback, Is.EqualTo("aed_arrive"));
+            Assert.That(demo.CompressTime(demo.Now), Is.InRange(CprLogic.DemoAedAt, CprLogic.DemoAedAt + 1));
+        }
+
+        [Test]
+        public void Demo_The3MinutePath_SwapAt20s_AedThenSkip_FitsTheShortVisit()
+        {
+            // COMPETITION_PLAN 3분 시연 경로: press about 20 s, ask the named neighbour, the AED's steps, then 건너뛰기
+            var L = Ready(stage: "guided", demo: true);
+            Play(L, 0, 21);
+            double t = L.BeatTime(BeatAt(L, 21)) + 0.1;
+            TickTo(L, t);
+            Assert.That(L.RequestSwap(t, true), Is.EqualTo("swap"));
+            TickTo(L, L.BeatTime(0) + CprLogic.DemoAedAt + 0.2);
+            Assert.That(L.Phase, Is.EqualTo(CprPhase.AedPower), "the AED comes while the neighbour has the chest");
+            Assert.That(L.Swap, Is.EqualTo(CprSwap.None));
+            TakeTheAedSteps(L);
+            Assert.That(L.Phase, Is.EqualTo(CprPhase.Compress));
+            Assert.That(L.SkipToHandover(L.Now + 1), Is.True, "the skip works once the shock is given");
+            Assert.That(L.Phase, Is.EqualTo(CprPhase.Handover));
+            var r = L.Result();
+            Assert.That(r.Seconds, Is.LessThan(40), "compressing to the skip: well under a minute (the count-in and pages come on top)");
+            Assert.That(r.Swaps, Is.EqualTo(1));
+            var ev = CprLogic.Evaluate(r);
+            Assert.That(ev.Rows.Single(x => x.Id == "cprSwap").Ok, Is.True, string.Join(" / ", ev.Rows.Select(x => x.Label)));
+        }
+
+        [Test]
+        public void Demo_WithoutTheSkip_TheParamedicsStillComeSoon_AndWithNoInputToo()
+        {
+            var L = Ready(demo: true);
+            Play(L, 0, CprLogic.DemoAedAt + 1);
+            TakeTheAedSteps(L);
+            double shock = L.CompressTime(L.Now);
+            Play(L, BeatAt(L, shock + 0.5), CprLogic.HandoverAt);
+            TickTo(L, L.Now + 2);
+            Assert.That(L.Phase, Is.EqualTo(CprPhase.Handover));
+            double end = L.CompressTime(L.EndAt);
+            Assert.That(end, Is.GreaterThanOrEqualTo(shock + CprLogic.AfterShockMin - 0.1), "compressions go on a while after the shock");
+            Assert.That(end, Is.LessThan(60), "not the story's 150 s");
+
+            var idle = Ready(demo: true);
+            TickTo(idle, Start + 120);
+            Assert.That(idle.Phase, Is.EqualTo(CprPhase.Handover), "no soft lock");
+            Assert.That(idle.AedAuto, Is.EqualTo(3));
+            Assert.That(idle.CompressTime(idle.EndAt), Is.LessThan(CprLogic.HandoverAt));
+        }
+
+        [Test]
+        public void Demo_TheNoteIsPlainAndHonest()
+        {
+            Assert.That(CprText.DemoAedNote, Does.StartWith("시연용").And.Contain("AED"));
+            Assert.That(CprText.AllLines(), Has.Member(CprText.DemoAedNote), "checked with the other words");
+        }
+
+        [Test]
+        public void TheStepFacts_ComeWithTheFeedback_NeverBeforeThePick()
+        {
+            // nothing picked yet: no answer on the page (the breathing check keeps only its 10 seconds)
+            Assert.That(CprText.StepFacts(CprPhase.Check, null), Is.Empty);
+            Assert.That(CprText.StepFacts(CprPhase.Call, null), Is.Empty);
+            Assert.That(CprText.StepFacts(CprPhase.Breath, null), Is.EqualTo(new[] { "cpr_breath" }));
+            // each step's right answer is not on its page before the pick
+            foreach (var (p, right) in new[] { (CprPhase.Check, "checked"), (CprPhase.Call, "call_named"), (CprPhase.Breath, "breath_ok") })
+            {
+                var answer = CprText.FactFor(right);
+                Assert.That(answer, Is.Not.Null, right);
+                Assert.That(CprText.BeforeFact(p), Is.Not.EqualTo(answer), p + ": the answer is not shown before the pick");
+            }
+            Assert.That(CprText.FactFor("breath_wrong"), Is.EqualTo("cpr_gasp"));
+            Assert.That(CprText.FactFor("breath_late"), Is.EqualTo("cpr_breath"));
+            Assert.That(CprText.FactFor("breath_timeout"), Is.EqualTo("cpr_breath"));
+            // after a pick: the fact comes with the feedback
+            Assert.That(CprText.StepFacts(CprPhase.Check, "check_wrong"), Is.EqualTo(new[] { "cpr_check" }));
+            Assert.That(CprText.StepFacts(CprPhase.Call, "checked"), Is.EqualTo(new[] { "cpr_check" }), "the check's fact with its feedback, not the call's answer");
+            Assert.That(CprText.StepFacts(CprPhase.Call, "call_vague"), Is.EqualTo(new[] { "cpr_point" }));
+            Assert.That(CprText.StepFacts(CprPhase.Call, "call_self"), Is.EqualTo(new[] { "cpr_point" }));
+            Assert.That(CprText.StepFacts(CprPhase.Breath, "call_named"), Is.EqualTo(new[] { "cpr_point", "cpr_breath" }));
+            Assert.That(CprText.StepFacts(CprPhase.Breath, "call_named"), Has.None.EqualTo("cpr_gasp"));
+            Assert.That(CprText.FactFor(null), Is.Null);
+            Assert.That(CprText.FactFor("good"), Is.Null, "the compression feedback has no fact box");
+            // every fact named is one the scene hands the screen, with its source
+            foreach (var id in new[] { "checked", "check_wrong", "call_named", "call_vague", "call_self", "breath_ok", "breath_late", "breath_timeout", "breath_wrong" })
+                Assert.That(AiOn.Story.CprScene.FactIds, Has.Member(CprText.FactFor(id)), id);
+        }
+
+        [Test]
+        public void FewOwnPresses_WithoutASwap_TheRowsDoNotAlsoSayPressedOnAlone()
+        {
+            CprResult R(int presses, double firstSwapAt) => new CprResult
+            {
+                Played = true, Named = true, BreathSeconds = 5, Compressions = presses, Misses = 2, Quality = 0.8,
+                FirstSwapAt = firstSwapAt, Swaps = firstSwapAt >= 0 ? 1 : 0, ResumeDelay = 1,
+            };
+            var few = CprLogic.Evaluate(R(CprLogic.MinOwnPresses - 1, -1));
+            Assert.That(few.Rows.Select(x => x.Id), Is.EqualTo(new[] { "cprPoint", "cprBreath", "cprRhythm", "cprAed" }));
+            Assert.That(few.Rows.Single(x => x.Id == "cprRhythm").Label, Is.EqualTo("직접 누른 압박이 적었다"));
+            Assert.That(few.Rows.Select(x => x.Label), Has.None.Contains("혼자 계속 눌렀다"));
+            Assert.That(few.Result, Is.EqualTo("solo"), "the ladder result is unchanged");
+
+            var many = CprLogic.Evaluate(R(CprLogic.MinOwnPresses, -1));
+            Assert.That(many.Rows.Single(x => x.Id == "cprSwap").Label, Is.EqualTo("교대를 요청하지 않고 혼자 계속 눌렀다"));
+
+            var fewSwapped = CprLogic.Evaluate(R(5, 3));
+            Assert.That(fewSwapped.Rows.Single(x => x.Id == "cprSwap").Label, Does.Contain("바로 교대"), "an early swap is still told");
+
+            // the run in the screenshot: nobody pressed, the volunteer took the AED steps
+            var idle = Ready();
+            TickTo(idle, Start + 260);
+            Assert.That(CprLogic.Evaluate(idle.Result()).Rows.Select(x => x.Id), Has.None.EqualTo("cprSwap"));
+
+            // the debrief text says the same: few presses, and not also "혼자 계속 눌렀다면" or "교대를 요청하지 않았습니다"
+            Assert.That(CprLogic.FewAlone(R(CprLogic.MinOwnPresses - 1, -1)), Is.True);
+            Assert.That(CprLogic.FewAlone(R(CprLogic.MinOwnPresses, -1)), Is.False);
+            Assert.That(CprLogic.FewAlone(R(5, 3)), Is.False, "a swap was asked for");
+            var fewLines = CprLogic.DebriefLines(R(CprLogic.MinOwnPresses - 1, -1));
+            Assert.That(fewLines, Has.Member("직접 누른 압박이 적었습니다."));
+            Assert.That(fewLines, Has.None.Contains("혼자 계속 눌렀다면"));
+            Assert.That(fewLines, Has.None.Contains("교대를 요청하지 않았습니다"));
+            var manyLines = CprLogic.DebriefLines(R(CprLogic.MinOwnPresses, -1));
+            Assert.That(manyLines, Has.Some.Contains("혼자 계속 눌렀다면"), "pressed enough: the lesson the run did not show is still told");
+            Assert.That(manyLines, Has.Some.StartsWith("교대를 요청하지 않았습니다"));
+            Assert.That(CprLogic.DebriefLines(idle.Result()), Has.None.Contains("교대를 요청하지 않았습니다"), "the idle run's text");
+        }
+
+        // ------------------------------------------------------------------ review 11-26: the demo fatigue clock
+
+        [Test]
+        public void Demo_AFirmPresserAlone_GetsShallowBeforeTheSoonerAed_WhileTheGaugeStaysHigh()
+        {
+            Assert.That(CprLogic.DemoSoloShallowAt, Is.LessThan(CprLogic.DemoAedAt - 5), "the lesson fits before the demo AED");
+            Assert.That(CprLogic.SoloShallowAtFor(true), Is.EqualTo(CprLogic.DemoSoloShallowAt));
+            Assert.That(CprLogic.SoloShallowAtFor(false), Is.EqualTo(CprLogic.SoloShallowAt));
+            var L = Ready(demo: true);
+            Play(L, 0, CprLogic.DemoAedAt - 0.5, hold: 0.33);
+            var r = L.Result();
+            Assert.That(r.Demo, Is.True);
+            Assert.That(r.ShallowAt, Is.GreaterThanOrEqualTo(0), "the demo shows the presses getting shallow");
+            Assert.That(r.ShallowAt, Is.InRange(CprLogic.DemoSoloShallowAt - 5, CprLogic.DemoAedAt - 3));
+            Assert.That(r.GaugeAtShallow, Is.GreaterThan(0.85), "while the gauge still looks fine (the felt fatigue is unchanged)");
+            Assert.That(L.FeltFatigue, Is.EqualTo(0));
+            Assert.That(CprLogic.DebriefLines(r)[0], Does.Contain("실제로는 얕아지고 있었습니다"), "the line the feedback calls the strongest moment");
+
+            // the same presses in the story: still full depth at that time
+            var story = Ready();
+            Play(story, 0, CprLogic.DemoAedAt - 0.5, hold: 0.33);
+            Assert.That(story.Result().ShallowAt, Is.EqualTo(-1), "the story keeps its fatigue clock");
+            Assert.That(story.Result().Demo, Is.False);
+            Assert.That(CprLogic.FatigueStart, Is.EqualTo(60), "the story's numbers are unchanged");
+            Assert.That(CprLogic.FatigueRamp, Is.EqualTo(60));
+            Assert.That(CprLogic.FatigueOf(30), Is.EqualTo(0));
+            Assert.That(CprLogic.FatigueOf(30, true), Is.GreaterThan(0.5));
+        }
+
+        [Test]
+        public void Demo_ThePlansSwapAfter21Seconds_IsStillBeforeTiring_AndTheDebriefTellsTheDemoTime()
+        {
+            var L = Ready(stage: "guided", demo: true);
+            Play(L, 0, 21.5, hold: 0.2);
+            double t = L.BeatTime(BeatAt(L, 21.5)) + 0.1;
+            TickTo(L, t);
+            Assert.That(L.RequestSwap(t, true), Is.EqualTo("swap"));
+            TickTo(L, L.BeatTime(0) + CprLogic.DemoAedAt + 0.2);
+            TakeTheAedSteps(L);
+            double shock = L.CompressTime(L.Now);
+            Play(L, BeatAt(L, shock + 0.5), shock + 3, hold: 0.2); // back on the chest at once
+            Assert.That(L.SkipToHandover(L.Now + 0.1), Is.True);
+            var r = L.Result();
+            var ev = CprLogic.Evaluate(r);
+            Assert.That(ev.Rows.Select(x => x.Ok), Has.All.True, string.Join(" / ", ev.Rows.Select(x => x.Label)));
+            // the swap comes after the presses got shallow: the graph and the first line show the hidden fatigue on this route too
+            Assert.That(r.ShallowAt, Is.InRange(0, 21.5));
+            Assert.That(CprLogic.DebriefLines(r)[0], Does.Contain("실제로는 얕아지고 있었습니다"));
+            Assert.That(CprLogic.DebriefLines(r).Last(), Is.EqualTo(CprText.DemoDebriefNote), "the debrief says the times were shortened");
+
+            // a demo run without a shallow stretch says the demo's "alone" time, the story its own
+            var kept = new CprResult { Played = true, Compressions = 60, FirstSwapAt = 21, Swaps = 1, Demo = true };
+            Assert.That(CprLogic.DebriefLines(kept), Has.Some.Contains(CprLogic.Clock(CprLogic.DemoSoloShallowAt) + "쯤부터"));
+            kept.Demo = false;
+            Assert.That(CprLogic.DebriefLines(kept), Has.Some.Contains(CprLogic.Clock(CprLogic.SoloShallowAt) + "쯤부터"));
+            Assert.That(CprLogic.DebriefLines(kept), Has.No.Member(CprText.DemoDebriefNote), "the story's debrief has no demo line");
+            // the flag goes into a prepared run's event only, and comes back
+            Assert.That(CprResult.Read(r.ToJson()).Demo, Is.True);
+            Assert.That(new CprResult { Played = true }.ToJson().ContainsKey("demo"), Is.False, "the story's event is as before");
+            Assert.That(CprText.DemoAedNote, Does.Contain("지치는 시간"), "the page says the fatigue is shortened too");
         }
     }
 }

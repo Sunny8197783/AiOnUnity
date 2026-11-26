@@ -462,6 +462,8 @@ namespace AiOn.Tests
                     var got = (JObject)GoldenRuns.Js(rec);
                     got.Remove("fate");
                     got["fateId"] = rec.Fate.Id;
+                    // port change: the share text ends with the Unity build's release page (ChallengesTests.PortUrl)
+                    if (exp["share"]?.Type == JTokenType.String) { exp = (JObject)exp.DeepClone(); exp["share"] = ChallengesTests.PortUrl((string)exp["share"]); }
                     GoldenRuns.AssertGolden(got, exp, $"{name}: record");
                     records++;
                 }

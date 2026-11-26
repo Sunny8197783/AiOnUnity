@@ -34,6 +34,29 @@ namespace AiOn.Story
         public static Func<StoryContext, Task> TracesPart = MountainScene.Traces;
         public static Func<StoryContext, Task> MountainPart = MountainScene.Run;
 
+        /// <summary>
+        /// The scene-select "소화기" start's fire clock (ExtResume; the key exists only in the prepared save, so only in a
+        /// demo run): about a minute of free roam before the small fire reaches the box pile. That start drops 정민 in the
+        /// corridor at 302 with no look step, the extinguisher by the stairs and the fire about 20 m on, so the story's own
+        /// 28 s (45 s after 어르신's knock) ran out before a first-time player had it in hand. The story keeps its timing.
+        /// </summary>
+        public const double ExtStartGrowAt = 60;
+
+        /// <summary>Seconds of free roam before the corridor fire grows by itself.</summary>
+        public static double FireGrowAt(bool knocked, bool extStart) => extStart ? ExtStartGrowAt : knocked ? 45 : 28;
+
+        /// <summary>The scene-select "소화기" start's first objective line: where the extinguisher is (the point's label is "소화기·소화전").</summary>
+        public const string ExtStartObjective = "계단 옆 '소화기·소화전' 앞에서 E를 눌러 소화기를 듭니다. 작은 불이면 소화기로 끄고, 커졌다면 알리고 대피합니다.";
+
+        /// <summary>
+        /// The corridor fire's objective line. The "소화기" start points at the extinguisher while the fire is still small;
+        /// once it has grown, the same judgement as the story (작은 불이면 소화기로, 커졌다면 알리고 대피).
+        /// </summary>
+        public static string FireObjective(bool looked, bool extStart, string size) =>
+            extStart && size == "small" ? ExtStartObjective
+            : looked ? "몸을 낮추고 계단으로. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다. 엘리베이터는 쓰지 않습니다."
+            : "판단하세요. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다.";
+
         static int Count(GameState g, string id) => g.Items.TryGetValue(id, out var e) && e != null ? e.Home + e.Bag : 0;
         static string WaterId(GameState g) => new[] { "water_500", "water_2l" }.FirstOrDefault(id => Count(g, id) > 0);
         static ItemEntry Entry(GameState g, string id)
@@ -447,13 +470,16 @@ namespace AiOn.Story
             bool fighting = false;
             double t = 0;
             bool shouted = knocked;
-            double growAt = knocked ? 45 : 28;
+            double growAt = FireGrowAt(knocked, inCorridor);
             void Grow()
             {
                 if (size == "small" && resolved == null)
                 {
                     size = "large"; ctx.SetLevelState("apartment", "hallFire", "large"); ctx.SetLevelState("apartment", "smoke", 0.7); FireSound(ctx, 0.9);
                     ctx.Toast("불이 상자 더미로 번졌다. 천장까지 닿을 것 같다.", "site");
+                    // the "소화기" start's line pointed at the extinguisher: now the fire is large, the judgement instead
+                    // (not while the 3D extinguisher has the objective panel; Fight puts the line back afterwards)
+                    if (inCorridor && !fighting) ctx.Objective("복도의 불", FireObjective(false, true, size), Array.Empty<ObjectiveStep>());
                 }
             }
             // Competition upgrade: look first (handle, gap, sound, broadcast), say where it is, then leave / stay / partition.
@@ -476,7 +502,7 @@ namespace AiOn.Story
             }
             // Chose to leave: the stairs (or simply walking down them) start the smoke escape; the extinguisher stays on the way.
             bool leaving = looked && lookAct == "leave";
-            void ShowObjective() => ctx.Objective("복도의 불", looked ? "몸을 낮추고 계단으로. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다. 엘리베이터는 쓰지 않습니다." : "판단하세요. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다.", Array.Empty<ObjectiveStep>());
+            void ShowObjective() => ctx.Objective("복도의 불", FireObjective(looked, inCorridor, size), Array.Empty<ObjectiveStep>());
             ShowObjective();
 
             // Leaving is a short walk down through the smoke (Escape), then 박 소장 in the lobby.

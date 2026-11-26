@@ -307,6 +307,59 @@ namespace AiOn.Tests
             Assert.That(host.Toasts, Has.Member("불이 상자 더미로 번졌다. 천장까지 닿을 것 같다."));
             Assert.That(host.Talks.First(t => t.Speaker == "복도").Role, Is.EqualTo("천장까지 닿는 불길"));
             Assert.That((string)host.G.Events.Single(e => e.Type == "fire_retreat").Details["size"], Is.EqualTo("large"));
+            Assert.That(host.Objectives.Where(o => o.title == "복도의 불").Select(o => o.body), Is.All.EqualTo("판단하세요. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다."), "the story's line, not the 소화기 start's");
+        }
+
+        [Test]
+        public void TheExtinguisherStart_GivesAboutAMinute_AndPointsAtTheExtinguisherFirst()
+        {
+            Assert.That(Endure.FireGrowAt(knocked: false, extStart: false), Is.EqualTo(28), "the story keeps its clock");
+            Assert.That(Endure.FireGrowAt(knocked: true, extStart: false), Is.EqualTo(45));
+            Assert.That(Endure.FireGrowAt(knocked: false, extStart: true), Is.EqualTo(Endure.ExtStartGrowAt));
+            Assert.That(Endure.FireGrowAt(knocked: true, extStart: true), Is.EqualTo(Endure.ExtStartGrowAt));
+            Assert.That(Endure.ExtStartGrowAt, Is.GreaterThanOrEqualTo(55).And.LessThanOrEqualTo(65), "about a minute");
+
+            var host = new FakeStoryHost { Strict = true };
+            var ctx = host.CreateContext(TestSupport.Rules);
+            host.G.Chapter = "endure";
+            ctx.Resume = Endure.ExtResume;
+            string at45 = null;
+            host.Queue(h => { h.RunFrames(30 * 45); at45 = h.Level("apartment").State["hallFire"].ToString(); }, () => ctx.Roaming && host.ControlsEnabled, "wait 45 s");
+            host.Queue(h => h.RunFrames(30 * 16), () => ctx.Roaming && host.ControlsEnabled, "wait past a minute");
+            host.Queue(h => h.Press("hallFire"), () => ctx.Roaming && host.ControlsEnabled, "look at the fire");
+            host.Answer("retreat");
+            host.Queue(h => { h.MoveTo(5, 0.9, 0); h.RunFrame(); }, () => ctx.Roaming && host.ControlsEnabled && host.Objectives.Last().title == "연기 속에서 1층까지", "down");
+            host.Answer("ok", "later");
+            host.AnswerOpen("chapterCard", new JObject());
+            host.Run(() => Endure.Run(ctx));
+
+            Assert.That(at45, Is.EqualTo("small"), "45 s in, still small (the story's 28 s would have grown it)");
+            var lines = host.Objectives.Where(o => o.title == "복도의 불").Select(o => o.body).ToList();
+            Assert.That(lines.First(), Is.EqualTo(Endure.ExtStartObjective), "the first line points at the extinguisher");
+            Assert.That(lines.First(), Does.Contain("'" + host.Level("apartment").Point("extinguisher").Label + "' 앞에서 E"), "named as the E prompt names it");
+            // after the longer wait the story's fire still grows, and retreating and telling stays the judgement
+            Assert.That(host.Toasts, Has.Member("불이 상자 더미로 번졌다. 천장까지 닿을 것 같다."));
+            Assert.That(lines.Last(), Is.EqualTo("판단하세요. 작은 불이면 소화기로, 커졌다면 알리고 대피합니다."), "grown: no longer sent to the extinguisher");
+            Assert.That(host.Talks.First(t => t.Speaker == "복도").Role, Is.EqualTo("천장까지 닿는 불길"));
+            Assert.That((string)host.G.Events.Single(e => e.Type == "fire_retreat").Details["size"], Is.EqualTo("large"));
+        }
+
+        [Test]
+        public void ExtStartObjective_HasAPlainKoreanLine_ThatKeepsTheWhereAndTheJudgement()
+        {
+            Assert.That(AiOn.Game.EasyKorean.Map.ContainsKey(Endure.ExtStartObjective), Is.True, "쉬운 한국어 covers the 소화기 start's first line");
+            var plain = AiOn.Game.EasyKorean.Map[Endure.ExtStartObjective];
+            Assert.That(plain, Does.Contain("'소화기·소화전' 앞에서 E"), "the point is named as its E prompt names it");
+            Assert.That(plain, Does.Contain("작은 불이면 소화기로").And.Contain("알리고 대피"));
+            bool was = AiOn.Game.EasyKorean.On;
+            try
+            {
+                AiOn.Game.EasyKorean.On = true;
+                Assert.That(AiOn.Game.EasyKorean.Of(Endure.ExtStartObjective), Is.EqualTo(plain));
+                AiOn.Game.EasyKorean.On = false;
+                Assert.That(AiOn.Game.EasyKorean.Of(Endure.ExtStartObjective), Is.EqualTo(Endure.ExtStartObjective), "off: the line as written");
+            }
+            finally { AiOn.Game.EasyKorean.On = was; }
         }
 
         [Test]

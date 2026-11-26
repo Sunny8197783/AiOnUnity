@@ -64,14 +64,15 @@ namespace AiOn.Story
             Director.ApplySettings();
 
             try { await Director.Boot(); }
-            catch (Exception e) { Debug.LogException(e); }
+            catch (Exception e) { if (!Director.Stale) Debug.LogException(e); } // after a title return: the old scene's teardown, not an error
         }
     }
 
-    /// <summary>The original's localStorage as a JSON file (save, gallery, records, settings).</summary>
+    /// <summary>The original's localStorage as a JSON file (save, gallery, records, settings). A player's file from the
+    /// folder before the competition build is copied over once at startup (SaveFolderMigration).</summary>
     public sealed class FileStoryStore : IStoryStore
     {
-        readonly string _path = Path.Combine(Application.persistentDataPath, "aion-store.json");
+        readonly string _path = Path.Combine(Application.persistentDataPath, SaveFolderMigration.StoreFile);
         Dictionary<string, string> _data;
 
         Dictionary<string, string> Data

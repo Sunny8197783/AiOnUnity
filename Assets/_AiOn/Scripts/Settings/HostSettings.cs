@@ -13,7 +13,8 @@ namespace AiOn.Settings
     /// <summary>
     /// The settings the host owns (app.js applySettings): master volume and mute (AudioListener), the sound buses, the
     /// mouse sensitivity, the graphics tier (URP asset, camera anti-aliasing, flashlight shadows, crowd rows) with the
-    /// frame-rate governor, the text scale, reduced motion on the camera, and the experience profile's body (run, jump,
+    /// frame-rate governor, the text scale, the screen brightness (화면 밝기: stops over every look, AtmosphereDirector),
+    /// reduced motion on the camera, and the experience profile's body (run, jump,
     /// eye height, stairs) and senses (청각 장애: no sound; 저시력: a blurred, dimmer, greyer world and spoken prompts).
     /// Lives on the story host (Boot scene, persistent).
     /// </summary>
@@ -96,6 +97,7 @@ namespace AiOn.Settings
             if (hands && body != null) { if (!body.Hands) hands.Drop(); hands.OtherBody = !body.Hands; }
             if (_host && _host.cameraRig) _host.cameraRig.reduceMotion = Truthy(s["reduceMotion"]);
             AiOn.Rendering.AtmosphereDirector.ReduceMotion = Truthy(s["reduceMotion"]);
+            AiOn.Rendering.AtmosphereDirector.Brightness = SettingsMath.Brightness(Num(s["brightness"], 0)); // 화면 밝기
             TextScaler.Apply((float)Num(s["textScale"], 1));
 
             var tier = QualityTiers.Norm(Str(s["quality"]), null) ?? Tier ?? DetectTier();

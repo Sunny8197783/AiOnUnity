@@ -35,6 +35,8 @@ namespace AiOn.Story
         public static readonly (double X, double Y, double Z, double Yaw) Door = (15.0, Cutscenes.F3, -0.95, Math.PI / 2);
         /// <summary>Her candle, just inside 304's door (the glow the cine fill light draws until she puts it out).</summary>
         static readonly (double X, double Y, double Z) CandleAt = (15.9, Cutscenes.F3 + 1.0, -0.45);
+        /// <summary>Seconds of the fade to black before the point-of-view card (the shelter goes, her side comes).</summary>
+        public const double PovFade = 0.45;
 
         /// <summary>Guided descent (wheelchair profile): the 3F stair top, then the landings 1..4 (ElderPovLogic.LandingAt).</summary>
         public static readonly (double X, double Y, double Z, double Yaw)[] Steps =
@@ -139,6 +141,7 @@ namespace AiOn.Story
                 g.Day = day0; g.Minute = minute0;
                 ctx.Hud.SetCinematic(false);
                 untimed?.Invoke();
+                await walk.Unblack(0.35); // left before the apartment (a fail, the title): no black screen left behind
             }
             await ctx.Goto("shelter", "spot");
             ctx.Refresh(); // 정민's clock, bag and phone again
@@ -159,6 +162,10 @@ namespace AiOn.Story
                 "· 달리지 않고 천천히 걷습니다", "· 층계참마다 숨을 고릅니다",
             };
             if (r.Guided) body.Add("· 휠체어 체험 모드에서는 계단을 반 층씩 골라 내려갑니다");
+            // The card says 20:05 at her door: it comes over black, not over the shelter (and 정민's later clock) behind it.
+            // The black lifts with the apartment's own fade in (Goto below).
+            walk.Black = true;
+            await ctx.Engine.FadeTo(1, PovFade);
             await Card(ctx, new CardOptions
             {
                 Kind = "info", Title = "시점 전환 · 304호 어르신", Meta = "20:05 · 103동 304호 앞", Body = body,
@@ -172,6 +179,7 @@ namespace AiOn.Story
             ctx.Calm = true;
             ctx.SetLevelState("apartment", "elder304", "off"); // she is the player now
             await ctx.Goto("apartment", "corridor3F");
+            await walk.Unblack(0); // the level's fade has lifted it already; a host whose Enter does not fade gets the picture back here
             ctx.Engine.TeleportTo(Door.X, Door.Y, Door.Z, Door.Yaw);
             ctx.SetPlayer?.Invoke("elder");
             ctx.WalkOnly?.Invoke(true); // her own slow steps: no running, no jumping
@@ -362,6 +370,16 @@ namespace AiOn.Story
             public bool Light { get; private set; }
             /// <summary>The camera view before her part (put back after it when the director does not say).</summary>
             public string View0;
+            /// <summary>The screen went black for the point-of-view card and has not been given back yet.</summary>
+            public bool Black;
+
+            /// <summary>Gives the picture back (over seconds) if the point-of-view card's black is still up.</summary>
+            public async Task Unblack(double seconds)
+            {
+                if (!Black) return;
+                Black = false;
+                await _ctx.Engine.FadeTo(0, seconds);
+            }
             bool _candle = true;
             double _fillX = double.NaN, _fillY, _fillZ;
             public int Rests => _rested.Count(n => n >= 1 && n <= ElderPovLogic.Landings);

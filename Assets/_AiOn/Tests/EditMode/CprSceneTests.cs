@@ -58,6 +58,20 @@ namespace AiOn.Tests
         }
 
         [Test]
+        public void APreparedRun_TellsTheScreenItIsADemo_TheStoryNever()
+        {
+            var (_, ctx) = Rig();
+            Assert.That((bool)CprScene.Options(ctx, "guided")["demo"], Is.False, "the story keeps the AED at 100 s");
+            ctx.Resume = "alert"; // the story's own checkpoint, which the 공습경보 shortcut also starts from
+            Assert.That((bool)CprScene.Options(ctx, "guided")["demo"], Is.False, "the key alone is not a prepared run");
+            ctx.DemoRun = true; // StoryDirector.PlayPrepared: 장면 바로가기 or a 교사용 모드 step, whichever moment
+            Assert.That((bool)CprScene.Options(ctx, "guided")["demo"], Is.True, "the short AED and the skip");
+            ctx.Resume = DDay.CprResume;
+            Assert.That((bool)CprScene.Options(ctx, "guided")["demo"], Is.True);
+            Assert.That(new CprLogic(demo: true).AedTime, Is.EqualTo(CprLogic.DemoAedAt));
+        }
+
+        [Test]
         public void ARelayRun_IsRemembered_AsTheEvent_TheEncounter_AndTwoTownDeeds()
         {
             var (host, ctx) = Rig();

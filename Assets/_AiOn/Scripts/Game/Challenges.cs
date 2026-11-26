@@ -96,7 +96,10 @@ namespace AiOn.Game
     /// </summary>
     public static class Challenges
     {
-        public const string PublicUrl = "https://sunny8197783.github.io/AiOn/";
+        /// <summary>The link at the end of the share text. Port change (competition build): the release page of this
+        /// Unity version, where the build is published, instead of the original's web game, which still has the old
+        /// scuffle scene (the goldens keep the original's link; the tests swap it).</summary>
+        public const string PublicUrl = "https://github.com/Sunny8197783/AiOnUnity/releases";
         public static readonly string[] Timed = { "prologue", "prep", "dday", "endure", "crossroads", "evac" };
         const int Top = 5;
 

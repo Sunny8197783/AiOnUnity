@@ -51,6 +51,10 @@ namespace AiOn.Game
         public const string TakeBackButton = "다시 이어 누르기 (E)";
         /// <summary>장면 바로가기 only, after the shock: straight to the paramedics and the debrief.</summary>
         public const string SkipButton = "구급대 도착까지 건너뛰기 (장면 바로가기)";
+        /// <summary>Prepared runs only (CprLogic.Demo): the AED and the fatigue come sooner than in the story, and the page says so.</summary>
+        public const string DemoAedNote = "시연용: AED 도착과 지치는 시간을 줄였습니다.";
+        /// <summary>The debrief's last line in a prepared run: the times it shows are the shortened ones, not the fact's.</summary>
+        public const string DemoDebriefNote = "이 판은 시연용으로 AED 도착과 지치는 시간을 줄였습니다.";
         public const string DebriefTitle = "돌아보기 · 압박의 질";
         public const string ChartTrue = "실제 압박의 질";
         public const string ChartGauge = "그때 게이지가 보여 준 것";
@@ -107,6 +111,37 @@ namespace AiOn.Game
             foreach (var c in BreathChoices) yield return c.label;
             yield return CollapseLine; yield return CheckBody; yield return CallBody; yield return BreathBody; yield return CompressBody; yield return HandoverBody;
             yield return ControlsLine; yield return OneButtonLine; yield return HintSwap; yield return HintPress; yield return PracticeNote;
+            yield return DemoAedNote; yield return DemoDebriefNote;
+        }
+
+        /// <summary>
+        /// The fact (facts-ext id) behind a step's feedback, shown with it once the player has picked; null for none. A fact
+        /// box beside the choices before the pick read as the right choice, so a step's answer comes only after it.
+        /// </summary>
+        public static string FactFor(string feedbackId) => feedbackId switch
+        {
+            "checked" or "check_wrong" => "cpr_check",
+            "call_named" or "call_vague" or "call_self" => "cpr_point",
+            "breath_late" or "breath_timeout" => "cpr_breath",
+            "breath_ok" or "breath_wrong" => "cpr_gasp",
+            _ => null,
+        };
+
+        /// <summary>
+        /// A fact a step page shows before the pick: only how to do the step (the breathing check's 10 seconds), never which
+        /// choice is right (cpr_gasp answers the breathing check; cpr_check and cpr_point answer theirs). Null for none.
+        /// </summary>
+        public static string BeforeFact(CprPhase p) => p == CprPhase.Breath ? "cpr_breath" : null;
+
+        /// <summary>The facts on a step page, top to bottom: the one behind the feedback shown (if any), then the step's own.</summary>
+        public static List<string> StepFacts(CprPhase p, string feedbackId)
+        {
+            var ids = new List<string>();
+            var told = FactFor(feedbackId);
+            if (told != null) ids.Add(told);
+            var own = BeforeFact(p);
+            if (own != null && !ids.Contains(own)) ids.Add(own);
+            return ids;
         }
 
         /// <summary>The page title for a phase.</summary>

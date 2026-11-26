@@ -913,6 +913,179 @@ namespace AiOn.Tests
             CollectionAssert.AreEqual(new[] { "화면이 자주 멈춰서 그래픽을 '낮음'(으)로 낮췄어요. 설정에서 다시 바꿀 수 있어요." }, r.Host.Toasts);
         }
 
+        // ------------------------------------------------------------------ title return (TitleReturn.Generation) and F10
+
+        /// <summary>A prepared save at a chapter's start (index, G with its checkpoint, no snapshot), as SceneSelect.Prepare reads it.</summary>
+        static string PreparedAt(string chapter)
+        {
+            var g = TestSupport.Rules.CreateGame(5);
+            SaveCodec.MakeCheckpoint(g, chapter);
+            return new JObject { ["index"] = Array.IndexOf(Ids, chapter), ["G"] = JObject.Parse(SaveCodec.Save(g)), ["snap"] = JValue.CreateNull() }.ToString(Newtonsoft.Json.Formatting.None);
+        }
+
+        [Test]
+        public void ATitleReturnWhileTheLandingIsUp_StartsNoRunOnTheOldScene()
+        {
+            var r = new Rig();
+            // the landing torn down by the return answers as it goes (UiScreen.OnDestroy); "new" would start a run on a dead HUD
+            r.Host.OpenPolicy = (screen, o) =>
+            {
+                if (screen != "landing") return new JObject();
+                AiOn.Settings.TitleReturn.Advance();
+                return "new";
+            };
+            Assert.IsFalse(r.D.Stale);
+            var result = r.Host.Run(() => r.D.TitleOnce());
+            Assert.IsTrue(r.D.Stale);
+            Assert.AreEqual(StoryDirector.StaleResult, result);
+            Assert.IsEmpty(r.Played);
+            Assert.IsNull(r.D.G, "no new game");
+            Assert.IsFalse(r.Host.Cards.Any(c => c.Title == "체험 모드"), "no intro card");
+            Assert.IsNull(r.Host.Clock, "nothing written to the HUD (ResetRun's clock was the MissingReferenceException)");
+        }
+
+        [Test]
+        public void ATitleReturnMidChapter_EndsTheBootLoop_WithoutTouchingTheOldHud()
+        {
+            var r = new Rig();
+            var talk = new TaskCompletionSource<JToken>();
+            bool waiting = false;
+            r.Body["prologue"] = async (c, n) => { waiting = true; return await talk.Task; };
+            r.Host.AnswerOpen("landing", "new"); // the first pass; a second one would come to the policy
+            r.Host.OpenPolicy = (screen, o) => screen == "landing"
+                ? throw new AssertionException("a second title pass on the old scene")
+                : new JObject();
+            // 메인 메뉴로: the count goes up, then the torn-down talk lets its await go
+            r.Host.Queue(h => { AiOn.Settings.TitleReturn.Advance(); talk.SetResult(null); }, () => waiting, "title return");
+            r.Host.Run(() => r.D.Boot());
+            CollectionAssert.AreEqual(new[] { "prologue#1" }, r.Played, "no next chapter, no second run");
+            Assert.AreEqual(1, r.Host.Opens.Count(o => o.screen == "landing"));
+            Assert.IsTrue(r.Host.HudShown, "Hud.Hide is not called on the destroyed overlay");
+            Assert.IsNull(r.D.G);
+        }
+
+        [Test]
+        public void ATitleReturnMidChapter_OpensNoFailCard()
+        {
+            var r = new Rig();
+            var talk = new TaskCompletionSource<JToken>();
+            bool waiting = false;
+            r.Body["prologue"] = async (c, n) =>
+            {
+                waiting = true;
+                await talk.Task;
+                c.Fail("late"); // what the old run does next: a fail card on the destroyed overlay
+                return null;
+            };
+            r.Host.Queue(h => { AiOn.Settings.TitleReturn.Advance(); talk.SetResult(null); }, () => waiting, "title return");
+            Assert.AreEqual(StoryDirector.StaleResult, r.Title(("landing", "new")));
+            Assert.IsFalse(r.Host.Opens.Any(o => o.screen == "failCard"));
+            CollectionAssert.AreEqual(new[] { "prologue#1" }, r.Played, "no retry");
+            Assert.IsTrue(r.Host.HudShown);
+        }
+
+        [Test]
+        public void F10_InAPreparedRun_GoesToTheTitleDuringATalk_AndTheOldRunStops()
+        {
+            var r = new Rig();
+            var menu = 0;
+            r.D.MenuRequested = () => { menu++; AiOn.Settings.TitleReturn.Advance(); }; // TitleReturn.ToTitle, without the scene load
+            r.D.PreparedSave = id => id == "decision" ? PreparedAt("crossroads") : null;
+            var talk = new TaskCompletionSource<JToken>();
+            bool waiting = false, hint = false;
+            string slot = null;
+            r.Body["crossroads"] = async (c, n) =>
+            {
+                c.Engine.SetControls(false); // a talk (or a card, a choice, a cutscene) holds the controls
+                waiting = true;
+                await talk.Task;
+                c.Toast("after the talk"); // the old run would go on here
+                return null;
+            };
+            r.Host.Queue(h =>
+            {
+                hint = AiOn.UI.DemoKeyHint.On;
+                slot = r.Store.Get(SceneSelect.SaveKey);
+                h.PressKey(StoryDirector.DemoTitleKey);
+            }, () => waiting, "F10");
+            r.Host.Queue(h => talk.SetResult(null), () => menu > 0, "the torn-down talk lets go");
+            try
+            {
+                var result = r.Host.Run(() => r.D.StartMoment(SceneSelect.Get("decision")));
+                Assert.AreEqual(1, menu, "the same way out as 메인 메뉴로");
+                Assert.AreEqual(StoryDirector.StaleResult, result);
+                Assert.IsTrue(hint, "the key strip shows F10 during the prepared run");
+                Assert.That(slot, Is.Not.Null.And.Not.Empty, "the prepared run had its slot");
+                Assert.AreEqual("", r.Store.Get(SceneSelect.SaveKey), "the demo slot is wiped on the way out");
+                CollectionAssert.AreEqual(new[] { "crossroads#1" }, r.Played, "no next chapter");
+                Assert.IsFalse(r.Host.Opens.Any(o => o.screen == "failCard"));
+                Assert.IsTrue(r.Host.HudShown, "Hud.Hide is not called on the destroyed overlay");
+                Assert.IsFalse(r.D.DemoRun);
+                Assert.IsNull(r.Store.Get(StoryDirector.SaveKey), "the player's own save is untouched");
+            }
+            finally { AiOn.UI.DemoKeyHint.On = false; } // TitleReturn.ToTitle clears it in the game
+        }
+
+        [Test]
+        public void F10_InAClass_AsksForASecondPress_WithinTwoSeconds()
+        {
+            var r = new Rig();
+            var menu = 0;
+            r.D.MenuRequested = () => menu++;
+            double now = 1000;
+            r.D.NowMs = () => now;
+            r.D.Ctx.TeacherRun = true; // StartTeacher, between or during the steps
+            try
+            {
+                Assert.IsFalse(r.D.DemoToTitle(), "one stray F10 does not end the class");
+                Assert.AreEqual(0, menu);
+                Assert.That(r.Host.Toasts.Last(), Is.EqualTo(StoryDirector.DemoTitleAgainText));
+                now += StoryDirector.DemoTitleConfirmMs + 500;
+                Assert.IsFalse(r.D.DemoToTitle(), "too late: it asks again");
+                Assert.AreEqual(0, menu);
+                now += 800;
+                Assert.IsTrue(r.D.DemoToTitle(), "the second press within the time goes");
+                Assert.AreEqual(1, menu);
+            }
+            finally { r.D.Ctx.TeacherRun = false; }
+            Assert.That(StoryDirector.DemoTitleAgainText, Does.Contain("F10").And.Contain("처음 화면"));
+        }
+
+        [Test]
+        public void F10_InThePlayersOwnStory_AndAtTheTitle_DoesNothing()
+        {
+            var menu = 0;
+            var rig = Roaming(async r =>
+            {
+                r.D.MenuRequested = () => menu++;
+                r.Host.PressKey(StoryDirector.DemoTitleKey); await r.Host.Settle();
+                Assert.IsFalse(r.D.DemoToTitle());
+            });
+            Assert.AreEqual(0, menu, "the main story keeps Esc → 메인 메뉴로 only");
+            Assert.IsFalse(rig.D.Stale);
+            Assert.IsFalse(AiOn.UI.DemoKeyHint.On);
+
+            var title = new Rig();
+            title.D.MenuRequested = () => menu++;
+            title.Host.PressKey(StoryDirector.DemoTitleKey);
+            Assert.AreEqual(0, menu);
+        }
+
+        [Test]
+        public void APreparedRunThatEnds_ClearsTheF10Hint()
+        {
+            var r = new Rig();
+            r.D.PreparedSave = id => id == "decision" ? PreparedAt("crossroads") : null;
+            bool during = false;
+            r.Body["crossroads"] = (c, n) => { during = AiOn.UI.DemoKeyHint.On; return Task.FromResult<JToken>(null); };
+            r.Body["ending"] = (c, n) => Task.FromResult<JToken>(new JValue("menu"));
+            Assert.AreEqual("menu", r.Host.Run(() => r.D.StartMoment(SceneSelect.Get("decision"))));
+            Assert.IsTrue(during);
+            Assert.IsFalse(AiOn.UI.DemoKeyHint.On);
+            Assert.IsFalse(r.Host.HudShown, "a run that ends on its own hides the HUD as before");
+            Assert.AreEqual("", r.Store.Get(SceneSelect.SaveKey));
+        }
+
         [Test]
         public void AsChapterTakesTheResultOfAnyTask()
         {

@@ -246,6 +246,19 @@ namespace AiOn.Story
         /// <summary>The key the running game saves under.</summary>
         public string ActiveSaveKey => DemoRun ? SceneSelect.SaveKey : SaveKey;
 
+        /// <summary>The title-return count this director was made under (AiOn.Settings.TitleReturn.Generation).</summary>
+        readonly int _generation = AiOn.Settings.TitleReturn.Generation;
+
+        /// <summary>
+        /// The game went back to the title since this director was made: its scene (overlay, host, HUD) is torn down and a
+        /// new director runs in the new one. The title loop, the runs and the chapter runner stop at their next await
+        /// instead of driving what was destroyed (a landing or card resolved by its teardown, a talk still waiting).
+        /// </summary>
+        public bool Stale => AiOn.Settings.TitleReturn.Generation != _generation;
+
+        /// <summary>The key that leaves a prepared run for the title from anywhere (DemoToTitle).</summary>
+        public const string DemoTitleKey = "F10";
+
         double _frameMs;
         double _pausedMs;
         bool _flashOn;
@@ -391,7 +404,7 @@ namespace AiOn.Story
         async void Observe(Task t, string what)
         {
             try { await t; }
-            catch (Exception e) { Log?.Invoke("[app] " + what, e); }
+            catch (Exception e) { if (!Stale) Log?.Invoke("[app] " + what, e); } // after a title return: the old scene's teardown, not an error
         }
 
         // ------------------------------------------------------------------ settings and profiles
@@ -515,6 +528,8 @@ namespace AiOn.Story
         /// <summary>A UI key ('KeyF' or 'F', 'Tab', 'Escape'...). Menus open only during free roam.</summary>
         public async Task OnKey(string code)
         {
+            // F10 in a prepared run: before the roaming checks, so a talk, a choice, a card or a cutscene does not hold it
+            if (code == DemoTitleKey) { DemoToTitle(); return; }
             if (G == null || !Engine.ControlsEnabled || code == null) return;
             var k = code.StartsWith("Key", StringComparison.Ordinal) && code.Length == 4 ? code.Substring(3) : code;
             if (Ctx.HandsFull && (k == "V" || k == "B" || k == "X")) return; // the extinguisher in both hands, first person
@@ -683,6 +698,40 @@ namespace AiOn.Story
         }
 
         public const string DemoNoSaveText = "장면 바로가기와 교사용 모드에서는 저장되지 않습니다.";
+
+        /// <summary>교사용 모드: the second F10 must come this soon after the first (ms on NowMs).</summary>
+        public const double DemoTitleConfirmMs = 2000;
+        public const string DemoTitleAgainText = "F10을 한 번 더 누르면 처음 화면으로 돌아갑니다.";
+        double _demoTitleAt = double.NegativeInfinity;
+
+        /// <summary>
+        /// F10 (DemoTitleKey) in a prepared run (장면 바로가기, a 교사용 모드 class): back to the title at once, also during a
+        /// talk, a choice, a card or a cutscene (Esc opens the pause menu only while roaming). The pause menu's 메인 메뉴로
+        /// without its question: the demo slot is wiped and the host reloads the title. In a class (Ctx.TeacherRun) the first
+        /// press only says to press again (DemoTitleAgainText); a second within DemoTitleConfirmMs goes. The player's own story
+        /// ignores it. Returns whether it went.
+        /// </summary>
+        public bool DemoToTitle()
+        {
+            if (!(DemoRun || Ctx.TeacherRun) || Stale) return false;
+            if (Ctx.TeacherRun)
+            {
+                // a class: one stray F10 would drop the 사전 퀴즈, the steps and the export, so it asks for a second press
+                double now = NowMs();
+                bool again = now - _demoTitleAt <= DemoTitleConfirmMs;
+                _demoTitleAt = again ? double.NegativeInfinity : now;
+                if (!again)
+                {
+                    // over the card or screen the F10 came during (a toast would wait for it to close)
+                    if (_rawHud is AiOn.UI.StoryOverlay so) so.Notice(DemoTitleAgainText, (int)DemoTitleConfirmMs);
+                    else Hud.Toast(DemoTitleAgainText, "self", (int)DemoTitleConfirmMs);
+                    return false;
+                }
+            }
+            Store.Set(SceneSelect.SaveKey, "");
+            MenuRequested?.Invoke();
+            return true;
+        }
 
         /// <summary>The lounge; the best run is what "내 최고 기록 알리기" posts.</summary>
         public Task<JToken> OpenLounge()
@@ -1098,6 +1147,9 @@ namespace AiOn.Story
         /// <summary>What RunChapters returns when a teacher-mode moment reached its stop.</summary>
         public const string MomentResult = "moment";
 
+        /// <summary>What the runner, the runs and the title loop return once the director is Stale: back to the title (it already is).</summary>
+        public const string StaleResult = "menu";
+
         // ------------------------------------------------------------------ resets
 
         /// <summary>Per-scene state that must not leak into a retry or the next run.</summary>
@@ -1173,6 +1225,7 @@ namespace AiOn.Story
                     try
                     {
                         var r = await ch.Run(Ctx);
+                        if (Stale) return StaleResult; // no next chapter in a scene that is gone
                         if (Array.IndexOf(Challenges.Timed, ch.Id) >= 0)
                         {
                             var d = new JObject { ["id"] = ch.Id, ["ms"] = Num.JsRound(NowMs() - t0 - _pausedMs), ["retries"] = retries };
@@ -1185,10 +1238,14 @@ namespace AiOn.Story
                     catch (StoryFail err) { fail = err; }
                     catch (MomentDone)
                     {
+                        if (Stale) return StaleResult;
                         Engine.SetControls(false); Audio.Loop("siren", false); Audio.Loop("fire", false); Hud.SetCinematic(false);
                         return MomentResult;
                     }
+                    // the title was chosen meanwhile: the chapter's last await came back from (or threw at) a torn-down scene
+                    catch (Exception) when (Stale) { return StaleResult; }
 
+                    if (Stale) return StaleResult; // a fail card would open on the destroyed overlay
                     if (fail.Type == "dead" && !DemoRun) _echo?.Death(JsText(fail.Detail?["why"]));
                     Engine.SetControls(false); Audio.Loop("siren", false); Audio.Loop("fire", false); Hud.SetCinematic(false);
                     var card = Debrief.FailDebrief(Rules, G, fail.Type, fail.Detail, Facts.Text, Facts.SourceId);
@@ -1196,6 +1253,7 @@ namespace AiOn.Story
                     o.Remove("sourceIds");
                     o["sources"] = new JArray((card.SourceIds ?? new List<string>()).Select(Facts.Source).Where(s => s != null).Select(s => JObject.FromObject(s)));
                     var pick = Str(await Ui.Open("failCard", o));
+                    if (Stale) return StaleResult;
                     if (pick != "retry") { Engine.SetControls(true); return "menu"; }
                     retries++;
                     var key = G.Checkpoint.Key;
@@ -1214,9 +1272,11 @@ namespace AiOn.Story
         {
             try { if (_opening != null) await _opening(Ctx); }
             catch (StoryFail) { throw; }
-            catch (Exception err) { Log?.Invoke("[cine] opening failed", err); }
+            catch (Exception err) { if (!Stale) Log?.Invoke("[cine] opening failed", err); }
+            if (Stale) return;
             Engine.SetControls(false);
             await ProfileCard();
+            if (Stale) return;
             Ctx.After(1.5, () => Hud.Toast("조작법은 언제든 H 키로 볼 수 있습니다.", "self", 5000));
         }
 
@@ -1234,7 +1294,7 @@ namespace AiOn.Story
                     new("lowvision", "저시력"), new("deaf", "청각 장애"), new("guardian", "보호자 동반"),
                 }.Select(a => { a.Hint = AiOn.UI.SettingsForm.ProfileSub(a.Id); return a; }).ToList(),
             });
-            if (pick != null && Profiles.ContainsKey(pick))
+            if (pick != null && Profiles.ContainsKey(pick) && !Stale)
             {
                 Settings["profile"] = pick;
                 if (pick == "deaf") Settings["captions"] = true;
@@ -1254,7 +1314,8 @@ namespace AiOn.Story
         public async Task Boot()
         {
             await Preload();
-            for (;;) await TitleOnce();
+            // until a title return: the new scene's director takes over (this one's next pass would open on its torn-down UI)
+            while (!Stale) await TitleOnce();
         }
 
         /// <summary>
@@ -1275,16 +1336,24 @@ namespace AiOn.Story
             {
                 ["hasSave"] = saved["G"] is JObject, ["endings"] = seen.Count(e => e.Seen), ["challenges"] = rec.Done.Count,
             }));
+            // a landing torn down by a title return answers too (as if closed): no run starts on the old scene's HUD
+            if (Stale) return StaleResult;
             if (pick == "gallery") { await Ui.Open("gallery", new JObject { ["view"] = JArray.FromObject(seen) }); return pick; }
             if (pick == "records") { await Ui.Open("records", JObject.FromObject(rec)); return pick; }
             if (pick == "lounge") { await OpenLounge(); return pick; }
             if (pick == FamilyCard.Screen) { await Ui.Open(FamilyCard.Screen, new JObject()); return pick; } // 우리 집 안전 준비
             if (pick == Archive.Screen) { await OpenMore(); return pick; } // 더 알아보기 (기록관, 지도와 사람들, 훈련 달력, 우리 집 안전 준비)
-            if (pick == "settings") { UpdateSettings(await Ui.Open("settings", (JObject)Settings.DeepClone())); return pick; }
+            if (pick == "settings")
+            {
+                var values = await Ui.Open("settings", (JObject)Settings.DeepClone());
+                if (!Stale) UpdateSettings(values); // ApplySettings drives the host and the HUD
+                return pick;
+            }
             if (pick == "about") { await Ui.Open("about", new JObject { ["sources"] = JArray.FromObject(Facts.Sources) }); return pick; }
             if (pick == "scenes")
             {
                 var id = Str(await Ui.Open("sceneSelect", SceneSelect.ScreenOptions(HasPrepared)));
+                if (Stale) return StaleResult;
                 var m = SceneSelect.Get(id);
                 if (m == null || !m.Ready) return pick;
                 return await StartMoment(m);
@@ -1317,7 +1386,8 @@ namespace AiOn.Story
         {
             var p = Prepared(m);
             if (p == null) { await Ui.Card(new CardOptions { Kind = "notice", Title = "장면을 열 수 없습니다", Body = { "준비된 상태를 읽지 못했습니다." } }); return "menu"; }
-            DemoRun = true; _stopAt = stopAt;
+            DemoRun = true; Ctx.DemoRun = true; _stopAt = stopAt;
+            AiOn.UI.DemoKeyHint.On = true; // the key strip adds F10 처음 화면으로
             // every prepared save ships with the same seed: a moment's export gets its own anonymous id (a class keeps its own)
             if (!Ctx.TeacherRun) _exportSeed = NextExportSeed();
             _echo?.Hold(true);
@@ -1333,13 +1403,15 @@ namespace AiOn.Story
                 Hud.Show();
                 string result;
                 try { result = await RunChapters(p.Index, p.Resume, end); }
-                finally { Hud.Hide(); }
+                finally { if (!Stale) Hud.Hide(); } // after a title return the overlay is destroyed
                 return result;
             }
             finally
             {
-                Store.Set(SceneSelect.SaveKey, "");
-                DemoRun = false; _stopAt = null;
+                // after a title return the slot was wiped on the way out (메인 메뉴로, F10) and the next title wipes a leftover;
+                // a late write here could empty the new scene's own prepared run
+                if (!Stale) { Store.Set(SceneSelect.SaveKey, ""); AiOn.UI.DemoKeyHint.On = false; }
+                DemoRun = false; Ctx.DemoRun = false; _stopAt = null;
                 _echo?.Hold(false);
                 LastPrepared = G;
                 if (Ctx.TeacherRun && G != null) _classSteps.Add((m.Id, G)); else _exportSeed = null;
@@ -1364,6 +1436,7 @@ namespace AiOn.Story
                 Kind = "info", Title = SceneSelect.TeacherTitle, Meta = SceneSelect.TeacherMeta, Body = SceneSelect.TeacherIntro.ToList(),
                 Actions = new List<CardAction> { new("start", "시작하기", true), new("back", "돌아가기") },
             });
+            if (Stale) return StaleResult;
             if (go != "start") return "teacher";
             // the player's own experience mode, kept until the class is over (also across a menu reload or a closed app)
             Store.Set(SceneSelect.TeacherRestoreKey, new JObject { ["profile"] = Settings["profile"]?.DeepClone(), ["captions"] = Settings["captions"]?.DeepClone() }.ToString(Formatting.None));
@@ -1375,7 +1448,9 @@ namespace AiOn.Story
             try
             {
                 await ProfileCard();
+                if (Stale) return StaleResult;
                 _classPre = await TakeQuiz(QuizLogic.Pre, classSeed, null, null);
+                if (Stale) return StaleResult;
                 var ids = Chapters.Select(c => c.Id).ToList();
                 var route = SceneSelect.TeacherRoute;
                 string result = null;
@@ -1385,10 +1460,13 @@ namespace AiOn.Story
                     bool last = i == route.Count - 1;
                     int end = last ? -1 : ids.IndexOf(m.Chapter) + 1;
                     result = await PlayPrepared(m, end, last ? null : route[i].StopAt);
+                    if (Stale) return StaleResult; // F10 or 메인 메뉴로 in the step: the class is over
                     if (result == "menu" && !last) return result; // the fail card's 'menu' or a missing state: back to the title
                     await LessonCard(i);
+                    if (Stale) return StaleResult;
                 }
                 await TeacherSummary();
+                if (Stale) return StaleResult;
                 // 사후 퀴즈 after the class: the same concepts in other words, the comparison, the facts and the export
                 // (the last step's report, and every step's rows)
                 var basis = ExportBasis(LastPrepared, "teacher");
@@ -1396,7 +1474,11 @@ namespace AiOn.Story
                 await TakeQuiz(QuizLogic.Post, classSeed, _classPre, basis);
                 return result;
             }
-            finally { Ctx.TeacherRun = false; _classPre = null; _classSteps.Clear(); _exportSeed = null; RestoreTeacherSettings(); }
+            finally
+            {
+                Ctx.TeacherRun = false; _classPre = null; _classSteps.Clear(); _exportSeed = null;
+                if (!Stale) RestoreTeacherSettings(); // after a title return the next title puts them back (TeacherRestoreKey)
+            }
         }
 
         // ------------------------------------------------------------------ 사전/사후 퀴즈 (QuizLogic, QuizScreen)
@@ -1436,7 +1518,8 @@ namespace AiOn.Story
             JToken r;
             try { r = await Ui.Open(QuizLogic.Screen, o); }
             catch (StoryFail) { throw; }
-            catch (Exception e) { Log?.Invoke("[quiz] screen failed; the run goes on", e); return null; }
+            catch (Exception e) { if (!Stale) Log?.Invoke("[quiz] screen failed; the run goes on", e); return null; }
+            if (Stale) return null;
             var a = QuizAnswers.Read(r);
             if (a == null) return null;
             a.Phase = phase; a.Seed = seed;
@@ -1537,14 +1620,22 @@ namespace AiOn.Story
             if (fresh) _echo?.Begin(); else _echo?.Resume();
             ResetRun(G.Checkpoint != null ? saved["snap"] : null);
             Engine.SetView(View);
-            if (fresh) { Engine.SetControls(false); await OfferPreQuiz(); await Intro(); Engine.SetControls(true); }
+            if (fresh)
+            {
+                Engine.SetControls(false);
+                await OfferPreQuiz();
+                if (Stale) return StaleResult;
+                await Intro();
+                if (Stale) return StaleResult;
+                Engine.SetControls(true);
+            }
             Hud.Show();
             string result;
             try { result = await RunChapters(start, resume); }
-            finally { Hud.Hide(); }
-            if (result == "restart") Store.Set(SaveKey, "");
+            finally { if (!Stale) Hud.Hide(); } // after a title return the overlay is destroyed
+            if (result == "restart" && !Stale) Store.Set(SaveKey, "");
             G = null; Ctx.Rate = 0;
-            return result;
+            return Stale ? StaleResult : result;
         }
 
         // ------------------------------------------------------------------ helpers
